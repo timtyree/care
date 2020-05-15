@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xml>
+	<data id="C_m" type="number">1</data>
+	<data id="diffCoef" type="number">0.001</data>
+	<data id="tau_pv" type="number">3.33</data>
+	<data id="tau_v1" type="number">15.6</data>
+	<data id="tau_v2" type="number">5</data>
+	<data id="tau_pw" type="number">350</data>
+	<data id="tau_mw" type="number">80</data>
+	<data id="tau_d" type="number">0.407</data>
+	<data id="tau_0" type="number">9</data>
+	<data id="tau_r" type="number">34</data>
+	<data id="tau_si" type="number">26.5</data>
+	<data id="K" type="number">15</data>
+	<data id="V_sic" type="number">0.45</data>
+	<data id="V_c" type="number">0.15</data>
+	<data id="V_v" type="number">0.04</data>
+	<data id="C_si" type="number">1</data>
+	<data id="tipRecSmpRte" type="number">0.2</data>
+	<data id="width" type="number">512</data>
+	<data id="height" type="number">512</data>
+	<data id="dt" type="number">0.1</data>
+</xml>
