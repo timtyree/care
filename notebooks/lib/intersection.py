@@ -1,12 +1,16 @@
 #!/bin/env python3
 import numpy as np
+from numba import jit, njit
 """
 Give, two x,y curves this gives intersection points,
 forked on May 24.2020
 forked from: https://github.com/sukhbinder/intersection.git
 Based on: http://uk.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
 """
+@njit
 def _rect_inter_inner(x1, x2):
+    assert(type(x1)==np.ndarray)
+    assert(type(x2)==np.ndarray)
     n1 = x1.shape[0]-1
     n2 = x2.shape[0]-1
     X1 = np.c_[x1[:-1], x1[1:]]
