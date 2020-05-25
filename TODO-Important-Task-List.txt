@@ -1,0 +1,10 @@
+TODO-Important Task List - CARE
+
+#advance in time until nsteps until two kinds of contours exit? do spiral tips form?
+
+
+#TODO: make a useful jupyter labview
+#TODO: export/load a useful/reproducible jupyter lab to html
+#https://github.com/rapidsai/jupyterlab-nvdashboard
+#google how to make a jupyter notebook reproducible
+#google how to save a workview in jupyterlab
