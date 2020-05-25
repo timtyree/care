@@ -1,0 +1,14 @@
+todo for getting a spiral wave started
+done1 - advance in time until some tissue repolarizes in the center
+done2 - make a box near a roughly horizontal direction
+done3 - detect spiral tips before/after placing ^that box. done. no spiral tips exist.
+4 - advance in time detecting each time step
+5 - make a stream of separate txt files to a log folder
+6 - make a python function that, when called, takes the sum of the contents in ^that folder
+7 - save, set running, then check on the data every now and again... consider making plots...  enjoy your time with your friends.
+
+todo(later)
+8 - put starting the initial N steps and the initial spacing into a function that runs the simulation and tracks some spiral tips
+9 - run the nvme_tests = the check for nvme on this computer
+10 - make an analysis notebook. turn it into a jupyter lab view.  take a screen shot
+11 -  edit the .css file to make a simplified work view.  is is just the matter of arranging figures? if so, maximize that volume and take a screen shot
