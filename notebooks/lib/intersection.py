@@ -7,20 +7,25 @@ forked on May 24.2020
 forked from: https://github.com/sukhbinder/intersection.git
 Based on: http://uk.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
 """
-@njit
+##TODO: make sure that all contours are properly considered
+# def get_tips(contours_raw,contours_inc):
+#     x1, y1 = (contours_raw[0][:,0], contours_raw[0][:,1])
+#     x2, y2 = (contours_inc[0][:,0], contours_inc[0][:,1])
+#     return intersection(x1,y1,x2,y2)
+# @jit
 def _rect_inter_inner(x1, x2):
-    assert(type(x1)==np.ndarray)
-    assert(type(x2)==np.ndarray)
+    # assert(type(x1)==np.ndarray)
+    # assert(type(x2)==np.ndarray)
     n1 = x1.shape[0]-1
     n2 = x2.shape[0]-1
-    X1 = np.c_[x1[:-1], x1[1:]]
-    X2 = np.c_[x2[:-1], x2[1:]]
+    X1 = np.asarray((x1[:-1], x1[1:])).T#np.c_[x1[:-1], x1[1:]]#
+    X2 = np.asarray((x2[:-1], x2[1:])).T#np.concatenate((x2[:-1], x2[1:]),axis=-1)
     S1 = np.tile(X1.min(axis=1), (n2, 1)).T
     S2 = np.tile(X2.max(axis=1), (n1, 1))
-    S3 = np.tile(X1.max(axis=1), (n2, 1)).T
+    S3 = np.tile(X1.max(axis=1), (n2, 1)).T#np.asarray(np.min(list(X1)))
     S4 = np.tile(X2.min(axis=1), (n1, 1))
     return S1, S2, S3, S4
-
+# @njit
 def _rectangle_intersection_(x1, y1, x2, y2):
     S1, S2, S3, S4 = _rect_inter_inner(x1, x2)
     S5, S6, S7, S8 = _rect_inter_inner(y1, y2)
@@ -33,6 +38,7 @@ def _rectangle_intersection_(x1, y1, x2, y2):
     ii, jj = np.nonzero(C1 & C2 & C3 & C4)
     return ii, jj
 
+# @njit
 def intersection(x1, y1, x2, y2):
     """
 INTERSECTIONS Intersections of curves.

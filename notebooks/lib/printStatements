@@ -1,0 +1,9 @@
+#!/bin/env python3
+
+
+def print_uniform_circ_motion(n,R,V,omega):
+    print(f"""for tip trajectory #{n}:
+    \testimated radius of circular spiral  = {R:.2f} pixels,
+    \taverage speed  = {V:.2f} pixels,
+    \timplies the following angular velocity  = {omega:.2f} pixels.
+    """)

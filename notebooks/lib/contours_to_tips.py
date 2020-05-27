@@ -33,8 +33,7 @@ def intersect(a1, b1, a2, b2):
     # #put contour sample points into a dataframe
 
 def contours_to_tips(contours_raw, contours_edge, inc):
-    df = pd.concat([pd.DataFrame(c,columns =['y', 'x']) for c in contours_raw], axis=0)
-        
+    df = pd.concat([pd.DataFrame(c,columns =['y', 'x']) for c in contours_raw], axis=0)   
     df = df.reset_index()
     # df = df.reset_index(drop=True)
     #color each pixel as increasing (1) or nonincreasing (0)
