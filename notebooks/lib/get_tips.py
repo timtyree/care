@@ -44,12 +44,12 @@ def tips_to_list(tips):
 #for the chaotic parameters
 def get_contours(img_nxt,img_inc):
     contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
-    contours_inc = measure.find_contours(img_inc, level=0.9)#,fully_connected='low',positive_orientation='low')
+    contours_inc = measure.find_contours(img_inc, level=0.9,fully_connected='low',positive_orientation='low')
     return contours_raw,contours_inc
 
 #tip locating for stable parameters
 # img_inc = (img_nxt * ifilter(dtexture_dt[..., 0]))**2  #mask of instantaneously increasing voltages
-# img_inc = filters.gaussian(img_inc,sigma=1.)#,truncate=1.0)
+# img_inc = filters.gaussian(img_inc,sigma=2., mode='wrap')
 # contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
 # contours_inc = measure.find_contours(img_inc, level=0.0005)#,fully_connected='low',positive_orientation='low')
 

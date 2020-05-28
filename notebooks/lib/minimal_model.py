@@ -394,9 +394,9 @@ def get_tissue_state(texture, out):
 # @njit
 def _blur_at_pixel(inVfs,x,y):
 	'''coefficients returned by GaussianMatrix[1] // MatrixForm'''
-	outV  = 0.00987648 * pbc1(inVfs,x + 1,y) + 0.0796275 * pbc1(inVfs,  x,  y) + 0.00987648 * pbc1(inVfs, x - 1, y)
-	outV += 0.0796275  * pbc1(inVfs,x,y + 1) + 0.641984 *  pbc1(inVfs,  x,  y) + 0.0796275  * pbc1(inVfs, x, y - 1)
-	outV += 0.00987648 * pbc1(inVfs,x+1,y+1) + 0.0796275 * pbc1(inVfs,x+1,y-1) + 0.00987648 * pbc1(inVfs, x -1,y-1)
+	outV  = 0.00987648 * pbc1(inVfs,x-1,y+1) + 0.0796275 * pbc1(inVfs,  x,y+1) + 0.00987648 * pbc1(inVfs, x +1, y + 1)
+	outV += 0.0796275  * pbc1(inVfs,x  ,y  ) + 0.641984 *  pbc1(inVfs,  x,  y) + 0.0796275  * pbc1(inVfs, x +1, y    )
+	outV += 0.00987648 * pbc1(inVfs,x-1,y-1) + 0.0796275 * pbc1(inVfs,  x,y-1) + 0.00987648 * pbc1(inVfs, x +1, y - 1)
 	return outV
 
 # @njit
