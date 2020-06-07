@@ -152,8 +152,8 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	# define parameters
 	width  = 512
 	height = 512
-	ds_x   = 18 #domain size
-	ds_y   = 18
+	ds_x   = 5 #18 #domain size
+	ds_y   = 5 #18
 
 	# dt = 0.1
 	diffCoef = 0.001
@@ -299,8 +299,8 @@ def current_at_pixel(inVfs, x, y):#, h):
 	# define parameters
 	width  = 512
 	height = 512
-	ds_x   = 18 #domain size
-	ds_y   = 18
+	ds_x   = 5#18 #domain size
+	ds_y   = 5#18
 	diffCoef = 0.001
 	C_m = 1.0
 

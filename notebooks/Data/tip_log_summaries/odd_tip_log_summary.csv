@@ -1,0 +1,47 @@
+,data_dir,num_odd_events,num_odd_frames,num_odds,num_total,percent_odd,percent_odd_frames_that_are_events,set_odd,tmax,tmin
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.6_wrapping_true_at_time_4500.0.csv,148,909,148,517,28.62669245647969,0.1628162816281628,[ 1 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.6_wrapping_true_at_time_4500.0.csv,148,909,148,517,28.62669245647969,0.1628162816281628,[ 1 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.6_wrapping_true_at_time_4500.0.csv,148,909,148,517,28.62669245647969,0.1628162816281628,[ 1 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.99_wrapping_true_at_time_4500.0.csv,552,1105,552,7546,7.31513384574609,0.4995475113122172,[ 1  3  5  7 -9 -7 -5 -3 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_2_threshold_0.9_wrapping_at_time_1800.0.csv,18,108,18,113,15.929203539823009,0.16666666666666666,[ 1 -1],1800.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.9_wrapping_true_at_time_1800.0.csv,20,86,20,542,3.690036900369004,0.23255813953488372,[ 1 -1],1800.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.95_wrapping_true_at_time_4500.0.csv,316,907,316,4759,6.6400504307627655,0.3484013230429989,[ 1  3  5 -5 -3 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.6_wrapping_true_at_time_3600.0.csv,48,388,48,222,21.62162162162162,0.12371134020618557,[ 1 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_2_threshold_0.9_at_time_3600.2.csv,48,669,48,143,33.56643356643357,0.07174887892376682,[ 1 -1],3600.2,1800.4
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.7_wrapping_true_at_time_3600.0.csv,84,536,84,281,29.893238434163703,0.15671641791044777,[ 1  5 -1 -3],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_2_threshold_0.6_wrapping_true_at_time_3600.0.csv,48,367,48,246,19.51219512195122,0.1307901907356948,[ 1 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_8_threshold_0.9_wrapping_true_at_time_4500.0.csv,468,913,468,1826,25.629791894852136,0.5125958378970427,[ 1  3 -1 -3],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_5_threshold_0.9_wrapping_true_at_time_4500.0.csv,486,1063,486,3215,15.116640746500778,0.45719661335841955,[ 1  3  5  7 -7 -5 -3 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.8_wrapping_true_at_time_4500.0.csv,182,1232,182,624,29.166666666666668,0.14772727272727273,[ 1  3 -1 -3],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.8_wrapping_true_at_time_1800.0.csv,22,112,22,102,21.568627450980394,0.19642857142857142,[ 1 -1],1800.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.7_wrapping_true_at_time_3600.0.csv,58,436,58,248,23.387096774193548,0.13302752293577982,[ 1 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_5_threshold_0.6_wrapping_true_at_time_3600.0.csv,78,476,78,282,27.659574468085108,0.1638655462184874,[ 1  3 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_8_threshold_0.6_wrapping_true_at_time_4500.0.csv,250,1234,250,1132,22.084805653710248,0.2025931928687196,[ 1  3  5 -1 -5 -3],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_12_threshold_0.6_wrapping_true_at_time_3600.0.csv,102,285,102,518,19.69111969111969,0.35789473684210527,[ 1  3 -1 -3],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.7_wrapping_true_at_time_1800.0.csv,22,101,22,128,17.1875,0.21782178217821782,[ 1 -1],1800.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.6_wrapping_true_at_time_4500.0.csv,148,909,148,517,28.62669245647969,0.1628162816281628,[ 1 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.99_wrapping_true_at_time_4500.0.csv,552,1105,552,7546,7.31513384574609,0.4995475113122172,[ 1  3  5  7 -9 -7 -5 -3 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_2_threshold_0.9_wrapping_at_time_1800.0.csv,18,108,18,113,15.929203539823009,0.16666666666666666,[ 1 -1],1800.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.9_wrapping_true_at_time_1800.0.csv,20,86,20,542,3.690036900369004,0.23255813953488372,[ 1 -1],1800.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.95_wrapping_true_at_time_4500.0.csv,316,907,316,4759,6.6400504307627655,0.3484013230429989,[ 1  3  5 -5 -3 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.6_wrapping_true_at_time_3600.0.csv,48,388,48,222,21.62162162162162,0.12371134020618557,[ 1 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_2_threshold_0.9_at_time_3600.2.csv,48,669,48,143,33.56643356643357,0.07174887892376682,[ 1 -1],3600.2,1800.4
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.7_wrapping_true_at_time_3600.0.csv,84,536,84,281,29.893238434163703,0.15671641791044777,[ 1  5 -1 -3],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_2_threshold_0.6_wrapping_true_at_time_3600.0.csv,48,367,48,246,19.51219512195122,0.1307901907356948,[ 1 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_8_threshold_0.9_wrapping_true_at_time_4500.0.csv,468,913,468,1826,25.629791894852136,0.5125958378970427,[ 1  3 -1 -3],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_5_threshold_0.9_wrapping_true_at_time_4500.0.csv,486,1063,486,3215,15.116640746500778,0.45719661335841955,[ 1  3  5  7 -7 -5 -3 -1],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.8_wrapping_true_at_time_4500.0.csv,182,1232,182,624,29.166666666666668,0.14772727272727273,[ 1  3 -1 -3],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.8_wrapping_true_at_time_1800.0.csv,22,112,22,102,21.568627450980394,0.19642857142857142,[ 1 -1],1800.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.7_wrapping_true_at_time_3600.0.csv,58,436,58,248,23.387096774193548,0.13302752293577982,[ 1 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_5_threshold_0.6_wrapping_true_at_time_3600.0.csv,78,476,78,282,27.659574468085108,0.1638655462184874,[ 1  3 -1],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_8_threshold_0.6_wrapping_true_at_time_4500.0.csv,250,1234,250,1132,22.084805653710248,0.2025931928687196,[ 1  3  5 -1 -5 -3],4500.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_12_threshold_0.6_wrapping_true_at_time_3600.0.csv,102,285,102,518,19.69111969111969,0.35789473684210527,[ 1  3 -1 -3],3600.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_3_threshold_0.7_wrapping_true_at_time_1800.0.csv,22,101,22,128,17.1875,0.21782178217821782,[ 1 -1],1800.0,0.2
+0,Data/tip_log_chaos_circle6_sigma_4_threshold_0.7_wrapping_true_at_time_5400.0.csv,252,1883,252,859,29.336437718277065,0.13382899628252787,[ 1  5 -1 -3],5400.0,0.2
+0,Data/input/tip_log_chaos_circle6_starting_at_5400.0_sigma_0.1_threshold_0.95_wrapping_true_at_time_1485.2.csv,232,1975,232,2066,11.22942884801549,0.11746835443037974,[ 1  3  5 -1 -3],1485.1,0.2
+0,Data/input/tip_log_chaos_circle6_starting_at_5400.0_sigma_0.01_threshold_0.95_wrapping_true_at_time_1455.7.csv,229,1931,229,2014,11.370407149950347,0.11859140341791817,[ 1  3  5 -1 -3],1455.6,0.2
+0,Data/input/tip_log_chaos_circle6_starting_at_5400.0_sigma_0.001_threshold_0.99_wrapping_true_at_time_1464.9.csv,239,1991,239,2050,11.658536585365853,0.12004018081366148,[ 1  3  5 -1 -5 -3],1464.8,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_4_threshold_0.7_wrapping_true_at_time_5400.0.csv,252,1883,252,859,29.336437718277065,0.13382899628252787,[ 1  5 -1 -3],5400.0,0.2
+0,Data/input/tip_log_chaos_circle6_sigma_2_threshold_0.6_wrapping_true_at_time_5400.0.csv,186,1590,186,837,22.22222222222222,0.1169811320754717,[ 1  3 -1 -3],5400.0,0.2
+0,Data/input/tip_log_chaos_circle6_starting_at_5400.0_sigma_0.001_threshold_0.95_wrapping_true_at_time_1461.1.csv,230,1947,230,2026,11.352418558736426,0.11813045711350796,[ 1  3  5 -1 -3],1461.0,0.2
+0,Data/input/tip_log_chaos_circle6_starting_at_5400.0_sigma_0.001_threshold_0.999_wrapping_true_at_time_1468.7.csv,240,2007,240,2055,11.678832116788321,0.11958146487294469,[ 1  3  5 -1 -5 -3],1468.6,0.2
