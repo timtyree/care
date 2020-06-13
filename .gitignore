@@ -4,6 +4,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Figures and bulk output
+notebooks/Figures/
+
 # Distribution / packaging
 .Python
 build/
