@@ -1,4 +1,5 @@
 #!/bin/env python3
+# def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = u'\u2764', printEnd = "\r"):
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
     Prints iteration progress.  Call in a loop to create terminal progress bar

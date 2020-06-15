@@ -7,6 +7,9 @@ forked on May 24.2020
 forked from: https://github.com/sukhbinder/intersection.git
 Based on: http://uk.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
 """
+#TODO 1: pad txt slightly for slick enforcement of pbc
+#TODO 2: expand intersection in terms of for loops and njit it! 
+
 ##TODO: make sure that all contours are properly considered
 # def get_tips(contours_raw,contours_inc):
 #     x1, y1 = (contours_raw[0][:,0], contours_raw[0][:,1])

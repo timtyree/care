@@ -48,13 +48,13 @@ def contours_to_tips(contours_raw, contours_edge, inc):
 
     #get displacements with pbc with previous step
     df['tmp'] = (df.x.shift(-1) - df.x)
-    df.loc[df.tmp<-500, 'dx']        = df['tmp']+512
-    df.loc[df.tmp>500, 'dx']         = df['tmp']-512
+    df.loc[df.tmp<-500, 'dx']        = df['tmp']+600
+    df.loc[df.tmp>500, 'dx']         = df['tmp']-600
     df.loc[(500>=df.tmp) | (df.tmp>=-500), 'dx']  = df['tmp']
     df = df.drop(columns=['tmp'])
     df['tmp'] = (df.y.shift(-1) - df.y)
-    df.loc[df.tmp<-500, 'dy']        = df['tmp']+512
-    df.loc[df.tmp>500, 'dy']         = df['tmp']-512
+    df.loc[df.tmp<-500, 'dy']        = df['tmp']+600
+    df.loc[df.tmp>500, 'dy']         = df['tmp']-600
     df.loc[(500>=df.tmp) | (df.tmp>=-500), 'dy']  = df['tmp']
     df = df.drop(columns=['tmp'])
     #get distances to next neighbor
@@ -62,13 +62,13 @@ def contours_to_tips(contours_raw, contours_edge, inc):
 
     #get displacements with pbc next step
     df['tmp'] = (df.x.shift(1) - df.x)
-    df.loc[df.tmp<-500, 'dx']        = df['tmp']+512
-    df.loc[df.tmp>500, 'dx']         = df['tmp']-512
+    df.loc[df.tmp<-500, 'dx']        = df['tmp']+600
+    df.loc[df.tmp>500, 'dx']         = df['tmp']-600
     df.loc[(500>=df.tmp) | (df.tmp>=-500), 'dx']  = df['tmp']
     df = df.drop(columns=['tmp'])
     df['tmp'] = (df.y.shift(1) - df.y)
-    df.loc[df.tmp<-500, 'dy']        = df['tmp']+512
-    df.loc[df.tmp>500, 'dy']         = df['tmp']-512
+    df.loc[df.tmp<-500, 'dy']        = df['tmp']+600
+    df.loc[df.tmp>500, 'dy']         = df['tmp']-600
     df.loc[(500>=df.tmp) | (df.tmp>=-500), 'dy']  = df['tmp']
     df = df.drop(columns=['tmp'])
     #get distances to next neighbor
@@ -90,13 +90,13 @@ def contours_to_tips(contours_raw, contours_edge, inc):
         #get ds = distances from current pixel with pbc
         tip = tips.iloc[i]
         ef['tmp'] = (ef.x - tip.x)
-        ef.loc[ef.tmp<-500, 'dx']        = ef['tmp']+512
-        ef.loc[ef.tmp>500, 'dx']         = ef['tmp']-512
+        ef.loc[ef.tmp<-500, 'dx']        = ef['tmp']+600
+        ef.loc[ef.tmp>500, 'dx']         = ef['tmp']-600
         ef.loc[(500>=ef.tmp) | (ef.tmp>=-500), 'dx']  = ef['tmp']
         ef = ef.drop(columns=['tmp'])
         ef['tmp'] = (ef.y - tip.y)
-        ef.loc[ef.tmp<-500, 'dy']        = ef['tmp']+512
-        ef.loc[ef.tmp>500, 'dy']         = ef['tmp']-512
+        ef.loc[ef.tmp<-500, 'dy']        = ef['tmp']+600
+        ef.loc[ef.tmp>500, 'dy']         = ef['tmp']-600
         ef.loc[(500>=ef.tmp) | (ef.tmp>=-500), 'dy']  = ef['tmp']
         ef = ef.drop(columns=['tmp'])
         #get distances to tip

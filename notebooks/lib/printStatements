@@ -1,5 +1,10 @@
 #!/bin/env python3
 
+import inspect
+def print_source_code(foo):
+	ss = inspect.getsource()
+	print(ss)
+	# [print(l) for l in ss.splitlines()]
 
 def print_uniform_circ_motion(n,R,V,omega):
     print(f"""for tip trajectory #{n}:

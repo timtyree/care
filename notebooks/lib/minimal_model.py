@@ -108,8 +108,8 @@ def pbc(S,x,y):
 	'''S=texture with size 512,512,3
 	(x, y) pixel coordinates of texture with values 0 to 1.
 	tight boundary rounding is in use.'''
-	width  = 512
-	height = 512
+	width  = int(S.shape[0])
+	height = int(S.shape[1])
 	if ( x < 0  ):				# // Left P.B.C.
 		x = width - 1
 	elif ( x > (width - 1) ):	# // Right P.B.C.
@@ -118,15 +118,15 @@ def pbc(S,x,y):
 		y = height - 1
 	elif ( y > (height - 1)):	# // Top P.B.C.
 		y = 0
-	return S[x,y,:]
+	return S[x,y]
 
 @njit
 def pbc1(S,x,y):
 	'''S=texture with size 512,512,1
 	(x, y) pixel coordinates of texture with values 0 to 1.
 	tight boundary rounding is in use.'''
-	width  = 512
-	height = 512
+	width  = int(S.shape[0])
+	height = int(S.shape[1])
 	if ( x < 0  ):				# // Left P.B.C.
 		x = width - 1
 	elif ( x > (width - 1) ):	# // Right P.B.C.
@@ -150,14 +150,16 @@ def step(a,b):
 @njit
 def time_step_at_pixel(inVfs, x, y):#, h):
 	# define parameters
-	width  = 512
-	height = 512
-	ds_x   = 5 #18 #domain size
-	ds_y   = 5 #18
+	width  = int(inVfs.shape[0])
+	height = int(inVfs.shape[1])
+	ds_x   = 5 # 18 #domain size
+	ds_y   = 5 # 18
 
 	# dt = 0.1
-	diffCoef = 0.001
-	C_m = 1.0
+	diffCoef = 0.001 # cm^2 / ms
+	#^this is the most commonly used value in the literature, but it assumes a surface to volume ratio of 5000/ cm, corresponding to a fairly small cell radius of around 4 􏰎m.
+	#^quoth Fenton & Cherry (2002)
+	C_m      = 1.000  # 􏰎microFarad/cm^2 
 
 	#no spiral defect chaos observed for these parameters (because of two stable spiral tips)
 	# tau_pv = 3.33
@@ -176,25 +178,43 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	# C_si   = 1.0
 	# Uth    = 0.9
 
-	#these parameters supported spiral defect chaos beautifully
-	tau_pv = 3.33
-	tau_v1 = 15.6
-	tau_v2 = 5
-	tau_pw = 350
-	tau_mw = 80
-	tau_d = 0.407
-	tau_0 = 9
-	tau_r = 34
-	tau_si = 26.5
-	K = 15
-	V_sic = 0.45
-	V_c = 0.15
-	V_v = 0.04
-	C_si = 1
-	Uth = 0.9
+	# # #these parameters supported spiral defect chaos beautifully
+	# tau_pv = 3.33
+	# tau_v1 = 15.6
+	# tau_v2 = 5
+	# tau_pw = 350
+	# tau_mw = 80
+	# tau_d = 0.407
+	# tau_0 = 9
+	# tau_r = 34
+	# tau_si = 26.5
+	# K = 15
+	# V_sic = 0.45
+	# V_c = 0.15
+	# V_v = 0.04
+	# C_si = 1
+	# Uth = 0.9
 
-	# dx, dy = (1, 1)
-	#(1/512, 1/512)
+	#NOTE ALTERED arameter set 8 of FK model from Fenton & Cherry (2002)
+	tau_pv = 13.03#3.33
+	tau_v1 = 19.6#15.6
+	tau_v2 = 1250#5#5
+	tau_pw = 800#350
+	tau_mw = 40#80
+	tau_d = 0.45#0.407#0.40#0.6#
+	tau_0 = 12.5#9
+	tau_r = 33.25#34
+	tau_si = 29#26.5
+	K = 10#15
+	V_sic = 0.85#0.45
+	V_c = 0.13#0.15
+	V_v = 0.04#0.04
+	C_si = 1  # I didn't find this (trivial) multiplicative constant in Fenton & Cherry (2002).  The value C_si = 1 was used in Kaboudian (2019).
+	# TODO: delete Uth line if works without.
+	     # apparently ^this doesn't appear in the acutal model, it must have been a display parameter - Uth = 0.1??#0.9
+
+	dx, dy = (1, 1)
+	# (1/512, 1/512)
 
 
 	# cddx = 1 / ds_x  #no motion
@@ -281,13 +301,13 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 #     '''assuming width and height have the size of the first two axes of texture'''
 @njit
 def get_time_step(texture, out):
-	#width  = 512
-	#height = 512
-	for x in range(512):
-		for y in range(512):
+	width  = int(texture.shape[0])
+	height = int(texture.shape[1])
+	for x in range(width):
+		for y in range(height):
 			out[x,y] = time_step_at_pixel(texture,x,y)
 
-@jit
+@njit # or perhaps @jit, which probably won't speed up time_step
 def time_step(texture, h, zero_txt):
 	dtexture_dt = zero_txt.copy()
 	get_time_step(texture, dtexture_dt)
@@ -296,11 +316,12 @@ def time_step(texture, h, zero_txt):
 
 @njit
 def current_at_pixel(inVfs, x, y):#, h):
+	print('Hey, are the parameters in current_at_pixel up to date?')
 	# define parameters
-	width  = 512
-	height = 512
-	ds_x   = 5#18 #domain size
-	ds_y   = 5#18
+	width  = int(inVfs.shape[0])
+	height = int(inVfs.shape[1])
+	ds_x   = 5#18#5#18 #domain size
+	ds_y   = 5#18#5#18
 	diffCoef = 0.001
 	C_m = 1.0
 
@@ -322,21 +343,21 @@ def current_at_pixel(inVfs, x, y):#, h):
 	# Uth    = 0.9
 
 	#chaos parameters
-	tau_pv = 3.33
-	tau_v1 = 15.6
-	tau_v2 = 5
-	tau_pw = 350
-	tau_mw = 80
-	tau_d = 0.407
-	tau_0 = 9
-	tau_r = 34
-	tau_si = 26.5
-	K = 15
-	V_sic = 0.45
-	V_c = 0.15
-	V_v = 0.04
-	C_si = 1
-	Uth = 0.9
+	# tau_pv = 3.33
+	# tau_v1 = 15.6
+	# tau_v2 = 5
+	# tau_pw = 350
+	# tau_mw = 80
+	# tau_d = 0.407
+	# tau_0 = 9
+	# tau_r = 34
+	# tau_si = 26.5
+	# K = 15
+	# V_sic = 0.45
+	# V_c = 0.15
+	# V_v = 0.04
+	# C_si = 1
+	# Uth = 0.9
 
 	# /*------------------------------------------------------------------------
 	#  * reading from textures

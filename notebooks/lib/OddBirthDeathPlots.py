@@ -9,10 +9,6 @@
 import numpy as np, pandas as pd, matplotlib.pyplot as plt, os
 from ast import literal_eval
 
-width = 512
-height = 512
-channel_no = 3
-
 from lib.minimal_model import *
 from lib.TexturePlot import *
 from lib.get_tips import *
@@ -26,9 +22,6 @@ import time, os, sys, re
 beep = lambda x: os.system("echo -n '\\a';sleep 0.2;" * x)
 if not 'nb_dir' in globals():
 	nb_dir = os.getcwd()
-width = 512
-height = 512
-channel_no = 3
 
 ####################################################
 # Plots
