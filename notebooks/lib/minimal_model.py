@@ -60,7 +60,8 @@ def color_within_range(x0,y0,r, out, val=1.0, width=512,height=512):
 		for y in range(height):
 			dy = y-y0
 			if np.sqrt(dx**2+dy**2)<=r:
-				out[y,x,0] = val
+				out[y,x] = val
+				# out[y,x,0] = val
 # @njit
 # def set_to_value_in_box(image, min_x, max_x, min_y, max_y, width, height, value=30.0):
 # 	for x in range(width):
