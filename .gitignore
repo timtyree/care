@@ -7,6 +7,10 @@ __pycache__/
 # Figures and bulk output
 notebooks/Figures/
 
+# Log files
+# notebooks/Data/**/Log/*
+notebooks/Data/ds_5_param_set_8/*.pdf
+
 # Distribution / packaging
 .Python
 build/

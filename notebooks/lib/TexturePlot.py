@@ -1,7 +1,48 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from skimage import measure, filters
 from lib.get_tips import *
 from lib.intersection import *
+from lib import *
+
+def show_buffer (txt, 
+	sigma       = 3.,#5#1
+	threshold   = 0.8,#9#0.95
+	V_threshold = 0.7,
+	describe_it=False):#0.5
+
+	# check all the functions work/ compile the needed functions
+	if describe_it:
+		describe(txt)#optional printing
+	width, height, channel_no = txt.shape
+	zero_txt = np.zeros((width, height, channel_no), dtype=np.float64)
+	dtexture_dt = zero_txt.copy()
+	get_time_step(txt, dtexture_dt)
+
+	#calculate contours and tips
+	img_nxt = txt[..., 0]
+	img_inc = ifilter(dtexture_dt[..., 0])  #mask of instantaneously increasing voltages 
+	img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap')
+	contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
+	contours_inc = measure.find_contours(img_inc, level=threshold)#,fully_connected='low',positive_orientation='low')
+	tips  = get_tips(contours_raw, contours_inc)
+	n_old = count_tips(tips[1])
+
+	#bluf
+	# print(f"\n number of type 1 contour = {len(contours_raw)},\tnumber of type 2 contour = {len(contours_inc)},")
+	print(f"the number of tips are {n_old}.")
+	# print(f"""the topological tip state:{tips[0]}""")
+	# print(f"""x position of tips: {tips[1]}""")
+	# print(f"""y position of tips: {tips[2]}""")
+
+	n_lst, x_lst, y_lst = get_tips(contours_raw, contours_inc)
+	tip_states = {'n': n_lst, 'x': x_lst, 'y': y_lst}
+
+	fig = plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, 
+	                  figsize=(5,5),max_marker_size=200, lw=1);
+	# fig.show()
+	return fig
+
 
 ####################################
 # Elementary texture viewing

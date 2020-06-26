@@ -2,7 +2,6 @@ from numba import njit
 from numba.typed import List
 import numpy as np
 
-
 @njit
 def color_within_range(x0,y0,r, out, val=1.0, width=512,height=512):
 	for x in range(width):

@@ -11,6 +11,9 @@ import numpy as np
 #  * Mechanica
 #  *------------------------------------------------------------------------
 #  */
+#TODO: make wrappers for cardiomyocytes that are optimized with, perhaps, njit or numba.cuda
+# ^This let's all my hard work done below be functionally built into a function that scales.
+#do this from a jupyter notebook, of course
 
 def SignedVolumeOfTriangle(p1, p2, p3):
 	'''Vector p1, Vector p2, Vector p3'''
@@ -162,6 +165,36 @@ class CardioMyocyte(object):
 			\there's my slow variable, {self.slow:.3f} units. Come again!
 			"""
 
+	def set_defaults(self):
+		'''fenton and cherry (2002) parameter set 8.  not all of these are necessarily needed or used.'''
+		# define parameters
+		self.width  = 600
+		self.height = 600
+		self.ds_x   = 5 #18 #domain size
+		self.ds_y   = 5 #18
+
+		# dt = 0.1
+		self.diffCoef = 0.001
+		self.C_m = 1.0
+
+		#no spiral defect chaos observed for these parameters (because of two stable spiral tips)
+		#parameter set 8 of FK model from Fenton & Cherry (2002)
+		self.tau_pv = 13.03
+		self.tau_v1 = 19.6
+		self.tau_v2 = 1250
+		self.tau_pw = 800
+		self.tau_mw = 40
+		self.tau_d = 0.45# also interesting to try, but not F&C8's 0.45: 0.407#0.40#0.6#
+		self.tau_0 = 12.5
+		self.tau_r = 33.25
+		self.tau_si = 29#
+		self.K = 10
+		self.V_sic = 0.85#
+		self.V_c = 0.13
+		self.V_v = 0.04
+		self.C_si = 1  # I didn't find this (trivial) multiplicative constant in Fenton & Cherry (2002).  The value C_si = 1 was used in Kaboudian (2019).
+		return self
+
 	#######################################
 	# Functionality for a local 2D Geometry
 	#######################################
@@ -300,6 +333,7 @@ class CardioMyocyte(object):
 
 	#@njit
 	def time_step_at_shape_at_pixel(self, h, neighboring_ids):
+		'''maybe this task is best outside of this .py file. use trimesh in a different myocardial_tissue.py'''
 		#TODO: define mechanical parameters from kwargs
 		neighboring_ids   = self.get_neighboring_ids()
 		
@@ -311,35 +345,29 @@ class CardioMyocyte(object):
 		#TODO
 		return self
 
-	#@njit
-def time_step_at_pixel(inVfs, x, y):#, h):
-	# define parameters
-	width  = 600
-	height = 600
-	ds_x   = 5 #18 #domain size
-	ds_y   = 5 #18
+# /*------------------------------------------------------------------------
+#  * Teoria
+#  *------------------------------------------------------------------------
+#  */
+#TODO: njit-able time step for (1) laplacian and (2) local hamiltonian
 
-	# dt = 0.1
-	diffCoef = 0.001
-	C_m = 1.0
+#@njit
+	def time_step_self(self, others, h):
+		'''TODO: make the nonlocal steps be an exchange rule evaluated by stream/thread fed by an asynchronous queue.'''
+		dx, dy = (1, 1)#local lengthscale units
+		cddx = width  / ds_x  #if this is too big than the simulation will blow up (at a given timestep)
+		cddy = height / ds_y #if this is too big than the simulation will blow up (at a given timestep)
+		cddx *= cddx
+		cddy *= cddy
+		nonlocal_term = get_nonlocal_term(self, others)
+		local_term = get_local_term(self)
+		dself = h * (nonlocal_term + local_term) #forward euler integration is less than stable for large h
+		self.voltage = dself.voltage
+		self.fast = dself.fast
+		self.slow = dself.slow
+		return self
 
-	#no spiral defect chaos observed for these parameters (because of two stable spiral tips)
-	# tau_pv = 3.33
-	# tau_v1 = 19.6
-	# tau_v2 = 1000
-	# tau_pw = 667
-	# tau_mw = 11
-	# tau_d  = 0.42
-	# tau_0  = 8.3
-	# tau_r  = 50
-	# tau_si = 45
-	# K      = 10
-	# V_sic  = 0.85
-	# V_c    = 0.13
-	# V_v    = 0.055
-	# C_si   = 1.0
-	# Uth    = 0.9
-
+	def time_step_at_pixel(inVfs, ):#, h):
 
 	def set_params(self, **kwargs):
 		'''numba wants structs like this:
@@ -359,21 +387,6 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 
 	struct_dtype = np.dtype([(param, np.float64) for param in params])
 
-	# tau_pv = 3.33
-	# tau_v1 = 15.6
-	# tau_v2 = 5
-	# tau_pw = 350
-	# tau_mw = 80
-	# tau_d = 0.407
-	# tau_0 = 9
-	# tau_r = 34
-	# tau_si = 26.5
-	# K = 15
-	# V_sic = 0.45
-	# V_c = 0.15
-	# V_v = 0.04
-	# C_si = 1
-	# Uth = 0.9
 	######################################
 	# Getter & Setter for Cell State/Shape 
 	# Caution! These might break immutability needed for some LLVM compilation.  Not sure.

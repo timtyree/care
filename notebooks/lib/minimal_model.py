@@ -12,83 +12,6 @@ import numpy as np
 # plt.layout_tight()
 # plt.savefig('Figures/init.jpg', dpi=128)
 
-# Image.frombuffer("L", (512, 512), gimage, 'raw', "L", 0, 1)
-@njit
-def set_voltage_in_box(image, min_x, max_x, min_y, max_y, width, height, value=30.0):
-	for x in range(width):
-		for y in range(height):
-			if min_x <= x < max_x and min_y <= y < max_y:
-				image[y, x, 0] = value
-
-@njit
-def init_in_box(image, min_x, max_x, min_y, max_y, width, height, value=30.0):
-	for x in range(width):
-		for y in range(height):
-			if min_x <= x < max_x and min_y <= y < max_y:
-				image[y, x, 0] = value
-				image[y, x, 1] = 0.#0.#11116473
-				image[y, x, 2] = 0.#0.#02320262
-			else:
-				image[y, x, 0] = 0.0#01574451
-				image[y, x, 1] = 1.0#11116473
-				image[y, x, 2] = 0.4#02320262
-
-def initialize_mesh(width,height,channel_no, value, zero=None):
-	'''create initialization buffer for the standard.
-	let the ring propagate out until tissue in the center
-	is excitable before exploring initial trajectories based
-	on the width of rectangular perturbations.'''
-	if zero is None:
-		zero = np.zeros((width, height, channel_no), dtype = np.float64)
-	gimage = zero.copy()
-	# change a rectangle to initial values
-	init_in_box(gimage,
-					 min_x=256-64,
-					 max_x=256+64,
-					 min_y=256-32,
-					 max_y=256+32,
-					 width=width,
-					 height=height,
-					 value=value
-					)
-	return gimage
-
-@njit
-def color_within_range(x0,y0,r, out, val=1.0, width=512,height=512):
-	for x in range(width):
-		dx = x-x0
-		for y in range(height):
-			dy = y-y0
-			if np.sqrt(dx**2+dy**2)<=r:
-				out[y,x] = val
-				# out[y,x,0] = val
-# @njit
-# def set_to_value_in_box(image, min_x, max_x, min_y, max_y, width, height, value=30.0):
-# 	for x in range(width):
-# 		for y in range(height):
-# 			if min_x <= x < max_x and min_y <= y < max_y:
-# 				image[y, x, 0] = value
-# 				image[y, x, 1] = 0.#0.#11116473
-# 				image[y, x, 2] = 0.#0.#02320262
-# 			else:
-# 				image[y, x, 0] = 0.0#01574451
-# 				image[y, x, 1] = 1.0#11116473
-# 				image[y, x, 2] = 0.4#02320262
-
-# def initialize_mesh(width,height,channel_no, value):
-# 	#create standardized initialization buffer
-# 	gimage = np.zeros((width, height, channel_no), dtype = np.float64)
-# 	# change a rectangle to initial values
-# 	set_to_value_in_box(gimage,
-# 					 min_x=256-64,
-# 					 max_x=256+64,
-# 					 min_y=256-32,
-# 					 max_y=256+32,
-# 					 width=width,
-# 					 height=height,
-# 					 value=value
-# 					)
-# 	return gimage
 
 @njit
 def Tanh(x):
@@ -196,33 +119,24 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	# C_si = 1
 	# Uth = 0.9
 
-	#NOTE ALTERED arameter set 8 of FK model from Fenton & Cherry (2002)
-	tau_pv = 13.03#3.33
-	tau_v1 = 19.6#15.6
-	tau_v2 = 1250#5#5
-	tau_pw = 800#350
-	tau_mw = 40#80
-	tau_d = 0.45#0.407#0.40#0.6#
-	tau_0 = 12.5#9
-	tau_r = 33.25#34
-	tau_si = 29#26.5
-	K = 10#15
-	V_sic = 0.85#0.45
-	V_c = 0.13#0.15
-	V_v = 0.04#0.04
+	#parameter set 8 of FK model from Fenton & Cherry (2002)
+	tau_pv = 13.03
+	tau_v1 = 19.6
+	tau_v2 = 1250
+	tau_pw = 800
+	tau_mw = 40
+	tau_d = 0.45# also interesting to try, but not F&C8's 0.45: 0.407#0.40#0.6#
+	tau_0 = 12.5
+	tau_r = 33.25
+	tau_si = 29#
+	K = 10
+	V_sic = 0.85#
+	V_c = 0.13
+	V_v = 0.04
 	C_si = 1  # I didn't find this (trivial) multiplicative constant in Fenton & Cherry (2002).  The value C_si = 1 was used in Kaboudian (2019).
-	# TODO: delete Uth line if works without.
-	     # apparently ^this doesn't appear in the acutal model, it must have been a display parameter - Uth = 0.1??#0.9
-
-	dx, dy = (1, 1)
-	# (1/512, 1/512)
-
-
-	# cddx = 1 / ds_x  #no motion
-	# cddy = 1 / ds_y  #no motion
-	cddx = width / ds_x  #blows up  #TODO: retry with fast/slow initialized at unity
-	cddy = height / ds_y #blows up
-
+	dx, dy = (1, 1)# (1/512, 1/512) # size of a pixel
+	cddx = width  / ds_x  #if this is too big than the simulation will blow up (at a given timestep)
+	cddy = height / ds_y #if this is too big than the simulation will blow up (at a given timestep)
 	cddx *= cddx
 	cddy *= cddy
 
@@ -231,12 +145,9 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	#  *------------------------------------------------------------------------
 	#  */
 	C = pbc(inVfs, x, y)
-	vlt = C[0]
-	#volts
-	fig = C[1]
-	#fast var
-	sig = C[2]
-	#slow var
+	vlt = C[0]#volts
+	fig = C[1]#fast var
+	sig = C[2]#slow var
 
 	# /*-------------------------------------------------------------------------
 	#  * Calculating right hand side vars
@@ -244,7 +155,6 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	#  */
 	p = step(V_c, vlt)
 	q = step(V_v, vlt)
-
 	tau_mv = (1.0 - q) * tau_v1 + q * tau_v2
 
 	Ifi = -fig * p * (vlt - V_c) * (1.0 - vlt) / tau_d
@@ -301,7 +211,7 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 
 #     '''assuming width and height have the size of the first two axes of texture'''
 @njit
-def get_time_step(texture, out):
+def get_time_step (texture, out):
 	width  = int(texture.shape[0])
 	height = int(texture.shape[1])
 	for x in range(width):
@@ -309,14 +219,14 @@ def get_time_step(texture, out):
 			out[x,y] = time_step_at_pixel(texture,x,y)
 
 @njit # or perhaps @jit, which probably won't speed up time_step
-def time_step(texture, h, zero_txt):
+def time_step (texture, h, zero_txt):
 	dtexture_dt = zero_txt.copy()
 	get_time_step(texture, dtexture_dt)
 	texture += h * dtexture_dt
 
 
 @njit
-def current_at_pixel(inVfs, x, y):#, h):
+def current_at_pixel (inVfs, x, y):#, h):
 	print('Hey, are the parameters in current_at_pixel up to date?')
 	# define parameters
 	width  = int(inVfs.shape[0])
