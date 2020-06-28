@@ -20,7 +20,7 @@ def rotation_matrix(axis, theta):
                      [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
                      [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
 
-    def get_R(trim,tris,testing=True):
+def get_R(trim,tris,testing=True):
     '''trim is a triangle in material/reference space that is 
     deformed to tris, which is a triangle in real space.  
     returns the 3x3 rotation matrix aligning both their area normals and their first shape vector.
@@ -60,19 +60,19 @@ def rotation_matrix(axis, theta):
     Rb = rotation_matrix(axisb, thetab).T
 
     if not np.isclose(np.dot(Rb, v1),v2).all():
-        print(np.dot(Rb, v1))
-        print(v2)
-        print('Rb was flipped likely because of the sign ambiguity of thetab.')
+        # print(np.dot(Rb, v1))
+        # print(v2)
+        # print('Rb was flipped likely because of the sign ambiguity of thetab.')
         Rb = Rb.T
-        print(np.dot(Rb, v1))
-        print(v2)
+        # print(np.dot(Rb, v1))
+        # print(v2)
         
     R = Rb.dot(Ra).T
     if testing:
         assert(np.isclose(np.dot(Rb, v1),v2).all())
         # test that Rb keeps the area vectors aligned
-        print(Rb.dot(Ra.dot(Ashat)))
-        print(Amhat)
+        # print(Rb.dot(Ra.dot(Ashat)))
+        # print(Amhat)
         assert(np.isclose(Rb.dot(Ra.dot(Ashat)),Amhat).all())
         # test that R = Rb.dot(Ra).T rotates Amhat onto Ashat
         assert(np.isclose(Ashat,R.dot(Amhat)).all())
