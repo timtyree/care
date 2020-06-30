@@ -64,11 +64,12 @@ def Tanh(x):
 #  *------------------------------------------------------------------------
 #  */
 @njit
-def pbc(x,y, width  = 600, height = 600):
-	'''by default, x is in [0,600] and y is in [0,600] at steps of size 1.
-	 width = 600 and height = 600
+def pbc(x,y, width, height):
+	'''S=texture with size 512,512,3
 	(x, y) pixel coordinates of texture with values 0 to 1.
 	tight boundary rounding is in use.'''
+	width  = int(S.shape[0])
+	height = int(S.shape[1])
 	if ( x < 0  ):				# // Left P.B.C.
 		x = width - 1
 	elif ( x > (width - 1) ):	# // Right P.B.C.

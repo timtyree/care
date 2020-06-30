@@ -194,6 +194,81 @@ def process_tip_log(data_dir, descrip = None, plot_figs=True,
 	df_tips = _log_to_table(df=df_new, save_dir=save_tip_locations_dir)
 	return df_tips
 
+####################################################
+# Formatted Tip Log to Tip Trajectories
+####################################################
+from lib.dist_func import *
+import trackpy
+
+#TODO: test cases
+def track_tips (df_tips, dist_mode='pbc', 
+	h = 0.007, search_range=1, mem = 2, width=200, height=200):
+	'''using periodic boundary conditions, take output of process_tip_log() and return a dataframe of tip trajectories'''
+	distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
+	df['frame'] = df['t']/h
+	if dist_mode=='pbc':
+		link_kwargs = {
+		    'neighbor_strategy' : 'BTree',
+		    'dist_func'         : distance_L2_pbc,
+	    	'memory': mem}
+	else:
+		link_kwargs = {
+		    'neighbor_strategy' : 'BTree',
+		    'dist_func'         : None,
+		    'memory': mem}
+	df_trajectories = trackpy.link_df(f=df,search_range=search_range,t_column='frame', **link_kwargs)
+	return df_trajectories
+
+#TODO: test cases
+def track_tips_in_folder(nb_dir, log_dir=None, out_dir=None, 
+	h = 0.007, mem = 2, search_range  = 1, width=200, height=200):
+	'''nb_dir is the notebook directory containing the folder, Data, and 
+	nb_dir is unused if log_dir and out_dir are both not None.
+	string log_dir = folder containing the tip logs
+	string out_dir = folder containing the tip logs
+	'''
+	if log_dir is None:
+		log_dir = f"{nb_dir}/Data/ds_5_param_set_8/Log"
+	if out_dir is None:	
+		out_dir = f"{nb_dir}/Data/ds_5_param_set_8/trajectories"
+	
+	distance_L2_pbc = get_distance_L2_pbc(width=width,height=width)
+	df['frame'] = df['t']/h
+	df = df.astype(dtype={'frame':int}).copy()
+	link_kwargs = {
+	    'neighbor_strategy' : 'BTree',
+	    'dist_func'         : distance_L2_pbc,
+	    'memory': mem}
+
+	#compute all _processed.csv tip logs in the Log folder
+	for root, dirs, files in os.walk(".", topdown=False):
+	    for name in dirs:
+	        print(os.path.join(root, name))
+	    for name in files:
+	        os.chdir(log_dir)
+	        df_dir = os.path.join(root, name)
+	        if df_dir.find('_processed.csv') !=-1:
+	            print(f"starting on {df_dir}...")
+	            df = pd.read_csv(data_dir)
+	            df['frame'] = df['t']/h
+	            df = df.astype(dtype={'frame':int}).copy()
+	            # test whether data has no odd spiral tips since the data has periodic boundary conditions
+	            if (np.array(list(set(df.n.values)))%2==1).any():
+	                print(f'WARNING: an odd spiral tips exists in \n\t{fn}')
+	            
+	            compute trajectories (slowest part)
+	            traj = trackpy.link_df(f=df,search_range=search_range,t_column='frame', **link_kwargs)
+	            
+	            #save results
+	            os.chdir(out_dir)
+	            save_fn = os.path.basename(df_dir).replace('_processed.csv', f'_traj_sr_{search_range}_mem_{mem}.csv')
+	            traj.to_csv(save_fn, index=False)
+	return True
+
+####################################################
+# TODO: Command line prompt
+####################################################
+
 #TODO: make a command line interface for process_tip_log
 # def main():
 #   save_dir = data_dir.replace('tip_log','tip_positions')

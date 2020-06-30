@@ -132,11 +132,12 @@ def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, figsize=(15,
         ax.scatter(x = x_values[j], y = y_values[j], c='yellow', s=int(max_marker_size/(j+1)), zorder=3, marker = '*')
     return fig
 
-def get_lifetime(trajectory_list):
-    '''trajectory_list is a list of lists.  
-    return np.mean( [ len(trajectory) for trajectory in trajectory_list ], axis=0 )'''
-    return np.mean( [ len(trajectory) for trajectory in trajectory_list ], axis=0 )
-#    TODO: for a given .csv of tip positions, make their trajectories naively in trackpy
+# def get_lifetime(trajectory_list):
+#     '''trajectory_list is a list of lists.  
+#     return np.mean( [ len(trajectory) for trajectory in trajectory_list ], axis=0 )'''
+#     return np.mean( [ len(trajectory) for trajectory in trajectory_list ], axis=0 )
+# #    TODO: for a given .csv of tip positions, make their trajectories naively in trackpy
+
 
 
 def process_tip_log_file(input_fn):
@@ -180,3 +181,24 @@ def remove_log_folder(folder_name='Data/log-tmp/'):
         os.rkdir(folder_name)
     except:
         print('^that folder probs existed already.')
+
+  
+#! /usr/bin/env python
+"""
+Convert empty IPython notebook to a sphinx doc page.
+"""
+import os
+import sys
+
+
+def convert_nb(nbname):
+
+    os.system("runipy --o %s.ipynb --matplotlib --quiet" % nbname)
+    os.system("ipython nbconvert --to rst %s.ipynb" % nbname)
+    os.system("tools/nbstripout %s.ipynb" % nbname)
+
+
+if __name__ == "__main__":
+
+    for nbname in sys.argv[1:]:
+        convert_nb(nbname)
