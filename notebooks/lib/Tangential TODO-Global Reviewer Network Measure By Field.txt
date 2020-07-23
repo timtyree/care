@@ -1,0 +1,8 @@
+Does the time averaged net network size of the citation network for academic field, X1 have in common with academic field X2?
+
+Prereqs. to test ^this are
+- a way to scrape the web
+- a way to put ^that scrape into a DataFrame
+- a way to put ^that into a time-averaged network size
+- a way to put ^that into the actual mean network size, averaged over all time
+- a way to put ^that into an xy-plot using matplotlib.

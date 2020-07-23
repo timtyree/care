@@ -1,9 +1,0 @@
-TODO:
-move rapids-notebook into main notebook folder
-add to sys.path the ther lib one directory up
-git push care
-make sure the RA .npz or .npy is on github
-docker run rapids-notebook, briefly only briefly trying to mount a volume
-if no volume mount, git pull my care repository
-
-#ERROR: it sucks trying to make documentation in jupyter lab.  i want a rapids NOTEbook.

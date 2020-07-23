@@ -181,6 +181,25 @@ def textures_to_padded_textures(txt,dtexture_dt, pad):
     dpadded_txt_dt = np.pad(array = dtexture_dt[...,0], pad_width = pad, mode = 'wrap')
     return padded_txt, dpadded_txt_dt
 
+def matrices_to_padded_matrices(txt,dtexture_dt, pad):
+    '''txt and dtexture_dt are rank two tensors.
+    large pad allows knots to be recorded right.
+    '''
+    # width, height = txt.shape[:2]
+    # padded_width = 512 + pad #pixels
+    padded_txt     = np.pad(array = txt,        pad_width = pad, mode = 'wrap')
+    dpadded_txt_dt = np.pad(array = dtexture_dt, pad_width = pad, mode = 'wrap')
+    return padded_txt, dpadded_txt_dt
+
+# @njit
+def pad_matrix(mat, pad):
+    '''large pad allows knots to be recorded right.
+    consider pad = int(512/2), edge_tolerance = int(512/4)'''
+    width, height = mat.shape[:2]
+    # padded_width = 512 + pad #pixels
+    padded_mat = np.pad(array = mat, pad_width = pad, mode = 'wrap')
+    return padded_mat
+
 # @njit
 def pad_texture(txt, pad):
     '''large pad allows knots to be recorded right.
