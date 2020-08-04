@@ -6,8 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from IPython import utils
 import time, os, sys, re
 beep = lambda x: os.system("echo -n '\\a';sleep 0.2;" * x)
-if not 'nb_dir' in globals():
-    nb_dir = os.getcwd()
+if not 'nb_dir' in globals():     nb_dir = os.getcwd()
 sys.path.append("../lib") 
 from lib import *
 sys.path.append("lib") 
@@ -16,7 +15,8 @@ from lib import *
 # the visualization tools involved here for triangular meshes is
 import trimesh
 import pyglet
-from numba import njit, cuda
+from numba import njit
+# from numba import cuda
 
 def read_mesh(file_name):
     mesh = trimesh.load(file_name);

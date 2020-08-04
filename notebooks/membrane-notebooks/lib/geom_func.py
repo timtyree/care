@@ -9,7 +9,7 @@ import numpy as np
 ##########################################################################################
 # #Example Usage: test the explicit deformation map for a one triangle to another triangle
 # import trimesh
-# mesh = trimesh.load('../Data/spherical_meshesspherical_mesh_64.stl')
+# mesh = trimesh.load('../Data/spherical_meshes/spherical_mesh_64.stl')
 # #subtract the center of mass
 # mesh.vertices -= mesh.center_mass
 # #normalize the mean radius to 1
