@@ -4,6 +4,38 @@ from skimage import measure, filters
 from lib.get_tips import *
 from lib.intersection import *
 from lib import *
+import matplotlib.cm as cm
+
+def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, 
+	figsize=(15,15), max_marker_size=800, lw=2,
+	color_values = None):
+	'''computes display data; returns fig.'''
+	#plot figure
+	fig, ax = plt.subplots(1,figsize=figsize)
+	ax.imshow(img_nxt,cmap='Reds', vmin=0, vmax=1)
+	ax.axis('off')
+
+	#plot contours, if any.  type 1 = contours_raw (blue), type 2 = contours_inc (green)
+	for n, contour in enumerate(contours_inc):
+		ax.plot(contour[:, 1], contour[:, 0], linewidth=lw, c='g', zorder=2)
+	for n, contour in enumerate(contours_raw):
+		ax.plot(contour[:, 1], contour[:, 0], linewidth=lw, c='b', zorder=2)
+
+	#plot tips, if any
+	s1_values, s2_values, y_values, x_values, states_nearest, states_interpolated_linear, states_interpolated_cubic = tips
+	#     if len(n_values)>0:
+	if color_values is None:
+		for j in range(len(x_values)): 
+			ax.scatter(x = x_values[j], y = y_values[j], c='yellow', s=int(max_marker_size/(j+1)), zorder=3, marker = '*')
+		pass
+	else:
+		vmin = 0.#np.min(color_values)
+		vmax = 1.#np.max(color_values)
+		cmap = plt.get_cmap('cividis')
+		for j in range(len(x_values)): 
+		    ax.scatter(x = x_values[j], y = y_values[j], c=color_values[j], s=int(max_marker_size/(j+1)), 
+		               zorder=3, marker = '*', cmap=cmap, vmin=vmin, vmax=vmax)
+	return fig
 
 def show_buffer (txt, 
 	sigma       = 3.,#5#1
@@ -39,7 +71,7 @@ def show_buffer (txt,
 	tip_states = {'n': n_lst, 'x': x_lst, 'y': y_lst}
 
 	fig = plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, 
-	                  figsize=(5,5),max_marker_size=200, lw=1);
+					  figsize=(5,5),max_marker_size=200, lw=1);
 	# fig.show()
 	return fig
 

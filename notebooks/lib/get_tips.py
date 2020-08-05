@@ -3,9 +3,10 @@ from numba import jit, njit
 from numba.typed import List
 import numpy as np, os
 from lib.intersection import *
+from scipy.interpolate import interp2d
 
 
-# #original code reference # @njit
+# @njit
 def get_tips(contours_raw, contours_inc):
     '''returns tips with indices of parent contours'''
     n_list = []; x_lst = []; y_lst = []
@@ -182,7 +183,7 @@ def textures_to_padded_textures(txt,dtexture_dt, pad):
     return padded_txt, dpadded_txt_dt
 
 def matrices_to_padded_matrices(txt,dtexture_dt, pad):
-    '''txt and dtexture_dt are rank two tensors.
+    '''txt and dtexture_dt are rank two tensors. i.e. the channel_no is 1.
     large pad allows knots to be recorded right.
     '''
     # width, height = txt.shape[:2]
@@ -191,6 +192,11 @@ def matrices_to_padded_matrices(txt,dtexture_dt, pad):
     dpadded_txt_dt = np.pad(array = dtexture_dt, pad_width = pad, mode = 'wrap')
     return padded_txt, dpadded_txt_dt
 
+# #informal test for ^that
+# padded_txt     = np.pad(array = txt,        pad_width = pad, mode = 'wrap')
+# print(txt[0,0])
+# print(padded_txt[...,2:5][pad,pad])
+
 # @njit
 def pad_matrix(mat, pad):
     '''large pad allows knots to be recorded right.
@@ -198,7 +204,7 @@ def pad_matrix(mat, pad):
     width, height = mat.shape[:2]
     # padded_width = 512 + pad #pixels
     padded_mat = np.pad(array = mat, pad_width = pad, mode = 'wrap')
-    return padded_mat
+    return padded_mat[...,2:5]
 
 # @njit
 def pad_texture(txt, pad):
@@ -260,3 +266,97 @@ def map_pbc_tips_back(tips, pad, width, height, edge_tolerance, atol = 1e-11):
                         s2_mapped_lst[min_index].append(S2)
     return s1_mapped_lst, s2_mapped_lst, x_mapped_lst, y_mapped_lst
 
+
+#########################################################################
+# Interpolating Electrophysiological state values to spiral tip locations
+#########################################################################
+def get_state_nearest(x, y, txt):
+    '''nearest local texture values, ignore any index errors and/or periodic boundary conditions'''
+    xint = np.round(x).astype(dtype=int)
+    yint = np.round(y).astype(dtype=int)
+    try:
+        state_nearest = list(txt[xint,yint])
+    except IndexError:
+        state_nearest = nanstate
+    return state_nearest    
+
+#for get_state_interpolated
+import sys
+if not sys.warnoptions:
+    import warnings
+    warnings.simplefilter("ignore", category=RuntimeWarning, lineno=0, append=False)
+#TODO: restrict ^this warning filter to onlyt get_state_interpolated
+
+def get_state_interpolated(x, y, txt, nanstate, xcoord_mesh, ycoord_mesh,
+                          channel_no = 3, rad = 0.5, kind='linear'):
+    '''linear interpolation of local texture values to subpixel precision
+    using 2D linear interpolation with scipy.interpolate.interp2d.
+    channel_no must be len(nanstate). 
+    for channel_no = 3, use nanstate = [np.nan,np.nan,np.nan].
+    rad = the pixel radius considered in interpolation.
+    kind can be "linear" or "cubic".  
+    if kind="cubic", then set rad = 3.5.'''
+    state_interpolated = nanstate #.copy() if you change nanstate to a numpy array
+    try:
+        xlo = np.round(x-rad).astype(dtype=int)
+        ylo = np.round(y-rad).astype(dtype=int)
+        xhi = np.round(x+rad).astype(dtype=int)
+        yhi = np.round(y+rad).astype(dtype=int)
+        yloc = ycoord_mesh[ylo:yhi+1,xlo:xhi+1].flatten().copy()
+        xloc = xcoord_mesh[ylo:yhi+1,xlo:xhi+1].flatten().copy()
+        local_values = txt[ylo:yhi+1,xlo:xhi+1]
+
+        interp_foo = lambda x,y,zloc: interp2d(yloc,xloc,zloc,kind=kind)(y,x)
+        for c in range(channel_no):
+            zloc = local_values[...,c].flatten().copy()
+            state_interpolated[c] = float(interp_foo(x,y,zloc))
+    except IndexError:
+        pass
+    except RuntimeWarning:
+        pass
+    return state_interpolated
+# ###############
+# # Example Usage 
+# ###############
+# #Caution! : check whether spiral tips are recorded as 'x': x coordinate or 'x': y coordinate
+
+# #precompute the following the __padded__ coordinates
+# xcoord_mesh, ycoord_mesh = np.meshgrid(np.arange(0,200),np.arange(0,200))
+
+# x = 169.75099760896785
+# y = 68.05364536542943
+
+# nanstate = [np.nan,np.nan,np.nan]
+# txt = np.stack([texture,texture,texture]).T
+# print(
+#     get_state_nearest(x,y,txt)
+#     )
+# print ( 
+#     get_state_interpolated(x, y, txt.astype('float32'), nanstate, xcoord_mesh, ycoord_mesh,
+#                           channel_no = 3, rad = 3.5, kind='cubic') 
+#       )
+# print ( 
+#     get_state_interpolated(x, y, txt.astype('float32'), nanstate, xcoord_mesh, ycoord_mesh,
+#                           channel_no = 3, rad = 0.5, kind='linear') 
+#       )
+
+
+def get_states(tips_mapped, txt, pad,
+              nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
+    '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
+    # tips_mapped gives tip locations using the correct image pixel coordinates, here.
+    padded_txt  = pad_matrix(txt, pad)
+    y_locations = np.array(tips_mapped[2]) + pad
+    x_locations = np.array(tips_mapped[3]) + pad
+
+    states_nearest = states_interpolated_linear = states_interpolated_cubic = [];
+    for x,y in zip(x_locations,y_locations):
+        state_nearest = get_state_nearest(x,y,txt=padded_txt)
+        state_interpolated_linear = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+                              channel_no = channel_no, rad = 0.5, kind='linear') 
+        state_interpolated_cubic = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+                              channel_no = channel_no, rad = 3.5, kind='cubic')
+        states_nearest.append(state_nearest)
+        states_interpolated_linear.append(state_interpolated_linear)
+        states_interpolated_cubic.append(state_interpolated_cubic)
+    return states_nearest, states_interpolated_linear, states_interpolated_cubic
