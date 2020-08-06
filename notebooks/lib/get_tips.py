@@ -360,3 +360,9 @@ def get_states(tips_mapped, txt, pad,
         states_interpolated_linear.append(state_interpolated_linear)
         states_interpolated_cubic.append(state_interpolated_cubic)
     return states_nearest, states_interpolated_linear, states_interpolated_cubic
+
+def add_states(tips_mapped, states_EP):
+    tips_mapped = list(tips_mapped)
+    tips_mapped.extend(states_EP)
+    return tuple(tips_mapped)
+    

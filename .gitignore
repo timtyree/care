@@ -137,3 +137,9 @@ dmypy.json
 *.npz
 notebooks/rapids-notebooks/Test Driven Model Development Using a Nice Sphere.ipynb
 notebooks/rapids-notebooks/Test Driven Model Development Using a Nice Sphere.ipynb
+notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_005.csv
+notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_004.csv
+notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_005_processed.csv
+notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_004.csv
+notebooks/Data/ds_5_param_set_8/trajectories/tip_log_ds_5_sigma_0.5_threshold_0.9_005_traj_sr_1_mem_2.csv
+notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_004.csv

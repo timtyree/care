@@ -112,25 +112,25 @@ def find_file(**kwargs):
     return find_files(**kwargs)[0]
 # def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, dpi, figsize=(15,15)):
 
-def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, figsize=(15,15), max_marker_size=800, lw=2):
-    '''computes display data; returns fig.'''
-    #plot figure
-    fig, ax = plt.subplots(1,figsize=figsize)
-    ax.imshow(img_nxt,cmap='Reds', vmin=0, vmax=1)
-    ax.axis('off')
+# def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, figsize=(15,15), max_marker_size=800, lw=2):
+#     '''computes display data; returns fig.'''
+#     #plot figure
+#     fig, ax = plt.subplots(1,figsize=figsize)
+#     ax.imshow(img_nxt,cmap='Reds', vmin=0, vmax=1)
+#     ax.axis('off')
 
-    #plot contours, if any.  type 1 = contours_raw (blue), type 2 = contours_inc (green)
-    for n, contour in enumerate(contours_inc):
-        ax.plot(contour[:, 1], contour[:, 0], linewidth=lw, c='g', zorder=2)
-    for n, contour in enumerate(contours_raw):
-        ax.plot(contour[:, 1], contour[:, 0], linewidth=lw, c='b', zorder=2)
+#     #plot contours, if any.  type 1 = contours_raw (blue), type 2 = contours_inc (green)
+#     for n, contour in enumerate(contours_inc):
+#         ax.plot(contour[:, 1], contour[:, 0], linewidth=lw, c='g', zorder=2)
+#     for n, contour in enumerate(contours_raw):
+#         ax.plot(contour[:, 1], contour[:, 0], linewidth=lw, c='b', zorder=2)
 
-    #plot tips, if any
-    s1_values, s2_values, y_values, x_values = tips
-    #     if len(n_values)>0:
-    for j in range(len(x_values)): 
-        ax.scatter(x = x_values[j], y = y_values[j], c='yellow', s=int(max_marker_size/(j+1)), zorder=3, marker = '*')
-    return fig
+#     #plot tips, if any
+#     s1_values, s2_values, y_values, x_values = tips
+#     #     if len(n_values)>0:
+#     for j in range(len(x_values)): 
+#         ax.scatter(x = x_values[j], y = y_values[j], c='yellow', s=int(max_marker_size/(j+1)), zorder=3, marker = '*')
+#     return fig
 
 # def get_lifetime(trajectory_list):
 #     '''trajectory_list is a list of lists.  
@@ -140,7 +140,7 @@ def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, figsize=(15,
 
 
 
-def process_tip_log_file(input_fn):
+def process_tip_log_file(input_fn, include_EP=False):
     '''input = file of tip log. returns pandas dataframe of tips.'''
     assert(os.path.exists(input_fn))
     df_input = pd.read_csv(input_fn)
@@ -154,16 +154,37 @@ def process_tip_log_file(input_fn):
         y_lst = eval(row['y'])
         s1_lst = eval(row['s1'])
         s2_lst = eval(row['s2'])
+        if include_EP:
+            states_nearest_lst = eval(row['states_nearest'])
+            states_interpolated_linear_lst = eval(row['states_interpolated_linear'])
+            states_interpolated_cubic_lst = eval(row['states_interpolated_cubic'])
         n = len(x_lst)
-        for x,y,s1,s2 in zip(x_lst,y_lst,s1_lst,s2_lst):
-            s = (s1,s2)
-            datum = {'t': float(np.around(t, time_sig_figs)),
-                        'x': x,
-                        'y': y,
-                        's1': tuple(s1),
-                        's2': tuple(s2),
-                        'n':n}
-            data_list.append(datum)
+        if not include_EP:
+            for x,y,s1,s2 in zip(x_lst,y_lst,s1_lst,s2_lst):
+                s = (s1,s2)
+                datum = {'t': float(np.around(t, time_sig_figs)),
+                            'x': x,
+                            'y': y,
+                            's1': tuple(s1),
+                            's2': tuple(s2),
+                            'n':n}
+                data_list.append(datum)
+        else:
+            for x,y,s1,s2, sn,sil,sic in zip(x_lst,y_lst,s1_lst,s2_lst, 
+                states_nearest_lst, states_interpolated_linear_lst,
+                states_interpolated_cubic_lst):
+                # s = (s1,s2)
+                datum = {'t': float(np.around(t, time_sig_figs)),
+                            'x': x,
+                            'y': y,
+                            's1': tuple(s1),
+                            's2': tuple(s2),
+                            'n':n,
+                            'states_nearest': tuple(sn),
+                            'states_interpolated_linear':tuple(sil),
+                            'states_interpolated_cubic':tuple(sic)
+                            }
+                data_list.append(datum)
     df_output = pd.DataFrame(data_list)
     return df_output
 
