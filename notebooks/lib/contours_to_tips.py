@@ -4,8 +4,6 @@
 #UCSD
 #8.4.2020
 import pandas as pd, numpy as np
-from scipy.interpolate import interp2d
-
 
 
 #########################################################################

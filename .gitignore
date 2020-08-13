@@ -10,6 +10,7 @@ notebooks/Figures/
 # Log files
 # notebooks/Data/**/Log/*
 notebooks/Data/ds_5_param_set_8/*.pdf
+notebooks/Data/ds_5_param_set_8/
 
 # Distribution / packaging
 .Python

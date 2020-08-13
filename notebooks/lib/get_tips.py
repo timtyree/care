@@ -339,8 +339,9 @@ def get_state_interpolated(x, y, txt, nanstate, xcoord_mesh, ycoord_mesh,
 #     get_state_interpolated(x, y, txt.astype('float32'), nanstate, xcoord_mesh, ycoord_mesh,
 #                           channel_no = 3, rad = 0.5, kind='linear') 
 #       )
-
-
+##############################################
+##  Get Electrophysiological (EP) State Data #
+##############################################
 def get_states(tips_mapped, txt, pad,
               nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
     '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
@@ -366,3 +367,29 @@ def add_states(tips_mapped, states_EP):
     tips_mapped.extend(states_EP)
     return tuple(tips_mapped)
     
+def unwrap_EP(df, 
+              EP_col_name = 'states_interpolated_linear', 
+              drop_original_column=False):
+    '''If this function is slow, it may be a result of df[EP_col_name] containing  strings.'''
+    EP_col_exists =  EP_col_name in df.columns.values
+    if not EP_col_exists:
+        print(f"Caution! EP_col_name '{EP_col_exists}' does not exist. Returning input df.")
+        return df
+    else:
+        V_lst = []
+        f_lst = []
+        s_lst = []
+        for index, row in df.iterrows():
+            try:
+                V,f,s = row[EP_col_name]
+            except Exception as e:
+                V,f,s = eval(row[EP_col_name])
+            V_lst.append(V)
+            f_lst.append(f)
+            s_lst.append(s)
+        df['V'] = V_lst
+        df['f'] = f_lst
+        df['s'] = s_lst   
+        df.drop(columns=[EP_col_name], inplace=True)
+        return df
+
