@@ -1,0 +1,5 @@
+# file params.yaml
+prepare:
+    categories:
+        - comp.graphics
+        - sci.space
