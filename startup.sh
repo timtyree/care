@@ -1,7 +1,8 @@
 #!/bin/bash
 #install data version control
-mkdir dvc_tutorial
-cd dvc_tutorial
+# TODO: finish getting this to work using dvc. Hint: https://towardsdatascience.com/the-ultimate-guide-to-building-maintainable-machine-learning-pipelines-using-dvc-a976907b2a1b
+# mkdir tutorial
+# cd tutorial
 python3 -m venv .env
 #run the following line from command line to activate the (.env)
 source .env/bin/activate

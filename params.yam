@@ -3,3 +3,5 @@ prepare:
     categories:
         - comp.graphics
         - sci.space
+    train:
+    	alpha: 0.1

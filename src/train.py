@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 #TODO: update with fit_poisson.py on a train.pkl file containing the termination times of spiral defect chaos
 import sys
 import os
