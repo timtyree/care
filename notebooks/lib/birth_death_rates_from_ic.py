@@ -1,7 +1,8 @@
-#!/bin/bash/env python3
+#! /usr/bin/env python
 # Generate Birth Death Rates for Given Initial Conditions
 # Tim Tyree
 # 8.11.2020
+#TODO: test this works from an .ipynb
 
 # __bare minimum is this plus plotting the output by 3pm tomorrow__
 # - TODO: remove the redundant beginning of track_tip_trajectories
@@ -11,14 +12,12 @@
 # - DONE: clean up these sections.  remove uneeded comments, redundant code
 # - DONE: save birth death rates to a file named according to all of the relevant parameters in a special folder. don't delete the last entry! it gives the termination time!
 # - DONE: move all parameters to the beginning of the notebook
-# - TODO: move notebook contents to sublimetext and call on a list of functions!
-# - TODO: make EP fields spread out into their own fields in the trajectories
+# - DONE: move notebook contents to sublimetext and call on a list of functions!
+# - DONE: make EP fields spread out into their own fields in the tip locations
 # - TODO: change the print statements to print to a log file 
 # - TODO: smooth out the filenames in sublimeText
 # - DONE: make asserting=True by default. (optional) make beeping=True by default
-# - TODO: make ext incrementing work again.  keep it simple, stupid!
-# __and then,__ 
-# run all nine grid squares, 
+# - TODO: make ext incrementing work again.  keep it simple, stupid!  Hint: try using operari.get_trailing_number?
 
 #pylab
 # %matplotlib inline
@@ -398,9 +397,16 @@ def postprocess_tip_logs(tip_log_dir, **kwargs):
 	#save the tip positions expanded into rows
 	df_output = process_tip_log_file(tip_log_dir, include_EP=True, include_nonlinear_EP=False)
 
+	#expand the EP data into its own columns
+	df_output = unwrap_EP(df_output, 
+				   EP_col_name = 'states_interpolated_linear',
+				   drop_original_column=False).copy()
+
+	#save the tip positions to csv
 	df_output.to_csv(tip_position_dir, index=False)
 	if printing:
 		print(f"and the resulting \"_processed.csv\" was supplanted herein:\n\t{tip_position_dir}")
+
 	return tip_position_dir
 
 ############################################################        

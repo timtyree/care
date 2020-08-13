@@ -102,6 +102,7 @@ def count_tips(x_list):
 	return str(x_list).count('.')
 
 def find_files(filename, search_path):
+	'''recursively search everywhere inside of search_path and return all files matching filename.'''
 	result = []
 	for root, dir, files in os.walk(search_path):
 		if filename in files:
@@ -109,7 +110,9 @@ def find_files(filename, search_path):
 	return result
 
 def find_file(**kwargs):
+	'''recursively search everywhere inside of search_path for filename.  Returns the first found.  This could be optimized with a greedy algorithm.'''
 	return find_files(**kwargs)[0]
+
 # def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, dpi, figsize=(15,15)):
 
 # def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, figsize=(15,15), max_marker_size=800, lw=2):
@@ -257,3 +260,62 @@ def convert_nb(nbname):
 # if __name__ == "__main__":
 # 	for nbname in sys.argv[1:]:
 # 		convert_nb(nbname)
+
+###############################################################################
+### Initial Conditions IO (ic)using .bz2 for potentially faster/more efficient array compression
+###############################################################################
+#consider using a hdf5 file structure to efficiently store numpy arrays using hickle!
+class I0_File(object):
+	"""Describe the class"""
+	def __init__(self, folder, file_name):
+		os.chdir(folder)
+		f= open(file_name,"ab") #write to binary file: 'wb' ) )
+		data = read_array(f)
+		self.data = data
+		# for i in range(10):
+		#   f.write("This is line %d\r\n" % (i+1))
+		f.close()
+		self.folder = folder
+		self.file_name = file_name
+		self.precision = _precision(arr)
+		self.dtype = _dtype(arr)
+		self.width = None
+		self.height= None
+		self.xres = None
+		self.yres = None
+		
+	def shape(self):
+		return np.array((self.width,self.height), dtype=np.int)
+	def area(self):
+		shape = self.shape()
+		da = self.xres()*self.yres()
+		return da*shape[0]*shape[1]
+	
+# - TODO: see whether this compressed array format can store 3 channels of float instances at each pixel
+# def compress_array(array, save_file='data.pkl.lzma'):
+#     '''array is a numpy array.'''
+#     import pickle, gzip, lzma, bz2
+#     data = array
+#     # pickle.dump( data, gzip.open( 'data.pkl.gz',   'wb' ) ) # inferior to lzma
+#     pickle.dump( data, lzma.open( save_file, 'wb' ) )
+#     # pickle.dump( data,  bz2.open( 'data.pkl.bz2',  'wb' ) ) # inferior to lzma
+# def append_array(array, save_file='data.pkl.lzma'):
+#     '''array is a numpy array.'''
+#     import pickle, gzip, lzma, bz2
+#     data = array
+#     # pickle.dump( data, gzip.open( 'data.pkl.gz',   'wb' ) ) # inferior to lzma
+# #     pickle.dump( data, lzma.open( save_file, 'ab' ) ) # slightly smaller file size
+#     pickle.dump( data,  bz2.open( 'data.pkl.bz2',  'wb' ) ) # better loading speed for non-random numpy arrays
+
+# There also is the possibility to "pickle" directly into a compressed archive by doing:
+# import hickle as hkl 
+# data = { 'name' : 'test', 'data_arr' : [1, 2, 3, 4] }
+# # Dump data to file
+# hkl.dump( data, 'new_data_file.hkl' )
+# # Load data from file
+# data2 = hkl.load( 'new_data_file.hkl' )
+# print( data == data2 )    
+
+
+
+
