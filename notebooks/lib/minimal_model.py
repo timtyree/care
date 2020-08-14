@@ -80,7 +80,8 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	ds_y   = 5 # 18
 
 	# dt = 0.1
-	diffCoef = 0.001 # cm^2 / ms
+	diffCoef = 0.0005 # cm^2 / ms
+	# diffCoef = 0.001 # cm^2 / ms
 	#^this is the most commonly used value in the literature, but it assumes a surface to volume ratio of 5000/ cm, corresponding to a fairly small cell radius of around 4 􏰎m.
 	#^quoth Fenton & Cherry (2002)
 	C_m      = 1.000  # 􏰎microFarad/cm^2 
@@ -233,7 +234,8 @@ def current_at_pixel (inVfs, x, y):#, h):
 	height = int(inVfs.shape[1])
 	ds_x   = 5#18#5#18 #domain size
 	ds_y   = 5#18#5#18
-	diffCoef = 0.001
+	diffCoef = 0.0005
+	# diffCoef = 0.001
 	C_m = 1.0
 
 	#nonchaos parameters

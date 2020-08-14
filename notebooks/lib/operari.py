@@ -7,6 +7,19 @@ import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
 from tkinter import filedialog, Tk
 from glob import glob
 
+def init_filesystem_bd(base_folder, results_folder = 'ds_5_param_set_8', subfolder_list = None):
+	if subfolder_list is None:
+		subfolder_list = ('birth-death-rates', 'trajectories', 'Log')
+	os.chdir(base_folder)
+	os.mkdir(results_folder)
+	os.chdir(results_folder)
+	for folder in subfolder_list:
+		os.mkdir(folder)
+	os.chdir(base_folder)
+	return True
+
+
+
 def get_trailing_number(search_text):
 	search_obj = re.search(r"([0-9]+)$", search_text)
 	if not search_obj:
