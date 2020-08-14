@@ -593,7 +593,7 @@ def compute_birth_death_rates(data_fn_trajectories, **kwargs):
 			y_values = df.query('dn==-2').rates
 			ax.scatter(x=x_values,y=y_values, c='r', label='$W_{-2}$')
 
-			ax.set_legend(fontsize=fontsize-8)
+			ax.legend(fontsize=fontsize-8)
 			ax.set_xlabel('n/2', fontsize=fontsize)
 			ax.set_ylabel('rate (ms$^{-1}$)', fontsize=fontsize)
 			return data_fn_bdrates, fig
@@ -603,9 +603,9 @@ def _get_kwargs(ic):
 	kwargs = {
 		'beeping':(beeping   := False), 
 		'asserting':(asserting := False), 
-		'printing':(printing  := False), 
+		'printing':(printing  := True), 
 		'plotting':(plotting  := False),  #TODO: test when plotting=True
-		'logging':(logging  := False),
+		'logging':(logging  := True),
 		'sigma':(sigma       := 1.5),  #pixels
 		'threshold':(threshold   := 0.6),  #unitless 0 to 1
 		'V_threshold':(V_threshold := 0.5),  #unitless 0 to 1
@@ -613,7 +613,7 @@ def _get_kwargs(ic):
 		'pad':(pad := 5), 
 		'atol':(atol := 1e-11), 
 		'color_values':(color_values := None), 
-		'h':(h := 0.001), #0.0014), ##0.007), #milliseconds
+		'h':(h := 0.1), #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
 		'nsteps':(nsteps := 1*10**6), 
 		'save_every_n_frames':(save_every_n_frames := 100), 
 		'max_time':(max_time := h*nsteps),  #milliseconds
@@ -696,6 +696,9 @@ def _get_kwargs(ic):
 	# 	print( f"Will integrate up to no later than time = {max_time:.2f} milliseconds.")
 
 	return kwargs
+
+def get_kwargs(ic):
+	return _get_kwargs(ic)
 
 ################################        
 ###### MAIN ROUTINES ############
