@@ -1,9 +1,10 @@
-Radial Chemotaxis simulation
+Atrial Fibrillation Simulation
+Computing the Birth-Death Rates of Spiral Tips with a Novel Tip Detection Method
 Tim Tyree
 UCSD - Rappel Lab
-4.8.2020
+8.14.2020
 
-
+The following is a how-to-use-osg-guide for present Tim by past Tim.
 <!-- #log onto osg connect (which has nice tutorials) -->
 $ ssh TimtheTyrant@login05.osgconnect.net
 #enter password (hint:check phone, it's same as for cmail pass)
@@ -37,26 +38,26 @@ $ condor_submit pde-sim.submit
     Submitting job(s)..........
     10 job(s) submitted to cluster 329837.
 
-Apply your `condor_q` and `connect watch` knowledge to see this job progress. After all 
-jobs finished, execute the `post_script.sh  script to sort the results. 
+Apply your `condor_q` and `connect watch` knowledge to see this job progress. After all
+jobs finished, execute the `post_script.sh  script to sort the results.
 
     ./post_process.sh
-    or 
+    or
     ./post_script.sh
 
 <!--queue command tricks-->
 <!-- arguments = $(x_low) $(x_high) $(y_low) $(y_high)
 # Queue command  list
 queue x_low, x_high, y_low, y_high from (
--9 9 -9 9 
--8 8 -8 8 
--7 7 -7 7 
--6 6 -6 6 
--5 5 -5 5 
--4 4 -4 4 
--3 3 -3 3 
--2 2 -2 2 
--1 1 -1 1 
+-9 9 -9 9
+-8 8 -8 8
+-7 7 -7 7
+-6 6 -6 6
+-5 5 -5 5
+-4 4 -4 4
+-3 3 -3 3
+-2 2 -2 2
+-1 1 -1 1
 )
 
 # Queue from file
