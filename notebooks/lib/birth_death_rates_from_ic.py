@@ -3,7 +3,8 @@
 # Tim Tyree
 # 8.11.2020
 #TODO: test this works from an .ipynb
-
+# - TODO: make kwargs accessable from the main function call
+# - TODO: learn how to send different ic to each node on the OSG
 # - TODO: make positions/ folder and separate Log/ from positions/.
 # - TODO: consider switching to a different log file for each routine function call
 # - DONE: remove the redundant beginning of track_tip_trajectories
