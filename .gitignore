@@ -12,6 +12,9 @@ notebooks/Figures/
 notebooks/Data/ds_5_param_set_8/*.pdf
 notebooks/Data/ds_5_param_set_8/
 notebooks/Data/initial-conditions-suite-1/
+notebooks/Data/initial-conditions-suite-2/ic-wj/
+notebooks/Data/initial-conditions-suite-2/ic-in/
+notebooks/Data/initial-conditions-suite-2/ic-out/
 
 # Distribution / packaging
 .Python

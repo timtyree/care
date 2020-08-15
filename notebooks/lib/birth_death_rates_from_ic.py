@@ -15,7 +15,7 @@
 # - DONE: make EP fields spread out into their own fields in the tip locations
 # - DONE: parallelize birth_death_rates_from_ic for a list of initial conditions using dask.  (develop the dask part first in an .ipynb, then apply the dask part by calling the functionally in birth_death_rates_from_ic.py)
 # - DONE: make the filename handling sensible
-# - TODO: change the print statements to print to a log file 
+# - TODO: change the print statements to print to a log file
 # - TODO: smooth out the filenames in sublimeText
 # - DONE: make asserting=True by default. (optional) make beeping=True by default
 # - TODO(this shouldn't be needed): make ext incrementing work again.  keep it simple, stupid!  Hint: try using operari.get_trailing_number?
@@ -68,14 +68,14 @@ from lib.tracking import link
 # # search_for_file()
 
 
-############################################        
+############################################
 ###### START PARAMETER COMMENTS ############
 ############################################
 #the given parameters
 # #printing/testing parameters
 # beeping   = True
 # asserting = True
-# printing  = True 
+# printing  = True
 # plotting  = False
 
 # #define parameters for tip detection
@@ -108,8 +108,8 @@ from lib.tracking import link
 # #this saving overwrites the current save_file.  I check ahead of time that this won't happen with a "Caution! ... " print statement
 # save = True
 
-# #define parameters for tip tracking 
-# mem = 2 
+# #define parameters for tip tracking
+# mem = 2
 # sr  = 40 #?works sampling every 100 frames
 # # sr  = 1 #works sampling every frame
 
@@ -148,7 +148,7 @@ def blockPrint():
 def enablePrint():
 	sys.stdout = sys.__stdout__
 
-####################################        
+####################################
 ######## GENERATE TIP LOGS  ########
 ####################################
 def generate_tip_logs(initial_condition_dir, **kwargs):
@@ -157,9 +157,10 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 	# 	log = open(kwargs['print_log_dir'], "a")
 	# 	sys.stdout = log
 	logging = kwargs['logging']
-	if (printing := kwargs['printing']):
+	printing = kwargs['printing']
+	if printing:
 		print(f'loading initial conditions from: \n\t{initial_condition_dir}.')
-	
+
 	os.chdir(nb_dir)
 	txt = load_buffer(initial_condition_dir)
 	width, height, channel_no = txt.shape
@@ -170,18 +171,22 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 		})
 	#reinitialize records
 	time_start = 0.  #eval(buffer_fn[buffer_fn.find('time_')+len('time_'):-4])
-	if (asserting := kwargs['asserting']):
+	asserting = kwargs['asserting']
+	if asserting:
 		assert (float(time_start) is not None)
 	tip_state_lst = []
 	tme = time_start
 
 	#change directory to where results are logged
-	os.chdir((save_folder := kwargs['data_folder_log']))
-	if (printing := kwargs['printing']):
+	save_folder = kwargs['data_folder_log']
+	os.chdir(save_folder)
+	printing = kwargs['printing']
+	if printing:
 		print(f"changed directory to save_folder: \n\t{save_folder}.")
 
 	#precompute the _padded_ mesh coordinates
-	ycoord_mesh, xcoord_mesh = np.meshgrid(np.arange(0,txt.shape[0]+2*(pad := kwargs['pad'])),np.arange(0,txt.shape[0]+2*pad))
+	pad = kwargs['pad']
+	ycoord_mesh, xcoord_mesh = np.meshgrid(np.arange(0,txt.shape[0]+2*(pad)),np.arange(0,txt.shape[0]+2*pad))
 	nanstate = [np.nan,np.nan,np.nan]
 	channel_no = 3
 
@@ -194,7 +199,8 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 	####This section may be skipped
 	# check all the functions work and compile the needed functions just in time
 	zero_txt = txt.copy()*0.
-	time_step(txt, h=(h := kwargs['h']), zero_txt=zero_txt)
+	h = kwargs['h']
+	time_step(txt, h=h, zero_txt=zero_txt)
 
 	width, height, channel_no = txt.shape
 	zero_txt = np.zeros((width, height, channel_no), dtype=np.float64)
@@ -203,19 +209,23 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 
 	#calculate contours and tips after enforcing pbcs
 	img_nxt = txt[..., 0]#padded_txt#
-	img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages 
-	img_inc = filters.gaussian(img_inc,sigma=( sigma := kwargs['sigma']) , mode='wrap') 
+	img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
+	sigma = kwargs['sigma']
+	img_inc = filters.gaussian(img_inc,sigma=sigma , mode='wrap')
 	img_nxt_unpadded = img_nxt.copy()
 	img_inc_unpadded = img_inc.copy()
 
 	img_nxt, img_inc = matrices_to_padded_matrices(img_nxt_unpadded, img_inc_unpadded,pad=pad)
 	txt_padded, dtexture_dt_padded = matrices_to_padded_matrices(txt, dtexture_dt,pad=pad)
-
-	contours_raw = measure.find_contours(img_nxt, level=(V_threshold:= kwargs['V_threshold']),fully_connected='low',positive_orientation='low')
-	contours_inc = measure.find_contours(img_inc, level=(threshold  := kwargs['threshold']))
+	V_threshold= kwargs['V_threshold']
+	threshold  = kwargs['threshold']
+	contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
+	contours_inc = measure.find_contours(img_inc, level=threshold)
 	tips  = get_tips(contours_raw, contours_inc)
-	tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height, 
-					  edge_tolerance=( edge_tolerance := kwargs['edge_tolerance']), atol = (atol := kwargs['atol']) )
+	edge_tolerance = kwargs['edge_tolerance']
+	atol = kwargs['atol']
+	tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height,
+					  edge_tolerance=edge_tolerance, atol = atol)
 	n_old = count_tips(tips_mapped[2])
 
 	#extract local EP field values for each tip
@@ -244,8 +254,8 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 		# print(f"""the topological tip state:{tips[0]}""")
 		# print(f"""x position of tips: {tips[1]}""")
 		# print(f"""y position of tips: {tips[2]}""")
-
-	if (plotting := kwargs['plotting']):
+	plotting = kwargs['plotting']
+	if plotting:
 		#plot texture contours and tips. oh my!
 		# img_nxt_unpadded = img_nxt[pad:-pad,pad:-pad]
 		# img_inc_unpadded = img_inc[pad:-pad,pad:-pad]
@@ -255,7 +265,7 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 		# #print texture information
 		# describe(txt)
 
-		fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped, 
+		fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped,
 						  figsize=(5,5),max_marker_size=400, lw=1, color_values=color_values);
 		plt.show()
 		# plt.close()
@@ -280,32 +290,32 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 			#calculate discrete flow map
 			dtexture_dt = zero_txt.copy()
 			get_time_step(txt, dtexture_dt)
-			
-			#pad texture for saving view 
+
+			#pad texture for saving view
 			padded_txt, dpadded_txt_dt = textures_to_padded_textures(txt, dtexture_dt,pad=pad)
-			
+
 			#integrate explicitely in time by the forward euler method
 			txt += h*dtexture_dt
 			tme += h
-			
+
 			#calculate contours and tips after enforcing pbcs
 			img_nxt = txt[..., 0]#padded_txt#
-			img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages 
-			img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap') 
+			img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
+			img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap')
 			img_nxt_unpadded = img_nxt.copy()
 			img_inc_unpadded = img_inc.copy()
 			img_nxt, img_inc = matrices_to_padded_matrices(img_nxt_unpadded, img_inc_unpadded,pad=pad)
 			contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
 			contours_inc = measure.find_contours(img_inc, level=threshold)
 			tips  = get_tips(contours_raw, contours_inc)
-			tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height, 
+			tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height,
 							  edge_tolerance=edge_tolerance, atol = atol)
 
 			#extract local EP field values for each tip
 			states_EP = get_states(tips_mapped, txt, pad, nanstate, xcoord_mesh, ycoord_mesh, channel_no = channel_no)
 			tips_mapped = add_states(tips_mapped, states_EP)
 
-			#record spiral tip locations 
+			#record spiral tip locations
 			s1_lst, s2_lst, x_lst, y_lst, states_nearest, states_interpolated_linear, states_interpolated_cubic = tips_mapped
 			tip_state_lst.append({
 						't': float(tme),
@@ -327,13 +337,13 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 	#             'states_interpolated_linear': tuple(states_interpolated_linear),
 	#             'states_interpolated_cubic': tuple(states_interpolated_cubic),
 	#         })
-			
-			#determine if an odd number of tips were born        
+
+			#determine if an odd number of tips were born
 			n = count_tips(tips_mapped[2]) #counts the number of '.' in the nested list of x positions or just a normal list
 			dn = n - n_old
 			n_old = n
-			
-			#save the state if save_state is True 
+
+			#save the state if save_state is True
 			#save_state = recording_if_odd & odd_event & odd_tip_number # ==> odd birth/death event has just occurred
 			save_state = recording_if_odd & (dn%2!=0) & (n%2!=0)
 			if save_state:
@@ -344,7 +354,7 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 				contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=threshold)
 				if printing:
 					print(f'odd tip spotted at time {tme:.3f}! dn={dn} and n={n}...')
-				fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped, 
+				fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped,
 								  figsize=(5,5), max_marker_size=200, lw=1, color_values = None);
 				fig.savefig(f'plot_of_n_{n}_dn_{dn}_for_{descrip}_at_time_{tme:.1f}.pdf', bbox_inches='tight',pad_inches=0);
 				plt.close();
@@ -357,7 +367,7 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 			stop_early = (n==0) & (step>100) #np.max(txt[...,0])<0.1
 			if stop_early:
 				if printing:
-					print(f'\nmax voltage is {np.max(txt[...,0]):.4f}.') 
+					print(f'\nmax voltage is {np.max(txt[...,0]):.4f}.')
 					print(f"tip number = {n}.  stopping simulation at time t={tme:.3f}. please record domain size.")
 				break
 		if not logging:
@@ -382,14 +392,16 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 			print(f"\n number of type 1 contour = {len(contours_raw)},\tnumber of type 2 contour = {len(contours_inc)},")
 			print(f"the number of tips are {count_tips(tips_mapped[2])}.")
 			#     print(f"""the topological tip state is the following:{tips[0]}""")
-	if (beeping := kwargs['beeping']):
+	beeping = kwargs['beeping']
+	if beeping:
 		beep(1)
-
+	max_time = kwargs['max_time']
 	if printing:
-		if tme >= ((max_time := kwargs['max_time'])):
+		if tme >= max_time:
 			print( f"Caution! max_time was reached! Termination time not reached!  Consider rerunning with greater n_steps!")
 	tip_log_dir = kwargs['data_dir_log']
-	if (save := kwargs['save']):
+	save = kwargs['save']
+	if save:
 		df = pd.DataFrame(tip_state_lst)
 		df.to_csv(tip_log_dir, index=False)
 	#     df.to_csv(f'{nb_dir}/Data/tip_log_{descrip}_at_time_{tme:.1f}.csv', index=False)
@@ -398,45 +410,50 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 		print(tip_log_dir)
 	# print(f'Data/tip_log__{descrip}_at_time_{tme:.1f}.csv')
 	return tip_log_dir, kwargs
-##########################################################        
+##########################################################
 ######## POSTPROCESSING TIP LOGS TO TIP LOCATIONS ########
 ##########################################################
 def postprocess_tip_logs(tip_log_dir, **kwargs):
 	# if kwargs['logging']:
 	# 	log = open(kwargs['print_log_dir'], "a")
 	# 	sys.stdout = log
-	os.chdir((save_folder := kwargs['data_folder_log']))
-	if (printing := kwargs['printing']):
+	save_folder = kwargs['data_folder_log']
+	os.chdir(save_folder)
+	printing = kwargs['printing']
+	if printing:
 		print(str(os.path.exists(tip_log_dir))+" it is that the file to be post processed exists,")
 
 	#save the tip positions expanded into rows
 	df_output = process_tip_log_file(tip_log_dir, include_EP=True, include_nonlinear_EP=False)
 
 	#expand the EP data into its own columns
-	df_output = unwrap_EP(df_output, 
+	df_output = unwrap_EP(df_output,
 				   EP_col_name = 'states_interpolated_linear',
 				   drop_original_column=False).copy()
 
 	#save the tip positions to csv
-	df_output.to_csv((tip_position_dir:= kwargs['data_dir_tips']), index=False)
+	tip_position_dir= kwargs['data_dir_tips']
+	df_output.to_csv(tip_position_dir, index=False)
 	if printing:
 		print(f"and the resulting \"_processed.csv\" was supplanted herein:\n\t{tip_position_dir}")
 
 	return tip_position_dir
 
-############################################################        
+############################################################
 ######## TRACKING TIP LOCATIONS TO TIP TRAJECTORIES ########
 ############################################################
 def track_tip_trajectories(tip_position_dir, **kwargs):
 	# if kwargs['logging']:
 	# 	log = open(kwargs['print_log_dir'], "a")
 	# 	sys.stdout = log
-	if (printing := kwargs['printing']):
+	printing = kwargs['printing']
+	if printing:
 		print(f"loading .csv of size [?? {2*sys.getsizeof(tip_position_dir)} KB ??] from \n\t{tip_position_dir}")
 
 	#load processed df with tips as rows
 	df = pd.read_csv(tip_position_dir)
-	fn = (data_fn_tips := kwargs['data_fn_tips']) # tip_position_dir.split('/')[-1]
+	data_fn_tips = kwargs['data_fn_tips']
+	fn = data_fn_tips # tip_position_dir.split('/')[-1]
 	# # descrip = fn[:fn.find('_processed.csv')]
 	# threshold = eval(fn[fn.find('threshold_')+len('threshold_'):].split('_')[0])
 	# ds = eval(fn[fn.find('ds_')+len('ds_'):].split('_')[0])
@@ -445,13 +462,15 @@ def track_tip_trajectories(tip_position_dir, **kwargs):
 	# 	print(f"params inferred from filename: (ds,sigma,threshold) = {(ds,sigma,threshold)}")
 
 	#import tip positions
-	os.chdir(save_folder_traj := kwargs['data_folder_traj'])
+	save_folder_traj = kwargs['data_folder_traj']
+	os.chdir(save_folder_traj)
 	if printing:
 		print(f"files will be saved in the folder: \n\t{save_folder_traj}")
 
 	# test data has no odd spiral tips since the data has periodic boundary conditions
 	no_odd_spiral_tips_exist = not (np.array(list(set(df.n.values)))%2==1).any()
-	if (asserting := kwargs['asserting']):
+	asserting = kwargs['asserting']
+	if asserting:
 		assert (no_odd_spiral_tips_exist)
 	if printing:
 		if not no_odd_spiral_tips_exist:
@@ -471,24 +490,27 @@ def track_tip_trajectories(tip_position_dir, **kwargs):
 	# track tip trajectories
 	# width  = txt.shape[0] #0 may be switched with 1 here
 	# height = txt.shape[1]
-
-	distance_L2_pbc = get_distance_L2_pbc(width=(width:=kwargs['width']),height=(height:=kwargs['height']))
+	width=kwargs['width']
+	height=kwargs['height']
+	sr=kwargs['sr']
+	mem=kwargs['mem']
+	distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
 	link_kwargs = {
 		'neighbor_strategy' : 'BTree',
 		'dist_func'         : distance_L2_pbc,
-		'search_range': (sr:=kwargs['sr']),
-		'memory': (mem:=kwargs['mem']),
+		'search_range': sr),
+		'memory': mem,
 		'adaptive_stop': 2.0,  #stop decreasing search_range at 2
 		'adaptive_step': 0.95  #if subnet overflow error is thrown, retry with a smaller search_range
 		}
 
 	#use my version of trackpy.link_df with their terrible logging shut off.
 	traj = link(f=df,t_column='frame', verbose=False, **link_kwargs)
-	
+
 	# screw trackpy's logging shit.
 	# # if not printing:
 	# # 	blockPrint()
-	# blockPrint()	
+	# blockPrint()
 	# traj = trackpy.link_df(
 	# 	f=df,t_column='frame', **link_kwargs)
 	# if kwargs['logging']:
@@ -499,7 +521,8 @@ def track_tip_trajectories(tip_position_dir, **kwargs):
 
 
 	# save trajectories to csv
-	traj.to_csv((data_fn_traj:=kwargs['data_fn_traj']), index=False)
+	data_fn_traj=kwargs['data_fn_traj']
+	traj.to_csv(data_fn_traj, index=False)
 	if printing:
 		print (f"data_df_traj: {data_fn_traj}")
 
@@ -509,7 +532,7 @@ def track_tip_trajectories(tip_position_dir, **kwargs):
 
 	return data_fn_traj
 
-############################################################        
+############################################################
 ######## COMPUTING BIRTH DEATH RATES########################
 ############################################################
 def compute_birth_death_rates(data_fn_trajectories, **kwargs):
@@ -519,15 +542,18 @@ def compute_birth_death_rates(data_fn_trajectories, **kwargs):
 	#filter trajectories and compute the (filtered) spiral tip number as a function of time. store in df
 	data_fn_traj = data_fn_trajectories#kwargs['data_fn_traj']
 	#import most recent tip trajectory data and the corresponding raw tips
-	if (printing:=kwargs['printing']):
+	printing=kwargs['printing']
+	if printing:
 		print (f"loading trajectories from data_fn_traj: {data_fn_traj}.")
-		
+
 	#import most recent tip trajectory data and the corresponding raw tips
-	os.chdir((data_folder_traj:=kwargs['data_folder_traj']))
+	data_folder_traj=kwargs['data_folder_traj']
+	os.chdir(data_folder_traj)
 	df = pd.read_csv(data_fn_traj)
 
 	# select only data after tmin milliseconds
-	df = df[df.t>(tmin:=kwargs['tmin'])].copy()
+	tmin=kwargs['tmin']
+	df = df[df.t>tmin].copy()
 
 	#naive computation of lifetime for a given tip
 	def get_lifetime(pid,df):
@@ -570,16 +596,19 @@ def compute_birth_death_rates(data_fn_trajectories, **kwargs):
 		# df.dropna(inplace=True) #this gets rid of the termination time datum.  we want that!
 
 		#save birth death rates to a file named according to all of the relevant parameters in a special folder.
-		os.chdir((birth_death_dir:=kwargs['data_folder_bdrates']))
+		birth_death_dir=kwargs['data_folder_bdrates']
+		os.chdir(birth_death_dir)
 		df.index.rename('index', inplace=True)
-		df.to_csv((data_fn_bdrates:=kwargs['data_fn_bdrates']))
+		data_fn_bdrates=kwargs['data_fn_bdrates']
+		df.to_csv(data_fn_bdrates)
 
 		if printing:
 			print (f"birth death rates successfully saved in: {data_fn_bdrates}")
-		if (beeping:=kwargs['beeping']):
+		beeping=kwargs['beeping']
+		if beeping:
 			beep(3)
-
-		if (plotting:=kwargs['plotting']):
+		plotting=kwargs['plotting']
+		if plotting:
 			log_scale = False
 			fontsize=20
 			figsize=(6,5)
@@ -588,7 +617,7 @@ def compute_birth_death_rates(data_fn_trajectories, **kwargs):
 			x_values = df.query('dn==2').n/2
 			y_values = df.query('dn==2').rates
 			ax.scatter(x=x_values,y=y_values, c='g', label='$W_{+2}$')
-			
+
 			x_values = df.query('dn==-2').n/2
 			y_values = df.query('dn==-2').rates
 			ax.scatter(x=x_values,y=y_values, c='r', label='$W_{-2}$')
@@ -600,39 +629,69 @@ def compute_birth_death_rates(data_fn_trajectories, **kwargs):
 		return data_fn_bdrates
 
 def _get_kwargs(ic):
+		beeping   = False
+		asserting = False
+		printing  = True
+		plotting  = False #TODO: test when plotting=True
+		logging  = True
+		sigma       = 1.5 #pixels
+		threshold   = 0.6 #unitless 0 to 1
+		V_threshold = 0.5  #unitless 0 to 1
+		edge_tolerance = 3
+		pad = 5
+		atol = 1e-11
+		color_values = None
+		h = 0.1 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
+		nsteps = 1*10**6
+		save_every_n_frames = 100
+		max_time = h*nsteps  #milliseconds
+		max_buffers_to_save = 0
+		buffers_saved = 0
+		start_saving_buffers_at_step = 0
+		timing = False
+		recording_if_odd = True
+		recording = True
+		descrip = f'sigma_{sigma}_threshold_{threshold}'
+		save = True
+		mem = 2 #frames
+		sr   = 50  #pixels
+		ds=5 #cm #width of square domain
+		tmin = 100#milliseconds
+		LT_thresh = 2 #milliseconds
+
 	kwargs = {
-		'beeping':(beeping   := False), 
-		'asserting':(asserting := False), 
-		'printing':(printing  := True), 
-		'plotting':(plotting  := False),  #TODO: test when plotting=True
-		'logging':(logging  := True),
-		'sigma':(sigma       := 1.5),  #pixels
-		'threshold':(threshold   := 0.6),  #unitless 0 to 1
-		'V_threshold':(V_threshold := 0.5),  #unitless 0 to 1
-		'edge_tolerance':(edge_tolerance := 3), 
-		'pad':(pad := 5), 
-		'atol':(atol := 1e-11), 
-		'color_values':(color_values := None), 
-		'h':(h := 0.1), #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
-		'nsteps':(nsteps := 1*10**6), 
-		'save_every_n_frames':(save_every_n_frames := 100), 
-		'max_time':(max_time := h*nsteps),  #milliseconds
-		'max_buffers_to_save':(max_buffers_to_save := 0), 
-		'buffers_saved_counter':(buffers_saved := 0), 
-		'start_saving_buffers_at_step':(start_saving_buffers_at_step := 0), 
-		'timing':(timing := False), 
-		'recording_if_odd':(recording_if_odd := True), 
-		'recording':(recording := True), 
-		'descrip':(descrip := f'sigma_{sigma}_threshold_{threshold}'), 
-		'save':(save := True),
-		'mem':(mem := 2), #frames
-		'sr':(sr   := 50),  #pixels
-		'ds': (ds:=5), #cm #width of square domain
-		'tmin':(tmin := 100), #milliseconds
-		'LT_thresh':(LT_thresh := 2) #milliseconds
+		'beeping':beeping,
+		'asserting':asserting,
+		'printing':printing,
+		'plotting':plotting,  #TODO: test when plotting=True
+		'logging':logging,
+		'sigma':sigma,  #pixels
+		'threshold':threshold,  #unitless 0 to 1
+		'V_threshold':V_threshold,  #unitless 0 to 1
+		'edge_tolerance':edge_tolerance,
+		'pad':pad,
+		'atol':atol,
+		'color_values':color_values,
+		'h':h , #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
+		'nsteps':nsteps,
+		'save_every_n_frames':save_every_n_frames,
+		'max_time':max_time,  #milliseconds
+		'max_buffers_to_save':max_buffers_to_save,
+		'buffers_saved_counter':buffers_saved,
+		'start_saving_buffers_at_step':start_saving_buffers_at_step,
+		'timing':timing,
+		'recording_if_odd':recording_if_odd,
+		'recording':recording,
+		'descrip':descrip,
+		'save':save,
+		'mem':mem, #frames
+		'sr':sr,  #pixels
+		'ds': ds, #cm #width of square domain
+		'tmin':tmin, #milliseconds
+		'LT_thresh':LT_thresh#milliseconds
 	}
 
-	#(ignore these for now, the file names already encode how the trial was conducted) 
+	#(ignore these for now, the file names already encode how the trial was conducted)
 	# #TODO: determine if any of the output files will be overwritten
 	# if printing:
 	#     print(f"tip_log_dir is: \n\t{data_dir_tips}.")
@@ -700,27 +759,28 @@ def _get_kwargs(ic):
 def get_kwargs(ic):
 	return _get_kwargs(ic)
 
-################################        
+################################
 ###### MAIN ROUTINES ############
 ################################
 def birth_death_rates_from_ic(ic):
-	#get key word arguments 
+	#get key word arguments
 	kwargs = _get_kwargs(ic)
 
-	#update any of the default kwargs here, such as the domain width, 
+	#update any of the default kwargs here, such as the domain width,
 	# kwargs['ds'] = ??
 
 	# if logging, change the print statements to a .log file unique to ic
-	if (logging := kwargs['logging']):
+	logging = kwargs['logging']
+	if logging:
 		log = open(kwargs['print_log_dir'], "a")
 		sys.stdout = log
 
-	# main routine 
+	# main routine
 	tip_log_dir, kwargs      = generate_tip_logs(initial_condition_dir=ic, **kwargs)
 	tip_position_dir = postprocess_tip_logs(tip_log_dir, **kwargs)
 	data_fn_trajectories     = track_tip_trajectories(tip_position_dir, **kwargs)
 	data_fn_bdrates  = compute_birth_death_rates(data_fn_trajectories, **kwargs)
-	
+
 	#move the completed file to ic-out
 	completed_ic_fn = os.path.join(*(kwargs['base_dir'],'ic-out',os.path.basename(ic)))
 	os.rename(ic,completed_ic_fn)
@@ -731,18 +791,18 @@ def birth_death_rates_from_ic(ic):
 	return data_fn_bdrates
 
 # def tip_log_from_ic(ic):
-# 	#get key word arguments 
+# 	#get key word arguments
 # 	kwargs = _get_kwargs(ic)
 
-# 	#update any of the default kwargs here, such as the domain width, 
+# 	#update any of the default kwargs here, such as the domain width,
 # 	# kwargs['ds'] = ??
 
-# 	# main routine 
+# 	# main routine
 # 	tip_log_dir, kwargs      = generate_tip_logs(initial_condition_dir=ic, **kwargs)
 # 	# tip_position_dir = postprocess_tip_logs(tip_log_dir, **kwargs)
 # 	# data_fn_trajectories     = track_tip_trajectories(tip_position_dir, **kwargs)
 # 	# data_fn_bdrates  = compute_birth_death_rates(data_fn_trajectories, **kwargs)
-	
+
 # 	#move the completed file to ic-out
 # 	completed_ic_fn = os.path.join(*(kwargs['base_dir'],'ic-out',os.path.basename(ic)))
 # 	os.rename(ic,completed_ic_fn)
