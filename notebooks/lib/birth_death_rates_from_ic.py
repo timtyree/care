@@ -634,17 +634,17 @@ def _get_kwargs(ic):
 	asserting = False
 	printing  = True
 	plotting  = False #TODO: test when plotting=True
-	logging  = True
+	logging   = True
 	sigma       = 1.5 #pixels
 	threshold   = 0.6 #unitless 0 to 1
 	V_threshold = 0.5  #unitless 0 to 1
-	edge_tolerance = 3#10#3
-	pad = 5#20#5
-	atol = 1e-11#1e-9#1e-11
+	edge_tolerance = 10#3#10#3
+	pad = 20#5#20#5
+	atol = 1e-9#1e-11#1e-9#1e-11
 	color_values = None
-	h = 0.1 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
-	nsteps = 1*10**6
-	save_every_n_frames = 100#10#100
+	h = 0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
+	nsteps = 1*10**7
+	save_every_n_frames = 10#100#10#100
 	max_time = h*nsteps  #milliseconds
 	max_buffers_to_save = 0
 	buffers_saved = 0
