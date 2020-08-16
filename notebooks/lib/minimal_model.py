@@ -177,14 +177,24 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	#     ii = np.array([1,0])  ;
 	#     jj = np.array([0,1])  ;
 	#     gamma = 1./3. ;
-	dVlt2dt = (1. - 1. / 3.) * (
+	
+	#five point stencil
+	dVlt2dt =  (
 		(pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
 		 pbc(inVfs, x - 1, y)[0]) * cddx +
 		(pbc(inVfs, x, y + 1)[0] - 2.0 * C[0] +
-		 pbc(inVfs, x, y - 1)[0]) * cddy) + (1. / 3.) * 0.5 * (
-			 pbc(inVfs, x + 1, y + 1)[0] + pbc(
-				 inVfs, x + 1, y - 1)[0] + pbc(inVfs, x - 1, y - 1)[0] +
-			 pbc(inVfs, x - 1, y + 1)[0] - 4.0 * C[0]) * (cddx + cddy)
+		 pbc(inVfs, x, y - 1)[0]) * cddy)
+
+	# #nine point stencil
+	# dVlt2dt = (1. - 1. / 3.) * (
+	# 	(pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
+	# 	 pbc(inVfs, x - 1, y)[0]) * cddx +
+	# 	(pbc(inVfs, x, y + 1)[0] - 2.0 * C[0] +
+	# 	 pbc(inVfs, x, y - 1)[0]) * cddy) + (1. / 3.) * 0.5 * (
+	# 		 pbc(inVfs, x + 1, y + 1)[0] + pbc(
+	# 			 inVfs, x + 1, y - 1)[0] + pbc(inVfs, x - 1, y - 1)[0] +
+	# 		 pbc(inVfs, x - 1, y + 1)[0] - 4.0 * C[0]) * (cddx + cddy)
+
 	dVlt2dt *= diffCoef
 
 	# /*------------------------------------------------------------------------
