@@ -393,3 +393,29 @@ def unwrap_EP(df,
         df.drop(columns=[EP_col_name], inplace=True)
         return df
 
+@numba.njit
+def get_grad_direction(texture):
+    '''get the gradient direction field, N
+    out_Nx, out_Ny = get_grad_direction(texture)
+    '''
+    height, width = texture.shape
+    out_Nx = np.zeros_like(texture, dtype=np.float64)
+    out_Ny = np.zeros_like(texture, dtype=np.float64)
+    DX = 1/0.025; DY = 1/0.025;
+    for y in range(height):
+        for x in range(width):
+            up     = _pbc(texture,y+1,x,height,width)
+            down   = _pbc(texture,y-1,x,height,width)
+            left   = _pbc(texture,y,x-1,height,width)
+            right  = _pbc(texture,y,x+1,height,width)
+            Nx = (right-left)/DX
+            Ny = (up-down)/DY
+            norm = np.sqrt( Nx**2 + Ny**2 )
+            if norm == 0:
+                out_Nx[y,x] = -10.
+                out_Ny[y,x] = -10.
+            else:
+                out_Nx[y,x] = Nx/norm
+                out_Ny[y,x] = Ny/norm
+    return out_Nx, out_Ny
+
