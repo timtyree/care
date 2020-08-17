@@ -638,13 +638,13 @@ def _get_kwargs(ic):
 	sigma       = 1.5 #pixels
 	threshold   = 0.6 #unitless 0 to 1
 	V_threshold = 0.5  #unitless 0 to 1
-	edge_tolerance = 10#3#10#3
-	pad = 20#5#20#5
-	atol = 1e-9#1e-11#1e-9#1e-11
+	edge_tolerance = 6#10#3#10#3
+	pad = 10#20#5#20#5
+	atol = 1e-10#1e-9#1e-11#1e-9#1e-11
 	color_values = None
-	h = 0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
+	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
 	nsteps = 1*10**7
-	save_every_n_frames = 10#100#10#100
+	save_every_n_frames = 100#100#10#100
 	max_time = h*nsteps  #milliseconds
 	max_buffers_to_save = 0
 	buffers_saved = 0
@@ -655,7 +655,7 @@ def _get_kwargs(ic):
 	descrip = f'sigma_{sigma}_threshold_{threshold}'
 	save = True
 	mem  = 2#2 #frames
-	sr   = 50  #pixels
+	sr   = 10  #pixels
 	ds=5 #cm #width of square domain
 	tmin = 100#milliseconds
 	LT_thresh = 0# this might be the one causeing odd tips 2 #milliseconds

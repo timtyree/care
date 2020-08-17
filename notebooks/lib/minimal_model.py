@@ -13,15 +13,19 @@ import numpy as np
 # plt.savefig('Figures/init.jpg', dpi=128)
 
 
+# @njit
+# def Tanh(x):
+# 	'''fast/simple approximatation of the hyperbolic tangent function'''
+# 	if ( x < -3.):
+# 		return -1.
+# 	elif ( x > 3. ):
+# 		return 1.
+# 	else:
+# 		return x*(27.+x*x)/(27.+9.*x*x)
+
 @njit
 def Tanh(x):
-	'''fast/simple approximatation of the hyperbolic tangent function'''
-	if ( x < -3.):
-		return -1.
-	elif ( x > 3. ):
-		return 1.
-	else:
-		return x*(27.+x*x)/(27.+9.*x*x)
+	return np.math.tanh(x)
 
 # /*------------------------------------------------------------------------
 #  * applying periodic boundary conditions for each texture call
@@ -64,7 +68,7 @@ def pbc1(S,x,y):
 # step function
 @njit
 def step(a,b):
-	return 1 if a<b else 0 # nan yields 1
+	return 1 if a<=b else 0 # nan yields 1
 # return 0 if a>b else 1 # nan yields 0
 
 # /*------------------------------------------------------------------------
@@ -84,7 +88,7 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	# diffCoef = 0.001 # cm^2 / ms
 	#^this is the most commonly used value in the literature, but it assumes a surface to volume ratio of 5000/ cm, corresponding to a fairly small cell radius of around 4 􏰎m.
 	#^quoth Fenton & Cherry (2002)
-	C_m      = 1.000  # 􏰎microFarad/cm^2 
+	C_m      = 1.000  # 􏰎microFarad/cm^2
 
 	#no spiral defect chaos observed for these parameters (because of two stable spiral tips)
 	# tau_pv = 3.33
@@ -177,7 +181,7 @@ def time_step_at_pixel(inVfs, x, y):#, h):
 	#     ii = np.array([1,0])  ;
 	#     jj = np.array([0,1])  ;
 	#     gamma = 1./3. ;
-	
+
 	#five point stencil
 	dVlt2dt =  (
 		(pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
