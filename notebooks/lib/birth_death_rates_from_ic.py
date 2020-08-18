@@ -23,7 +23,7 @@
 # - DONE: make parameters passed by kwargs so dask doesn't run into memory access issues!
 # - TODO: fix (parallel dask) logger.  first get a simple case to work with dask
 
-
+ 
 #pylab
 # %matplotlib inline
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
@@ -633,13 +633,13 @@ def _get_kwargs(ic):
 	beeping   = False
 	asserting = False
 	printing  = True
-	plotting  = False #TODO: test when plotting=True
+	plotting  = False 
 	logging   = True
 	sigma       = 1.5 #pixels
 	threshold   = 0.6 #unitless 0 to 1
 	V_threshold = 0.5  #unitless 0 to 1
-	edge_tolerance = 6#10#3#10#3
-	pad = 10#20#5#20#5
+	edge_tolerance = 20#3#6#10#3#10#3
+	pad = 21#5#10#20#5#20#5
 	atol = 1e-10#1e-9#1e-11#1e-9#1e-11
 	color_values = None
 	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds

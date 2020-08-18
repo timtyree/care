@@ -393,7 +393,7 @@ def unwrap_EP(df,
         df.drop(columns=[EP_col_name], inplace=True)
         return df
 
-@numba.njit
+@njit
 def get_grad_direction(texture):
     '''get the gradient direction field, N
     out_Nx, out_Ny = get_grad_direction(texture)
