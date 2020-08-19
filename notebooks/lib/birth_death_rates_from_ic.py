@@ -23,7 +23,7 @@
 # - DONE: make parameters passed by kwargs so dask doesn't run into memory access issues!
 # - TODO: fix (parallel dask) logger.  first get a simple case to work with dask
 
- 
+
 #pylab
 # %matplotlib inline
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
@@ -196,8 +196,9 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 	#     #integrate explicitely in time
 	#     time_step(txt, h=h, zero_txt=zero_txt) #up to twice as fast as for separated calls
 	#     tme += h
-
-	####This section may be skipped
+    #############################################
+	####This section may be skipped##############
+    #############################################
 	# check all the functions work and compile the needed functions just in time
 	zero_txt = txt.copy()*0.
 	h = kwargs['h']
@@ -301,13 +302,15 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 
 			#calculate contours and tips after enforcing pbcs
 			img_nxt = txt[..., 0]#padded_txt#
-			img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
-			img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap')
+			img_inc = dtexture_dt[..., 0].copy()# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
+			# img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
+			# img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap')
 			img_nxt_unpadded = img_nxt.copy()
 			img_inc_unpadded = img_inc.copy()
 			img_nxt, img_inc = matrices_to_padded_matrices(img_nxt_unpadded, img_inc_unpadded,pad=pad)
 			contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
-			contours_inc = measure.find_contours(img_inc, level=threshold)
+			# contours_inc = measure.find_contours(img_inc, level=threshold)
+			contours_inc = measure.find_contours(img_inc, level=0.)
 			tips  = get_tips(contours_raw, contours_inc)
 			tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height,
 							  edge_tolerance=edge_tolerance, atol = atol)
@@ -352,7 +355,8 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 				#img_nxt_unpadded = img_nxt[pad:-pad,pad:-pad]
 				#img_inc_unpadded = img_inc[pad:-pad,pad:-pad]
 				contours_raw_unpadded = measure.find_contours(img_nxt_unpadded, level=V_threshold,fully_connected='low',positive_orientation='low')
-				contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=threshold)
+				contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=0.)
+				# contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=threshold)
 				if printing:
 					print(f'odd tip spotted at time {tme:.3f}! dn={dn} and n={n}...')
 				fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped,
@@ -633,13 +637,13 @@ def _get_kwargs(ic):
 	beeping   = False
 	asserting = False
 	printing  = True
-	plotting  = False 
+	plotting  = False
 	logging   = True
 	sigma       = 1.5 #pixels
 	threshold   = 0.6 #unitless 0 to 1
 	V_threshold = 0.5  #unitless 0 to 1
-	edge_tolerance = 20#3#6#10#3#10#3
-	pad = 21#5#10#20#5#20#5
+	edge_tolerance = 6#20#3#6#10#3#10#3
+	pad = 10#21#5#10#20#5#20#5
 	atol = 1e-10#1e-9#1e-11#1e-9#1e-11
 	color_values = None
 	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
