@@ -1,6 +1,5 @@
-#!/bin/bash/env python3
-from numba import njit, jit
 import numpy as np
+from numba import njit
 
 # @njit
 # def Tanh(x):
@@ -22,7 +21,7 @@ def Tanh(x):
 #  */
 @njit
 def pbc(S,x,y):
-    '''S=texture with size width,height,3
+    '''S=texture with size 512,512,3
     (x, y) pixel coordinates of texture with values 0 to 1.
     tight boundary rounding is in use.'''
     width  = int(S.shape[0])
@@ -39,7 +38,7 @@ def pbc(S,x,y):
 
 @njit
 def pbc1(S,x,y):
-	'''S=texture with size width,height,1
+	'''S=texture with size 512,512,1
 	(x, y) pixel coordinates of texture with values 0 to 1.
 	tight boundary rounding is in use.'''
 	width  = int(S.shape[0])
@@ -90,7 +89,7 @@ def time_step_at_pixel(inVfs, x, y):#, h):
     V_c      = 0.13
     V_v      = 0.04
     C_si     = 1  # I didn't find this (trivial) multiplicative constant in Fenton & Cherry (2002).  The value C_si = 1 was used in Kaboudian (2019).
-    dx, dy   = (1, 1)# size of a pixel
+    dx, dy   = (1, 1)# (1/512, 1/512) # size of a pixel
 
     # /*------------------------------------------------------------------------
     #  * reading from textures
@@ -107,12 +106,8 @@ def time_step_at_pixel(inVfs, x, y):#, h):
     #  */
     p = step(V_c, vlt)
     q = step(V_v, vlt)
-    
-    #original FK model
-    #     tau_mv = (1.0 - q) * tau_v1 + q * tau_v2
-    #FK model with tau_v2 and tau_v1 switched
-    tau_mv = (1.0 - q) * tau_v2 + q * tau_v1
-    
+    tau_mv = (1.0 - q) * tau_v1 + q * tau_v2
+
     Ifi = -fig * p * (vlt - V_c) * (1.0 - vlt) / tau_d
     Iso = vlt * (1.0 - p) / tau_0 + p / tau_r
 
@@ -158,135 +153,3 @@ def time_step (texture, h, zero_txt):
     dtexture_dt = zero_txt.copy()
     get_time_step(texture, dtexture_dt)
     texture += h * dtexture_dt
-
-#######################################
-# Auxiliary functions
-#######################################
-
-
-@njit
-def current_at_pixel (inVfs, x, y):#, h):
-	print('Hey, are the parameters in current_at_pixel up to date?')
-	# define parameters
-	width  = int(inVfs.shape[0])
-	height = int(inVfs.shape[1])
-	ds_x   = 5#18#5#18 #domain size
-	ds_y   = 5#18#5#18
-	diffCoef = 0.0005
-	# diffCoef = 0.001
-	C_m = 1.0
-
-	#nonchaos parameters
-	# tau_pv = 3.33
-	# tau_v1 = 19.6
-	# tau_v2 = 1000
-	# tau_pw = 667
-	# tau_mw = 11
-	# tau_d  = 0.42
-	# tau_0  = 8.3
-	# tau_r  = 50
-	# tau_si = 45
-	# K      = 10
-	# V_sic  = 0.85
-	# V_c    = 0.13
-	# V_v    = 0.055
-	# C_si   = 1.0
-	# Uth    = 0.9
-
-	#chaos parameters
-	# tau_pv = 3.33
-	# tau_v1 = 15.6
-	# tau_v2 = 5
-	# tau_pw = 350
-	# tau_mw = 80
-	# tau_d = 0.407
-	# tau_0 = 9
-	# tau_r = 34
-	# tau_si = 26.5
-	# K = 15
-	# V_sic = 0.45
-	# V_c = 0.15
-	# V_v = 0.04
-	# C_si = 1
-	# Uth = 0.9
-
-	# /*------------------------------------------------------------------------
-	#  * reading from textures
-	#  *------------------------------------------------------------------------
-	#  */
-	C = pbc(inVfs, x, y)
-	vlt = C[0]
-	#volts
-	fig = C[1]
-	#fast var
-	sig = C[2]
-	#slow var
-
-	# /*-------------------------------------------------------------------------
-	#  * Calculating right hand side vars
-	#  *-------------------------------------------------------------------------
-	#  */
-	p = step(V_c, vlt)
-	q = step(V_v, vlt)
-
-	tau_mv = (1.0 - q) * tau_v1 + q * tau_v2
-
-	Ifi = -fig * p * (vlt - V_c) * (1.0 - vlt) / tau_d
-	Iso = vlt * (1.0 - p) / tau_0 + p / tau_r
-
-	tn = Tanh(K * (vlt - V_sic))
-	Isi = -sig * (1.0 + tn) / (2.0 * tau_si)
-	Isi *= C_si
-	I_sum = Isi + Ifi + Iso
-
-	# /*------------------------------------------------------------------------
-	#  * Time integration for 0D membrane
-	#  *------------------------------------------------------------------------
-	#  */
-	# dVlt2dt = I_sum / C_m
-	# dFig2dt = (1.0 - p) * (1.0 - fig) / tau_mv - p * fig / tau_pv
-	# dSig2dt = (1.0 - p) * (1.0 - sig) / tau_mw - p * sig / tau_pw
-	#fig += dFig2dt * h
-	#sig += dSig2dt * h
-
-	# /*------------------------------------------------------------------------
-	#  * ouputing the shader
-	#  *------------------------------------------------------------------------
-	#  */
-	# state  = (vlt,Ifi, Iso, Isi);
-	return np.array((vlt,Ifi, Iso, Isi),dtype=np.float64)
-
-def get_tissue_state(texture, out):
-	'''out is the 4-channeled np.ndarray saved to.  texture is txt.  each pixel is set to (vlt,Ifi, Iso, Isi).'''
-	# assert(4==out.shape[-1])
-	for x in range(512):
-		for y in range(512):
-			out[x,y] = current_at_pixel(texture,x,y)
-
-# @njit
-def _blur_at_pixel(inVfs,x,y):
-	'''coefficients returned by GaussianMatrix[1] // MatrixForm'''
-	outV  = 0.00987648 * pbc1(inVfs,x-1,y+1) + 0.0796275 * pbc1(inVfs,  x,y+1) + 0.00987648 * pbc1(inVfs, x +1, y + 1)
-	outV += 0.0796275  * pbc1(inVfs,x  ,y  ) + 0.641984 *  pbc1(inVfs,  x,  y) + 0.0796275  * pbc1(inVfs, x +1, y    )
-	outV += 0.00987648 * pbc1(inVfs,x-1,y-1) + 0.0796275 * pbc1(inVfs,  x,y-1) + 0.00987648 * pbc1(inVfs, x +1, y - 1)
-	return outV
-
-# @njit
-def blur(texture, out):
-	for x in range(512):
-		for y in range(512):
-			out[x,y] = _blur_at_pixel(texture,x,y)
-
-# @njit
-def ifilter(texture):
-    return texture>0
-
-# @njit
-def get_inc(texture,out):
-    blur(ifilter(texture),out)
-
-
-#TODO: move these tests to a proper testing file.
-# assert(time_step(gimage ,0.1) is None)
-# assert(gimage.any())
-# assert(gimage[0,0].dtype    is not None)
