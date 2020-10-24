@@ -15,6 +15,7 @@ from lib.get_tips import *
 from lib.intersection import *
 from lib.minimal_model import *
 
+
 def txt_to_tip_dict(txt, nanstate, zero_txt, x_coord_mesh, y_coord_mesh, 
                     pad, edge_tolerance, atol, tme):
     '''instantaneous method of tip detection'''
