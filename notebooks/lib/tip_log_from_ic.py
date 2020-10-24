@@ -7,7 +7,7 @@ import time, os, sys, re
 #beep = lambda x: os.system("echo -n '\\a';sleep 0.2;" * x)
 #if not 'nb_dir' in globals():
 #	nb_dir = os.getcwd()
-    
+
 #llvm jit acceleration
 from numba import njit
 
@@ -66,6 +66,7 @@ def generate_tip_log_from_ic(input_file_name, dt = 0.025,save_every_n_steps = 10
 
     #initializing cuda context
     #initialize PyCuda and get compute capability needed for compilation
+    # stream = drv.Stream()
     context = drv.Device(0).make_context()
     devprops = { str(k): v for (k, v) in context.get_device().get_attributes().items() }
     cc = str(devprops['COMPUTE_CAPABILITY_MAJOR']) + str(devprops['COMPUTE_CAPABILITY_MINOR'])
@@ -108,7 +109,7 @@ def generate_tip_log_from_ic(input_file_name, dt = 0.025,save_every_n_steps = 10
         tme += 2*n*dt
 
         # measure the tip state
-        dict_out = txt_to_tip_dict(txt, nanstate, zero_txt, xcoord_mesh, ycoord_mesh, 
+        dict_out = txt_to_tip_dict(txt, nanstate, zero_txt, xcoord_mesh, ycoord_mesh,
                             pad=pad, edge_tolerance=edge_tolerance, atol=atol, tme=tme)
         tip_state_lst.append(dict_out)
         num_tips = dict_out['n']
@@ -145,6 +146,3 @@ if __name__=='__main__':
     print("please select a file from within the desired folder.")
     input_file_name = search_for_file()
     generate_tip_log_from_ic(input_file_name)
-    
-
-

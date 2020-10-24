@@ -27,11 +27,13 @@ def step_forward_2n_times(time_step_kernel,drv,n,txt_in,
 
     #call the GPU kernel 2*iterations times (and don't measure performance)
     context.synchronize()
+    # stream.synchronize()
     # start.record()
     for i in range(iterations):
         time_step_kernel(u_new, u_old, v_new, v_old, w_new, w_old, block=threads, grid=grid)
         time_step_kernel(u_old, u_new, v_old, v_new, w_old, w_new, block=threads, grid=grid)
     # end.record()
+    # stream.synchronize()
     context.synchronize()
     # runtime = end.time_since(start)
     # print(f"{iterations*2} time steps took {runtime:.0f} ms.")
