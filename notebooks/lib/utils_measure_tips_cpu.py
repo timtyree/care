@@ -1,3 +1,4 @@
+#!/bin/bash/env/python3
 #TODO: gpu accelerate marching squares with numba.cuda
 #TODO: gpu accelerate tip intersections with numba.cuda
 import numpy as np

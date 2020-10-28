@@ -5,36 +5,41 @@ import numpy as np, os
 from lib.intersection import *
 from scipy.interpolate import interp2d
 
+#load the measure library for robust, simplified, fast tip detection
+from .measure import find_contours
+from .measure._utils_find_contours import *
+from .measure._utils_find_tips import *
+from .measure._find_tips import *
 
-# @njit
-def get_tips(contours_raw, contours_inc):
-    '''returns tips with indices of parent contours'''
-    n_list = []; x_lst = []; y_lst = []
-    for n1, c1 in enumerate(contours_raw):
-        for n2, c2 in enumerate(contours_inc):
-            x1, y1 = (c1[:, 0], c1[:, 1])
-            x2, y2 = (c2[:, 0], c2[:, 1])
-            x, y = intersection(x1, y1, x2, y2)
-            if len(x)>0:
-                s = (n1,n2)
-                x = list(x)
-                y = list(y)
-                n_list.append(s)
-                x_lst.append(x)
-                y_lst.append(y)
-    return n_list, x_lst, y_lst
+# # @njit
+# def get_tips(contours_raw, contours_inc):
+#     '''returns tips with indices of parent contours'''
+#     n_list = []; x_lst = []; y_lst = []
+#     for n1, c1 in enumerate(contours_raw):
+#         for n2, c2 in enumerate(contours_inc):
+#             x1, y1 = (c1[:, 0], c1[:, 1])
+#             x2, y2 = (c2[:, 0], c2[:, 1])
+#             x, y = intersection(x1, y1, x2, y2)
+#             if len(x)>0:
+#                 s = (n1,n2)
+#                 x = list(x)
+#                 y = list(y)
+#                 n_list.append(s)
+#                 x_lst.append(x)
+#                 y_lst.append(y)
+#     return n_list, x_lst, y_lst
 
 
 # @njit#(cache=True)#, nogil = True)
 # def get_tips(contours_a,contours_b):
 #     '''returns tips with indices of parent contours returned as the nested list, n_list.
 #     tuple(contours_a),tuple(contours_b) are each tuples of m-by-2 np.ndarrays. m is any positive int.
-#     each member is a 1D line.  
-    
-#     get_tips returns all intersections of 
-#     contours_a with contours_b.  
+#     each member is a 1D line.
+
+#     get_tips returns all intersections of
+#     contours_a with contours_b.
 #     will throw a TypingError exception if either input tuple is empty.
-    
+
 #     if you get a nonsingular matrix error, make sure that you`re not comparing a contour to itself.'''
 #     n_list = List(); x_list = List(); y_list = List();
 #     ncr = len(contours_a); nci = len(contours_b)
@@ -146,15 +151,15 @@ def my_numba_list_to_python_list(numba_lst):
     return normal_list
 
 @njit
-def unpad_xy_position (position, pad_x, width, rejection_distance_x, 
+def unpad_xy_position (position, pad_x, width, rejection_distance_x,
                        pad_y, height, rejection_distance_y):
     x = unpad(X=position[0], pad=pad_x, width=width, rejection_distance=rejection_distance_x)
     y = unpad(X=position[1], pad=pad_y, width=height, rejection_distance=rejection_distance_y)
-    return x,y    
+    return x,y
 
 @njit
 def unpad(X, pad, width, rejection_distance):
-    '''unpads 1 coordinate x or y for the padding: 
+    '''unpads 1 coordinate x or y for the padding:
     [0... pad | pad ... width + pad | width + pad ... width + 2 * pad]
     return -9999 if X is within rejection_distance of the edge,
     return X if X is in [pad ... width + pad], which is if X is in the unpadded frame, which has width = width
@@ -220,7 +225,7 @@ def pad_texture(txt, pad):
 
 def map_pbc_tips_back(tips, pad, width, height, edge_tolerance, atol = 1e-11):
     '''width and height are from the shape of the unpadded buffer.
-    TODO: get intersection to be njit compiled, then njit map_pbc_tips_back, 
+    TODO: get intersection to be njit compiled, then njit map_pbc_tips_back,
     for which I'll need to return to using numba.typed.List() instead of [].'''
     atol_squared = atol**2
     min_dist_squared_init = width**2
@@ -228,7 +233,7 @@ def map_pbc_tips_back(tips, pad, width, height, edge_tolerance, atol = 1e-11):
     s1_mapped_lst = []; s2_mapped_lst = [];
     x_mapped_lst  = []; y_mapped_lst  = [];
     #     s1_mapped_lst = List(); s2_mapped_lst = List();
-    #     x_mapped_lst  = List(); y_mapped_lst  = List(); 
+    #     x_mapped_lst  = List(); y_mapped_lst  = List();
     for n, x in enumerate(x_tips):
         y = y_tips[n]; s = s_tips[n]
         S1, S2 = s_tips[n]
@@ -251,7 +256,7 @@ def map_pbc_tips_back(tips, pad, width, height, edge_tolerance, atol = 1e-11):
 
                     #if this new tip is sufficiently far from all other recorded tips,
                     if min_dist_squared >= atol:
-                        # then append the entry to all four lists        
+                        # then append the entry to all four lists
                         x_mapped_lst.append(X)
                         y_mapped_lst.append(Y)
                         lst_S1 = []#List()
@@ -278,7 +283,7 @@ def get_state_nearest(x, y, txt):
         state_nearest = list(txt[xint,yint])
     except IndexError:
         state_nearest = nanstate
-    return state_nearest    
+    return state_nearest
 
 #for get_state_interpolated
 import sys
@@ -291,10 +296,10 @@ def get_state_interpolated(x, y, txt, nanstate, xcoord_mesh, ycoord_mesh,
                           channel_no = 3, rad = 0.5, kind='linear'):
     '''linear interpolation of local texture values to subpixel precision
     using 2D linear interpolation with scipy.interpolate.interp2d.
-    channel_no must be len(nanstate). 
+    channel_no must be len(nanstate).
     for channel_no = 3, use nanstate = [np.nan,np.nan,np.nan].
     rad = the pixel radius considered in interpolation.
-    kind can be "linear" or "cubic".  
+    kind can be "linear" or "cubic".
     if kind="cubic", then set rad = 3.5.'''
     state_interpolated = nanstate #.copy() if you change nanstate to a numpy array
     try:
@@ -316,7 +321,7 @@ def get_state_interpolated(x, y, txt, nanstate, xcoord_mesh, ycoord_mesh,
         pass
     return state_interpolated
 # ###############
-# # Example Usage 
+# # Example Usage
 # ###############
 # #Caution! : check whether spiral tips are recorded as 'x': x coordinate or 'x': y coordinate
 
@@ -331,13 +336,13 @@ def get_state_interpolated(x, y, txt, nanstate, xcoord_mesh, ycoord_mesh,
 # print(
 #     get_state_nearest(x,y,txt)
 #     )
-# print ( 
+# print (
 #     get_state_interpolated(x, y, txt.astype('float32'), nanstate, xcoord_mesh, ycoord_mesh,
-#                           channel_no = 3, rad = 3.5, kind='cubic') 
+#                           channel_no = 3, rad = 3.5, kind='cubic')
 #       )
-# print ( 
+# print (
 #     get_state_interpolated(x, y, txt.astype('float32'), nanstate, xcoord_mesh, ycoord_mesh,
-#                           channel_no = 3, rad = 0.5, kind='linear') 
+#                           channel_no = 3, rad = 0.5, kind='linear')
 #       )
 ##############################################
 ##  Get Electrophysiological (EP) State Data #
@@ -346,15 +351,17 @@ def get_states(tips_mapped, txt, pad,
               nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
     '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
     # tips_mapped gives tip locations using the correct image pixel coordinates, here.
+    # padded_txt  = txt
     padded_txt  = pad_matrix(txt, pad)
-    y_locations = np.array(tips_mapped[2]) + pad
-    x_locations = np.array(tips_mapped[3]) + pad
+    n_lst, x_lst, y_lst = tips_mapped
+    y_locations = np.array(flatten(x_lst))+pad#np.array(tips_mapped[2])
+    x_locations = np.array(flatten(y_lst))+pad#np.array(tips_mapped[3])
 
     states_nearest = states_interpolated_linear = states_interpolated_cubic = [];
     for x,y in zip(x_locations,y_locations):
         state_nearest = get_state_nearest(x,y,txt=padded_txt)
         state_interpolated_linear = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
-                              channel_no = channel_no, rad = 0.5, kind='linear') 
+                              channel_no = channel_no, rad = 0.5, kind='linear')
         state_interpolated_cubic = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
                               channel_no = channel_no, rad = 3.5, kind='cubic')
         states_nearest.append(state_nearest)
@@ -362,13 +369,34 @@ def get_states(tips_mapped, txt, pad,
         states_interpolated_cubic.append(state_interpolated_cubic)
     return states_nearest, states_interpolated_linear, states_interpolated_cubic
 
+
+# def get_states(tips_mapped, txt, pad,
+#               nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
+#     '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
+#     # tips_mapped gives tip locations using the correct image pixel coordinates, here.
+#     padded_txt  = pad_matrix(txt, pad)
+#     y_locations = np.array(tips_mapped[2]) + pad
+#     x_locations = np.array(tips_mapped[3]) + pad
+#
+#     states_nearest = states_interpolated_linear = states_interpolated_cubic = [];
+#     for x,y in zip(x_locations,y_locations):
+#         state_nearest = get_state_nearest(x,y,txt=padded_txt)
+#         state_interpolated_linear = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+#                               channel_no = channel_no, rad = 0.5, kind='linear')
+#         state_interpolated_cubic = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+#                               channel_no = channel_no, rad = 3.5, kind='cubic')
+#         states_nearest.append(state_nearest)
+#         states_interpolated_linear.append(state_interpolated_linear)
+#         states_interpolated_cubic.append(state_interpolated_cubic)
+#     return states_nearest, states_interpolated_linear, states_interpolated_cubic
+
 def add_states(tips_mapped, states_EP):
     tips_mapped = list(tips_mapped)
     tips_mapped.extend(states_EP)
     return tuple(tips_mapped)
-    
-def unwrap_EP(df, 
-              EP_col_name = 'states_interpolated_linear', 
+
+def unwrap_EP(df,
+              EP_col_name = 'states_interpolated_linear',
               drop_original_column=False):
     '''If this function is slow, it may be a result of df[EP_col_name] containing  strings.'''
     EP_col_exists =  EP_col_name in df.columns.values
@@ -389,7 +417,7 @@ def unwrap_EP(df,
             s_lst.append(s)
         df['V'] = V_lst
         df['f'] = f_lst
-        df['s'] = s_lst   
+        df['s'] = s_lst
         df.drop(columns=[EP_col_name], inplace=True)
         return df
 
@@ -418,4 +446,3 @@ def get_grad_direction(texture):
                 out_Nx[y,x] = Nx/norm
                 out_Ny[y,x] = Ny/norm
     return out_Nx, out_Ny
-

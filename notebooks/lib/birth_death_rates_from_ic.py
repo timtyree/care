@@ -59,6 +59,13 @@ from lib.get_tips import *
 from lib.minimal_model import *
 from lib.intersection import *
 from lib.tracking import link
+
+#load the measrue library for robust, simplified, fast tip detection
+from lib.measure import find_contours
+from lib.measure._utils_find_contours import *
+from lib.measure._utils_find_tips import *
+from lib.measure._find_tips import *
+
 # %autocall 1
 # %load_ext autoreload
 # %autoreload 2
@@ -144,16 +151,18 @@ from lib.tracking import link
 # Disable
 def blockPrint():
 	sys.stdout = open(os.devnull, 'w')
+	return True
 
 # Restore
 def enablePrint():
 	sys.stdout = sys.__stdout__
+	return True
 
 ####################################
 ######## GENERATE TIP LOGS  ########
 ####################################
 def generate_tip_logs(initial_condition_dir, **kwargs):
-		# if logging, change the print statements to a .log file unique to ic
+	'''if logging, change the print statements to a .log file unique to ic'''
 	# if kwargs['logging']:
 	# 	log = open(kwargs['print_log_dir'], "a")
 	# 	sys.stdout = log
@@ -161,15 +170,10 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 	printing = kwargs['printing']
 	if printing:
 		print(f'loading initial conditions from: \n\t{initial_condition_dir}.')
-
 	os.chdir(nb_dir)
 	txt = load_buffer(initial_condition_dir)
 	width, height, channel_no = txt.shape
-
-	kwargs.update({
-		'width':width,
-		'height':height
-		})
+	kwargs.update({'width':width,'height':height})
 	#reinitialize records
 	time_start = 0.  #eval(buffer_fn[buffer_fn.find('time_')+len('time_'):-4])
 	asserting = kwargs['asserting']
@@ -177,64 +181,83 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 		assert (float(time_start) is not None)
 	tip_state_lst = []
 	tme = time_start
-
 	#change directory to where results are logged
 	save_folder = kwargs['data_folder_log']
 	os.chdir(save_folder)
 	printing = kwargs['printing']
 	if printing:
 		print(f"changed directory to save_folder: \n\t{save_folder}.")
-
 	#precompute the _padded_ mesh coordinates
 	pad = kwargs['pad']
 	ycoord_mesh, xcoord_mesh = np.meshgrid(np.arange(0,txt.shape[0]+2*(pad)),np.arange(0,txt.shape[0]+2*pad))
 	nanstate = [np.nan,np.nan,np.nan]
-	channel_no = 3
-
+	# channel_no = 3
 	# # jump forward a number of steps to see what happens to the buffer
 	# for j in range(500):
 	#     #integrate explicitely in time
 	#     time_step(txt, h=h, zero_txt=zero_txt) #up to twice as fast as for separated calls
 	#     tme += h
-    #############################################
+	#############################################
 	####This section may be skipped##############
-    #############################################
+	#############################################
 	# check all the functions work and compile the needed functions just in time
 	zero_txt = txt.copy()*0.
 	h = kwargs['h']
 	time_step(txt, h=h, zero_txt=zero_txt)
-
 	width, height, channel_no = txt.shape
 	zero_txt = np.zeros((width, height, channel_no), dtype=np.float64)
 	dtexture_dt = zero_txt.copy()
 	get_time_step(txt, dtexture_dt)
-
-	#calculate contours and tips after enforcing pbcs
-	img_nxt = txt[..., 0]#padded_txt#
-	img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
 	sigma = kwargs['sigma']
-	img_inc = filters.gaussian(img_inc,sigma=sigma , mode='wrap')
-	img_nxt_unpadded = img_nxt.copy()
-	img_inc_unpadded = img_inc.copy()
-
-	img_nxt, img_inc = matrices_to_padded_matrices(img_nxt_unpadded, img_inc_unpadded,pad=pad)
-	txt_padded, dtexture_dt_padded = matrices_to_padded_matrices(txt, dtexture_dt,pad=pad)
 	V_threshold= kwargs['V_threshold']
 	threshold  = kwargs['threshold']
-	contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
-	contours_inc = measure.find_contours(img_inc, level=threshold)
-	tips  = get_tips(contours_raw, contours_inc)
 	edge_tolerance = kwargs['edge_tolerance']
 	atol = kwargs['atol']
-	tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height,
-					  edge_tolerance=edge_tolerance, atol = atol)
+	#lewiner marching squares with periodic boundary conditions fed into curve intersection
+	# #compute as discrete flow map dtexture_dt
+	# dtexture_dt = zero_txt.copy()
+	# get_time_step(txt, dtexture_dt)
+	#     img    = pad_mat_by_1x1(txt[...,0])
+	#     dimgdt = pad_mat_by_1x1(dtexture_dt[...,0])
+	#compute the images to find isosurfaces of
+	img = txt[...,0]
+	dimgdt = dtexture_dt[...,0]
+	#compute both families of contours
+	contours1 = find_contours(img, level = 0.5)
+	contours2 = find_contours(dimgdt, level = 0.0)
+	#find_tips
+	tips_mapped = contours_to_simple_tips_pbc(contours1,contours2,width, height, jump_threshold = 2, size_threshold = 6)
 	n_old = count_tips(tips_mapped[2])
-
 	#extract local EP field values for each tip
-	states_EP = get_states(tips_mapped, txt, pad, nanstate, xcoord_mesh, ycoord_mesh, channel_no = channel_no)
-	tips_mapped = add_states(tips_mapped, states_EP)
-	color_values = None
-
+	# states_EP = get_states(tips_mapped, txt, pad, nanstate, xcoord_mesh, ycoord_mesh, channel_no = channel_no)
+	# tips_mapped = add_states(tips_mapped, states_EP)
+	# color_values = None
+	# n_lst, x_lst, y_lst = contours_to_simple_tips_pbc(contours1,contours2,width, height, jump_threshold = 2, size_threshold = 6)
+	# n_tips = count_tips(x_lst)
+	# #record data for current time
+	# t_list.append(t)
+	# n_list.append(n_tips)
+	# #forward Euler integration in time
+	# txt += h*dtexture_dt
+	# t   += h
+	# #calculate contours and tips after enforcing pbcs
+	# img_nxt = txt[..., 0]#padded_txt#
+	# img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
+	# img_inc = filters.gaussian(img_inc,sigma=sigma , mode='wrap')
+	# img_nxt_unpadded = img_nxt.copy()
+	# img_inc_unpadded = img_inc.copy()
+	# img_nxt, img_inc = matrices_to_padded_matrices(img_nxt_unpadded, img_inc_unpadded,pad=pad)
+	# txt_padded, dtexture_dt_padded = matrices_to_padded_matrices(txt, dtexture_dt,pad=pad)
+	# contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
+	# contours_inc = measure.find_contours(img_inc, level=threshold)
+	# tips  = get_tips(contours_raw, contours_inc)
+	# # tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height,
+	# # 				  edge_tolerance=edge_tolerance, atol = atol)
+	# n_old = count_tips(tips_mapped[2])
+	# #extract local EP field values for each tip
+	# states_EP = get_states(tips_mapped, txt, pad, nanstate, xcoord_mesh, ycoord_mesh, channel_no = channel_no)
+	# tips_mapped = add_states(tips_mapped, states_EP)
+	# color_values = None
 	# # color by state value
 	# states_nearest, states_interpolated_linear, states_interpolated_cubic = states_EP
 	# chnl = 2
@@ -244,34 +267,31 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 	# state_value = np.array(states_interpolated_linear)[:,chnl]
 	# color_values = state_value
 	# print(f'plotting channel {chnl} \nof the {typs} states.')
-
 	# if printing:
-		# #bluf
-		# print('max value of change for each channel is {:.4f} , {:.4f}, {:.4f}.'.format(*tuple(np.max(txt,axis=(0,1)))))
-		# print('max rate of change for each channel is {:.4f} , {:.4f}, {:.4f}.'.format(*tuple(np.max(dtexture_dt,axis=(0,1)))))
-
-		# print(f"\n number of type 1 contour = {len(contours_raw)},\n number of type 2 contour = {len(contours_inc)},")
-		# print(f"the number of tips are {n_old}. time is {tme:.1f} ms.")
-		# print(f"note for time <100ms, I'm saying nothing about the accuracy of tip detection.")
-		# print(f"""the topological tip state:{tips[0]}""")
-		# print(f"""x position of tips: {tips[1]}""")
-		# print(f"""y position of tips: {tips[2]}""")
-	plotting = kwargs['plotting']
-	if plotting:
-		#plot texture contours and tips. oh my!
-		# img_nxt_unpadded = img_nxt[pad:-pad,pad:-pad]
-		# img_inc_unpadded = img_inc[pad:-pad,pad:-pad]
-		contours_raw_unpadded = measure.find_contours(img_nxt_unpadded, level=V_threshold,fully_connected='low',positive_orientation='low')
-		contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=threshold)
-
-		# #print texture information
-		# describe(txt)
-
-		fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped,
-						  figsize=(5,5),max_marker_size=400, lw=1, color_values=color_values);
-		plt.show()
-		# plt.close()
-
+	# #bluf
+	# print('max value of change for each channel is {:.4f} , {:.4f}, {:.4f}.'.format(*tuple(np.max(txt,axis=(0,1)))))
+	# print('max rate of change for each channel is {:.4f} , {:.4f}, {:.4f}.'.format(*tuple(np.max(dtexture_dt,axis=(0,1)))))
+	# print(f"\n number of type 1 contour = {len(contours_raw)},\n number of type 2 contour = {len(contours_inc)},")
+	# print(f"the number of tips are {n_old}. time is {tme:.1f} ms.")
+	# print(f"note for time <100ms, I'm saying nothing about the accuracy of tip detection.")
+	# print(f"""the topological tip state:{tips[0]}""")
+	# print(f"""x position of tips: {tips[1]}""")
+	# print(f"""y position of tips: {tips[2]}""")
+	# plotting = kwargs['plotting']
+	# if plotting:
+	# 	#plot texture contours and tips. oh my!
+	# 	# img_nxt_unpadded = img_nxt[pad:-pad,pad:-pad]
+	# 	# img_inc_unpadded = img_inc[pad:-pad,pad:-pad]
+	# 	contours_raw_unpadded = contours1 # measure.find_contours(img_nxt_unpadded, level=V_threshold,fully_connected='low',positive_orientation='low')
+	# 	contours_inc_unpadded = contours2 # measure.find_contours(img_inc_unpadded, level=threshold)
+	# 	# #print texture information
+	# 	# describe(txt)
+	# 	fig = plot_buffer(img, dimgdt, contours1, contours2, tips_mapped,
+	# 					  figsize=(5,5),max_marker_size=400, lw=1, color_values=color_values);
+	# 	# fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped,
+	# 	# 				  figsize=(5,5),max_marker_size=400, lw=1, color_values=color_values);
+	# 	plt.show()
+	# 	# plt.close()
 	#integrate explicitely in time
 	state = np.zeros((txt.shape[0],txt.shape[1],4),dtype=np.float64)
 	nsteps = kwargs['nsteps']
@@ -294,82 +314,109 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 			get_time_step(txt, dtexture_dt)
 
 			#pad texture for saving view
-			padded_txt, dpadded_txt_dt = textures_to_padded_textures(txt, dtexture_dt,pad=pad)
+			# padded_txt, dpadded_txt_dt = textures_to_padded_textures(txt, dtexture_dt,pad=pad)
+
+			#compute the images to find isosurfaces of
+			img    = txt[...,0]
+			dimgdt = dtexture_dt[...,0]
+
+			#compute both families of contours
+			contours1 = find_contours(img,    level = 0.5)
+			contours2 = find_contours(dimgdt, level = 0.0)
+
+			#find_tips
+			tips_mapped = contours_to_simple_tips_pbc(contours1,contours2,width, height, jump_threshold = 2, size_threshold = 6)
+
+			# #extract local EP field values for each tip
+			# states_EP = get_states(tips_mapped, txt, pad, nanstate, xcoord_mesh, ycoord_mesh, channel_no = channel_no)
+			# tips_mapped = add_states(tips_mapped, states_EP)
 
 			#integrate explicitely in time by the forward euler method
 			txt += h*dtexture_dt
 			tme += h
+			#
+			# #calculate contours and tips after enforcing pbcs
+			# img_nxt = txt[..., 0]#padded_txt#
+			# img_inc = dtexture_dt[..., 0].copy()# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
+			# # img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
+			# # img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap')
+			# img_nxt_unpadded = img_nxt.copy()
+			# img_inc_unpadded = img_inc.copy()
+			# img_nxt, img_inc = matrices_to_padded_matrices(img_nxt_unpadded, img_inc_unpadded,pad=pad)
+			# contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
+			# # contours_inc = measure.find_contours(img_inc, level=threshold)
+			# contours_inc = measure.find_contours(img_inc, level=0.)
+			# tips  = get_tips(contours_raw, contours_inc)
+			# tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height,
+			# 				  edge_tolerance=edge_tolerance, atol = atol)
+			#
+			# #extract local EP field values for each tip
+			# states_EP = get_states(tips_mapped, txt, pad, nanstate, xcoord_mesh, ycoord_mesh, channel_no = channel_no)
+			# tips_mapped = add_states(tips_mapped, states_EP)
 
-			#calculate contours and tips after enforcing pbcs
-			img_nxt = txt[..., 0]#padded_txt#
-			img_inc = dtexture_dt[..., 0].copy()# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
-			# img_inc = ifilter(dtexture_dt[..., 0])# ifilter(dpadded_txt_dt) #  #mask of instantaneously increasing voltages
-			# img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap')
-			img_nxt_unpadded = img_nxt.copy()
-			img_inc_unpadded = img_inc.copy()
-			img_nxt, img_inc = matrices_to_padded_matrices(img_nxt_unpadded, img_inc_unpadded,pad=pad)
-			contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
-			# contours_inc = measure.find_contours(img_inc, level=threshold)
-			contours_inc = measure.find_contours(img_inc, level=0.)
-			tips  = get_tips(contours_raw, contours_inc)
-			tips_mapped = map_pbc_tips_back(tips=tips, pad=pad, width=width, height=height,
-							  edge_tolerance=edge_tolerance, atol = atol)
-
-			#extract local EP field values for each tip
-			states_EP = get_states(tips_mapped, txt, pad, nanstate, xcoord_mesh, ycoord_mesh, channel_no = channel_no)
-			tips_mapped = add_states(tips_mapped, states_EP)
-
-			#record spiral tip locations
-			s1_lst, s2_lst, x_lst, y_lst, states_nearest, states_interpolated_linear, states_interpolated_cubic = tips_mapped
+						#record spiral tip locations
+			n_lst, x_lst, y_lst = tips_mapped
 			tip_state_lst.append({
 						't': float(tme),
 						'x': tuple(x_lst),
-						'y': tuple(y_lst),
-						's1': tuple(s1_lst),
-						's2': tuple(s2_lst),
-				'states_interpolated_linear': tuple(states_interpolated_linear)
+						'y': tuple(y_lst)
 			})
-	#         #record spiral tip locations with all three types of EP_states computed
-	#         s1_lst, s2_lst, x_lst, y_lst, states_nearest, states_interpolated_linear, states_interpolated_cubic = tips_mapped
-	#         tip_state_lst.append({
-	#                     't': float(np.around(tme, time_sig_figs)),
-	#                     'x': tuple(x_lst),
-	#                     'y': tuple(y_lst),
-	#                     's1': tuple(s1_lst),
-	#                     's2': tuple(s2_lst),
-	#             'states_nearest': tuple(states_nearest),
-	#             'states_interpolated_linear': tuple(states_interpolated_linear),
-	#             'states_interpolated_cubic': tuple(states_interpolated_cubic),
-	#         })
+
+			# #record spiral tip locations
+			# s1_lst, s2_lst, x_lst, y_lst, states_nearest, states_interpolated_linear, states_interpolated_cubic = tips_mapped
+			# tip_state_lst.append({
+			# 			't': float(tme),
+			# 			'x': tuple(x_lst),
+			# 			'y': tuple(y_lst),
+			# 			's1': tuple(s1_lst),
+			# 			's2': tuple(s2_lst),
+			# 	'states_interpolated_linear': tuple(states_interpolated_linear)
+			# })
+			#         #record spiral tip locations with all three types of EP_states computed
+			#         s1_lst, s2_lst, x_lst, y_lst, states_nearest, states_interpolated_linear, states_interpolated_cubic = tips_mapped
+			#         tip_state_lst.append({
+			#                     't': float(np.around(tme, time_sig_figs)),
+			#                     'x': tuple(x_lst),
+			#                     'y': tuple(y_lst),
+			#                     's1': tuple(s1_lst),
+			#                     's2': tuple(s2_lst),
+			#             'states_nearest': tuple(states_nearest),
+			#             'states_interpolated_linear': tuple(states_interpolated_linear),
+			#             'states_interpolated_cubic': tuple(states_interpolated_cubic),
+			#         })
 
 			#determine if an odd number of tips were born
 			n = count_tips(tips_mapped[2]) #counts the number of '.' in the nested list of x positions or just a normal list
 			dn = n - n_old
 			n_old = n
 
-			#save the state if save_state is True
-			#save_state = recording_if_odd & odd_event & odd_tip_number # ==> odd birth/death event has just occurred
-			save_state = recording_if_odd & (dn%2!=0) & (n%2!=0)
-			if save_state:
-				#plot texture contours and tips. oh my!
-				#img_nxt_unpadded = img_nxt[pad:-pad,pad:-pad]
-				#img_inc_unpadded = img_inc[pad:-pad,pad:-pad]
-				contours_raw_unpadded = measure.find_contours(img_nxt_unpadded, level=V_threshold,fully_connected='low',positive_orientation='low')
-				contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=0.)
-				# contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=threshold)
-				if printing:
-					print(f'odd tip spotted at time {tme:.3f}! dn={dn} and n={n}...')
-				fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped,
-								  figsize=(5,5), max_marker_size=200, lw=1, color_values = None);
-				fig.savefig(f'plot_of_n_{n}_dn_{dn}_for_{descrip}_at_time_{tme:.1f}.pdf', bbox_inches='tight',pad_inches=0);
-				plt.close();
-				#save texture as an .npy file as desired
-				if step>start_saving_buffers_at_step:
-					if buffers_saved<max_buffers_to_save:
-						buffers_saved += 1
-						np.save(f'buffer_of_n_{n}_dn_{dn}_for_{descrip}_at_time_{tme:.1f}.npy', txt)
+			# #save the state if save_state is True
+			# #save_state = recording_if_odd & odd_event & odd_tip_number # ==> odd birth/death event has just occurred
+			# save_state = recording_if_odd & (dn%2!=0) & (n%2!=0)
+			# if save_state:
+			# 	#plot texture contours and tips. oh my!
+			# 	#img_nxt_unpadded = img_nxt[pad:-pad,pad:-pad]
+			# 	#img_inc_unpadded = img_inc[pad:-pad,pad:-pad]
+			# 	# contours_raw_unpadded = measure.find_contours(img_nxt_unpadded, level=V_threshold,fully_connected='low',positive_orientation='low')
+			# 	# contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=0.)
+			# 	# contours_inc_unpadded = measure.find_contours(img_inc_unpadded, level=threshold)
+			# 	if printing:
+			# 		print(f'odd tip spotted at time {tme:.3f}! dn={dn} and n={n}...')
+			# 	fig = plot_buffer(img, dimgdt, contours1, contours2, tips_mapped,
+			# 					  figsize=(5,5), max_marker_size=200, lw=1, color_values = None);
+			# 	# fig = plot_buffer(img_nxt_unpadded, img_inc_unpadded, contours_raw_unpadded, contours_inc_unpadded, tips_mapped,
+			# 	# 				  figsize=(5,5), max_marker_size=200, lw=1, color_values = None);
+			# 	fig.savefig(f'plot_of_n_{n}_dn_{dn}_for_{descrip}_at_time_{tme:.1f}.pdf', bbox_inches='tight',pad_inches=0);
+			# 	plt.close();
+			# save_state = recording_if_odd & (dn%2!=0) & (n%2!=0)
+			# if save_state:
+			# 	#save texture as an .npy file as desired
+			# 	if step>start_saving_buffers_at_step:
+			# 		if buffers_saved<max_buffers_to_save:
+			# 			buffers_saved += 1
+			# 			np.save(f'buffer_of_n_{n}_dn_{dn}_for_{descrip}_at_time_{tme:.1f}.npy', txt)
 			#early stopping when spirals die out
-			stop_early = (n==0) & (step>100) #np.max(txt[...,0])<0.1
+			stop_early = (n==0) & (step>40000) #np.max(txt[...,0])<0.1
 			if stop_early:
 				if printing:
 					print(f'\nmax voltage is {np.max(txt[...,0]):.4f}.')
@@ -394,7 +441,7 @@ def generate_tip_logs(initial_condition_dir, **kwargs):
 		# if len(lst)~=0:
 		# print(f"number of tips is = {set([len(q) for q in lst_x[-1]])}.") #most recent number of tips
 		if recording:
-			print(f"\n number of type 1 contour = {len(contours_raw)},\tnumber of type 2 contour = {len(contours_inc)},")
+			print(f"\n number of type 1 contour = {len(contours1)},\tnumber of type 2 contour = {len(contours2)},")
 			print(f"the number of tips are {count_tips(tips_mapped[2])}.")
 			#     print(f"""the topological tip state is the following:{tips[0]}""")
 	beeping = kwargs['beeping']
@@ -429,12 +476,12 @@ def postprocess_tip_logs(tip_log_dir, **kwargs):
 		print(str(os.path.exists(tip_log_dir))+" it is that the file to be post processed exists,")
 
 	#save the tip positions expanded into rows
-	df_output = process_tip_log_file(tip_log_dir, include_EP=True, include_nonlinear_EP=False)
+	df_output = process_tip_log_file(tip_log_dir, include_EP=False, include_nonlinear_EP=False)
 
-	#expand the EP data into its own columns
-	df_output = unwrap_EP(df_output,
-				   EP_col_name = 'states_interpolated_linear',
-				   drop_original_column=False).copy()
+	# #expand the EP data into its own columns
+	# df_output = unwrap_EP(df_output,
+	# 			   EP_col_name = 'states_interpolated_linear',
+	# 			   drop_original_column=False).copy()
 
 	#save the tip positions to csv
 	tip_position_dir= kwargs['data_dir_tips']
@@ -643,8 +690,8 @@ def _get_kwargs(ic):
 	threshold   = 0.6 #unitless 0 to 1
 	V_threshold = 0.5  #unitless 0 to 1
 	edge_tolerance = 6#20#3#6#10#3#10#3
-	pad = 10#21#5#10#20#5#20#5
-	atol = 1e-10#1e-9#1e-11#1e-9#1e-11
+	pad = 0#10#21#5#10#20#5#20#5
+	atol = 1e-11#1e-9#1e-11#1e-9#1e-11
 	color_values = None
 	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
 	nsteps = 1*10**7
