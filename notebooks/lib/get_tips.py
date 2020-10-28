@@ -198,13 +198,13 @@ def matrices_to_padded_matrices(txt,dtexture_dt, pad):
 # print(padded_txt[...,2:5][pad,pad])
 
 # @njit
-def pad_matrix(mat, pad):
-    '''large pad allows knots to be recorded right.
-    consider pad = int(512/2), edge_tolerance = int(512/4)'''
-    width, height = mat.shape[:2]
+def pad_matrix(mat, pad, channel_no=3):
+    ''''''
+    return np.pad(array = mat, pad_width = pad, mode = 'wrap')[...,pad:pad+channel_no]
+    # width, height = mat.shape[:2]
     # padded_width = 512 + pad #pixels
-    padded_mat = np.pad(array = mat, pad_width = pad, mode = 'wrap')
-    return padded_mat[...,2:5]
+    # padded_mat = np.pad(array = mat, pad_width = pad, mode = 'wrap')
+    # return padded_mat[...,2:5]
 
 # @njit
 def pad_texture(txt, pad):
@@ -342,15 +342,15 @@ def get_state_interpolated(x, y, txt, nanstate, xcoord_mesh, ycoord_mesh,
 ##############################################
 ##  Get Electrophysiological (EP) State Data #
 ##############################################
-def get_states(tips_mapped, txt, pad,
+def get_states(x_values, y_values, txt, pad,
               nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
-    '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
-    # tips_mapped gives tip locations using the correct image pixel coordinates, here.
-    padded_txt  = pad_matrix(txt, pad)
-    y_locations = np.array(tips_mapped[2]) + pad
-    x_locations = np.array(tips_mapped[3]) + pad
+    '''iterates through x_values and y_values and returns the electrophysiological states
+    returns states_nearest, states_interpolated_linear, states_interpolated_cubic'''
+    padded_txt  = pad_matrix(txt, pad, channel_no=channel_no)
+    x_locations = x_values + pad # np.array(tips_mapped[2]) 
+    y_locations = y_values + pad # np.array(tips_mapped[3])
 
-    states_nearest = states_interpolated_linear = states_interpolated_cubic = [];
+    states_nearest = []; states_interpolated_linear = []; states_interpolated_cubic = [];
     for x,y in zip(x_locations,y_locations):
         state_nearest = get_state_nearest(x,y,txt=padded_txt)
         state_interpolated_linear = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
@@ -361,6 +361,26 @@ def get_states(tips_mapped, txt, pad,
         states_interpolated_linear.append(state_interpolated_linear)
         states_interpolated_cubic.append(state_interpolated_cubic)
     return states_nearest, states_interpolated_linear, states_interpolated_cubic
+
+# def get_states(tips_mapped, txt, pad,
+#               nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
+#     '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
+#     # tips_mapped gives tip locations using the correct image pixel coordinates, here.
+#     padded_txt  = pad_matrix(txt, pad)
+#     y_locations = np.array(tips_mapped[2]) + pad
+#     x_locations = np.array(tips_mapped[3]) + pad
+
+#     states_nearest = states_interpolated_linear = states_interpolated_cubic = [];
+#     for x,y in zip(x_locations,y_locations):
+#         state_nearest = get_state_nearest(x,y,txt=padded_txt)
+#         state_interpolated_linear = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+#                               channel_no = channel_no, rad = 0.5, kind='linear') 
+#         state_interpolated_cubic = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+#                               channel_no = channel_no, rad = 3.5, kind='cubic')
+#         states_nearest.append(state_nearest)
+#         states_interpolated_linear.append(state_interpolated_linear)
+#         states_interpolated_cubic.append(state_interpolated_cubic)
+#     return states_nearest, states_interpolated_linear, states_interpolated_cubic
 
 def add_states(tips_mapped, states_EP):
     tips_mapped = list(tips_mapped)

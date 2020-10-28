@@ -1,10 +1,15 @@
-from lib.minimal_model import *
-from lib.TexturePlot import *
-from lib.get_tips import *
-from lib.operari import *
-from lib.minimal_model import *
-from lib.intersection import *
-from lib.ProgressBar import *
-from lib.draw import *
-from lib.chunk_ic import *
-# ?fixed? from ../rapids-notebook/lib.mesh_ops import *  #TODO: how to import '../rapids-notebook/lib' or something that can be found recursively
+from .minimal_model import *
+from .TexturePlot import *
+from .get_tips import *
+from .operari import *
+from .minimal_model import *
+from .intersection import *
+from .ProgressBar import *
+from .draw import *
+from .chunk_ic import *
+from .dist_func import *
+# ?fixed? from ../rapids-notebook/lib.mesh_ops import *  #TODO: how to import '../rapids-notebook/lib' or something (that can be found recursively?)
+# from ..rapids-notebook.lib.mesh_ops import *
+
+from .measure import *
+from .routines import *

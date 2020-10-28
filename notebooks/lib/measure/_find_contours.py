@@ -96,12 +96,22 @@ def find_contours(array, level,
     especially around structures that are a single array element wide. Instead
     choose a middle value, as above.
 
+    .. addendum::
+
+    The aforementioned ambiguity is resolved according to the natural reduction 
+    of the method presented in [2] to two spatial dimensions.
+
     References
     ----------
     .. [1] Lorensen, William and Harvey E. Cline. Marching Cubes: A High
            Resolution 3D Surface Construction Algorithm. Computer Graphics
            (SIGGRAPH 87 Proceedings) 21(4) July 1987, p. 163-170).
-    .. [2] 
+    .. [2] Thomas Lewiner, Helio Lopes, Antonio Wilson Vieira and Geovan
+           Tavares. Efficient implementation of Marching Cubes' cases with
+           topological guarantees. Journal of Graphics Tools 8(2)
+           pp. 1-15 (december 2003).
+           :DOI:`10.1080/10867651.2003.10487582`
+
 
     Examples
     --------
