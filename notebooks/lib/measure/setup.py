@@ -19,7 +19,7 @@ def configuration(parent_package='', top_path=None):
 
     cython(['_find_contours_cy.pyx',
         '_find_contours_pbc_cy.pyx' 
-        # ,'_find_tips_pbc_cy.pyx'
+        ,'_find_tips_pbc_cy.pyx'
         ], 
         working_path=base_path)
 
@@ -29,8 +29,8 @@ def configuration(parent_package='', top_path=None):
                          include_dirs=[get_numpy_include_dirs()])
     config.add_extension('_find_contours_pbc_cy', sources=['_find_contours_pbc_cy.c'],
                          include_dirs=[get_numpy_include_dirs()])
-    # config.add_extension('_find_tips_pbc_cy', sources=['_find_tips_pbc_cy.c'],
-    #                      include_dirs=[get_numpy_include_dirs()])
+    config.add_extension('_find_tips_pbc_cy', sources=['_find_tips_pbc_cy.c'],
+                         include_dirs=[get_numpy_include_dirs()])
     return config
 
 if __name__ == '__main__':

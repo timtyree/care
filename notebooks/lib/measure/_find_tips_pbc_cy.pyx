@@ -24,7 +24,7 @@ cdef inline double _pbc_1d(double x_in, double x_max, double width):
     return x_in
 
 # def inline double[:] compute_segments_in_window(ul,ll,ur,ul,level):#,segments):
-def compute_segments_in_window(double ul,double ll,double ur,double ul,level):
+def compute_segments_in_window(double ul,double ll,double ur,double ul,double level):
 
     # (double[:, :] array1, double[:, :] array2,
     #                           double level1, double level2,
@@ -267,7 +267,7 @@ def _get_intersections_pbc(double[:, :] array1, double[:, :] array2,
             # left   = _pbc_1d(r0 + _get_fraction(ul, ll, level),rmax, width), _pbc_1d(c0,cmax, height)
             # right  = _pbc_1d(r0 + _get_fraction(ur, lr, level),rmax, width), _pbc_1d(c1,cmax, height)
 
-            segments = compute_segments_in_window(ul,ll,ur,ul,level)
+            # segments = compute_segments_in_window(ul,ll,ur,ul,level)
 
             # if jumped_lr and jumped_ul:
             #     #too much bottom right at boundaries
