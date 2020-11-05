@@ -2,6 +2,12 @@ from ._find_contours import find_contours
 from ._utils_find_contours import *
 from ._utils_find_tips import *
 from ._find_tips import *
+from ._find_tips_pbc_cy import *
+from ._find_tips_kernel_cy import *
+# from ._find_tips_pbc_cy import lookup_segments
+# from ._find_tips_kernel_cy import find_intersections
+# from ._find_tips_kernel import *
+# from ._find_tips_pbc_cy import *
 
 # __all__ = ['find_contours']  #uncomment and fill in the list of functions to import.  While commented, everything will just be imported by default. 
 

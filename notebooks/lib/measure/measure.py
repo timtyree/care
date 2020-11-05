@@ -39,6 +39,10 @@ def bilinear_interpolate(x,y,width,height,txt):
 
 @njit
 def interpolate_states(x_values,y_values,width,height,txt):
+	'''Measure color of txt at zip(x_values,y_values).  This was used to measure EP states.
+	Example Usage:
+	v_lst, f_lst, s_lst = interpolate_states(x_values,y_values,width,height,txt)
+	'''
 	v_lst = []; f_lst = []; s_lst = []; 
 	for x,y in zip(x_values,y_values):
 		v,f,s = bilinear_interpolate(x,y,width,height,txt)

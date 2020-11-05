@@ -1,25 +1,24 @@
 #!/usr/bin/env python
 from setuptools import setup
 from Cython.Build import cythonize
-
 from skimage._build import cython
 import os
 base_path = os.path.abspath(os.path.dirname(__file__))
 
-#compile from command line with python setup.py build_ext --inplace
-
-# setup(
-#     ext_modules = cythonize("_find_contours_cy.pyx")
-# )
+############################################
+# Example Usage - compile from command line with
+# $ python setup.py build_ext --inplace
+############################################
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration, get_numpy_include_dirs
 
     config = Configuration('measure', parent_package, top_path)
 
-    cython(['_find_contours_cy.pyx',
-        '_find_contours_pbc_cy.pyx' 
+    cython(['_find_contours_cy.pyx'
+        ,'_find_contours_pbc_cy.pyx' 
         ,'_find_tips_pbc_cy.pyx'
+        ,'_find_tips_kernel_cy.pyx'
         ], 
         working_path=base_path)
 
@@ -30,6 +29,8 @@ def configuration(parent_package='', top_path=None):
     config.add_extension('_find_contours_pbc_cy', sources=['_find_contours_pbc_cy.c'],
                          include_dirs=[get_numpy_include_dirs()])
     config.add_extension('_find_tips_pbc_cy', sources=['_find_tips_pbc_cy.c'],
+                         include_dirs=[get_numpy_include_dirs()])
+    config.add_extension('_find_tips_kernel_cy', sources=['_find_tips_kernel_cy.c'],
                          include_dirs=[get_numpy_include_dirs()])
     return config
 
