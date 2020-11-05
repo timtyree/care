@@ -75,7 +75,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 			dimgdt = dtexture_dt[...,0]
 
 			#compute both families of contours
-			contours1 = find_contours(img,    level = 0.5)
+			contours1 = find_contours(img,    level = 0.8)
 			contours2 = find_contours(dimgdt, level = 0.0)
 
 			#find_tips and measure tip topological/EP state
