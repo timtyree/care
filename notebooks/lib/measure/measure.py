@@ -2,6 +2,7 @@ from ._utils_find_tips import *
 from ._find_tips import *
 from numba import njit
 import numpy as np
+from ._utils_find_tips import reduce_tips
 # from ..operari import count_tips
 
 @njit
