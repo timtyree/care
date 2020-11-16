@@ -28,7 +28,7 @@ def compute_bdrates(n_series,t_series):
 def birth_death_rates_from_log(input_file_name, data_dir_bdrates, 
                                col_n = 'n', col_t = 't', 
                                kill_all_odd_rows = True, 
-                               min_time = 1000, printing = True):
+                               min_time = 1000, printing = True, **kwargs):
     df = pd.read_csv(input_file_name)
 
     if kill_all_odd_rows:
