@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # Generate Birth Death Rates for Given Initial Conditions
+# Method = Find intersections of contours after computing entire contours for each observation (unavoidably slow).
 # Tim Tyree
 # 10.28.2020
 from .. import * 
