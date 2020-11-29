@@ -84,9 +84,10 @@ def find_tips_for_linear_segment_pairs(list segments1, list segments2, int r0, i
             du = np.subtract(u[1],u[0])
             dv = np.subtract(v[1],v[0])
             theta = compute_theta(du,dv)
-
-            if np.abs(theta)<theta_threshold:
-                continue
+            
+            if (theta_threshold != 0.):
+                if np.abs(theta)<theta_threshold:
+                    continue
 
             #compute line for segment u
             x1=u[0][1];y1=u[0][0];x2=u[1][1];y2=u[1][0];
@@ -198,7 +199,7 @@ def find_intersections(array1,array2,level1,level2,theta_threshold = 0.):
             segments1 = lookup_segments(ul1,ll1,ur1,lr1,r0,r1,c0,c1,level1,square_case1)
             segments2 = lookup_segments(ul2,ll2,ur2,lr2,r0,r1,c0,c1,level2,square_case2)
 
-            lst_x,lst_y,lst_theta, lst_grad_ux, lst_grad_uy, lst_grad_vx, lst_grad_vy = find_tips_for_linear_segment_pairs(segments1, segments2, r0, c0)
+            lst_x,lst_y,lst_theta, lst_grad_ux, lst_grad_uy, lst_grad_vx, lst_grad_vy = find_tips_for_linear_segment_pairs(segments1, segments2, r0, c0, theta_threshold=theta_threshold)
 
             lst_values_x.extend(lst_x)
             lst_values_y.extend(lst_y)
