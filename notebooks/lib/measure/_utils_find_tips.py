@@ -2,20 +2,55 @@ import numpy as np
 from ._utils_find_contours import *
 
 
-def plot_contours_pbc(contours, ax, linewidth=2, min_num_vertices=1, alpha=1., linestyle = '-'):
+def pop_until_long_enough(lst_lst,min_length):
+    if len(lst_lst)==0:
+        return np.array([])#, lst_lst
+    lst = lst_lst.pop(0)
+    if len(lst)>=min_length:
+        return lst#, lst_lst
+    else:
+        return pop_until_long_enough(lst_lst,min_length)
+
+
+def plot_contours_pbc(contours, ax, linewidth=2, min_num_vertices=1, alpha=1., linestyle = '-', color=None):
     for contour in contours:
         if len(contour)>=min_num_vertices:
             contour_lst = split_contour_into_contiguous(contour)
+            ct = pop_until_long_enough(lst_lst=contour_lst,min_length=min_num_vertices)
+            if not (ct.shape[0]>1):
+                continue
             #plot the first segment of this pbc contour
-            ct = contour_lst[0]
-            if len(ct)>min_num_vertices:
+            if not color:
                 p = ax.plot(ct[:, 1], ct[:, 0], linewidth=linewidth, alpha=alpha, linestyle=linestyle)
-                #if there are more segments, plot them as well.
-                if len(contour_lst)>1:
-                    color = p[0].get_color()
-                    for ct in contour_lst[1:]:
-                        if len(ct)>min_num_vertices:
-                            ax.plot(ct[:, 1], ct[:, 0], linewidth=linewidth, color=color, alpha=alpha, linestyle=linestyle)
+            else:
+                p = ax.plot(ct[:, 1], ct[:, 0], linewidth=linewidth, alpha=alpha, linestyle=linestyle, color=color)
+            color = p[0].get_color()
+
+            #if there are more segments, plot them as well, keeping the same colors.
+            while len(contour_lst)>0:
+                ct = pop_until_long_enough(lst_lst=contour_lst,min_length=min_num_vertices)
+                if ct.shape[0]>1:
+                    ax.plot(ct[:, 1], ct[:, 0], linewidth=linewidth, color=color, alpha=alpha, linestyle=linestyle)
+
+
+# def plot_contours_pbc(contours, ax, linewidth=2, min_num_vertices=1, alpha=1., linestyle = '-', color=None):
+#     for contour in contours:
+#         if len(contour)>=min_num_vertices:
+#             contour_lst = split_contour_into_contiguous(contour)
+#             #plot the first segment of this pbc contour
+#             ct = contour_lst[0]
+
+#             if len(ct)>min_num_vertices:
+#                 if not color:
+#                     p = ax.plot(ct[:, 1], ct[:, 0], linewidth=linewidth, alpha=alpha, linestyle=linestyle)
+#                 else:
+#                     p = ax.plot(ct[:, 1], ct[:, 0], linewidth=linewidth, alpha=alpha, linestyle=linestyle, color=color)
+#                 #if there are more segments, plot them as well.
+#                 if len(contour_lst)>1:
+#                     color = p[0].get_color()
+#                     for ct in contour_lst[1:]:
+#                         if len(ct)>min_num_vertices:
+#                             ax.plot(ct[:, 1], ct[:, 0], linewidth=linewidth, color=color, alpha=alpha, linestyle=linestyle)
 
 def segment_and_filter_short_contours(contours, min_num_vertices=2):
     '''avoid using this function directly, as it destroys contour index information'''
