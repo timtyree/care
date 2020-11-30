@@ -14,6 +14,71 @@ import time, os, sys, re
 # %load_ext autoreload
 # %autoreload 2
 
+#Goal: fix compute_bdrates_from_log_w_subsampling to compute from times instead of indices.
+
+def compute_bdrates_from_log_w_mean(src, min_time_to_next_event = 0, min_time = 100):
+    '''returns pandas.DataFrame instance with the mean rate for a given change in tip number and tip number.
+    min_time_to_next_event is in units of milliseconds.  
+    min_time is the time when bd events stop being considered garbage in milliseconds.
+    src is a .csv filename.'''
+    df = pd.read_csv(src)
+    df = df[df.t>=min_time].copy()
+    df = df.groupby('t').n.mean().reset_index()
+    #compute birth death rates
+    df['dn'] = df.n.diff().shift(-1)
+    df = df.query('dn != 0').copy()
+    # #extract the timeseries of tip number
+    # n_series = df.n#df[boo].n
+    # t_series = df.t#df[boo].t
+
+    time_to_next_event = df.t.diff().shift(-1).dropna().values
+    event_times = df.t.values
+    dn_lst = df.dn.values
+    
+    #iterate through times, if time_to_next_event[j] is too small, then merge add it to the bucket
+    time_to_next_event = list(df.t.diff().shift(-1).dropna().values)
+    n_lst = list(df.n.values)
+    event_times = list(df.t.values)
+
+    #pop the first entry
+    t0 = time_to_next_event.pop(0)
+    n0 = n_lst.pop(0)
+
+    bucket = 0.
+    dn_lst_out = []
+    n_lst_out = []
+    rate_lst = []
+    time_lst = []
+    time = min_time
+    for j, wait in enumerate(time_to_next_event):
+        n1 = n_lst[j]
+        time   += wait
+        bucket += wait
+
+        #if the event took enough time
+        if (wait>min_time_to_next_event):
+            #empty the bucket
+            rate = 1/bucket
+            t0 = time-bucket
+            bucket = 0.
+
+            #and append the rate
+            rate_lst.append(rate)
+
+            #compute the change in n. Append
+            dn = n1 - n0
+            n_lst_out.append(n0) #number of tips at beginning of transition
+#             n_lst_out.append(n1) #number of tips at end of transition
+            dn_lst_out.append(dn)
+            n0 = n1
+            time_lst.append(t0)
+
+    dct = {'dn':dn_lst_out,'rate':rate_lst, 'n':n_lst_out,'time':time_lst}
+    gf = pd.DataFrame(dct)
+    df_output = gf.groupby(['dn','n']).mean().reset_index()
+    return df_output, gf
+
+
 def compute_bdrates(n_series,t_series):
     df = pd.DataFrame({"t":t_series.values,"n":n_series.values})
     #compute birth death rates
