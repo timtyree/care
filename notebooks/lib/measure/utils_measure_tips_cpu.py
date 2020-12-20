@@ -7,17 +7,18 @@ from numba import njit
 
 from skimage import measure
 
-#load the libraries
-from lib import *
-from lib.dist_func import *
-from lib.utils_jsonio import *
-from lib.operari import *
-from lib.get_tips import *
-from lib.intersection import *
-from lib.minimal_model import *
+# #load the libraries
+from .. import *
+# from lib import *
+# from lib.dist_func import *
+# from lib.utils_jsonio import *
+# from lib.operari import *
+# from lib.get_tips import *
+# from lib.intersection import *
+# from lib.minimal_model import *
 
 
-def txt_to_tip_dict(txt, nanstate, zero_txt, x_coord_mesh, y_coord_mesh, 
+def txt_to_tip_dict(txt, nanstate, zero_txt, x_coord_mesh, y_coord_mesh,
                     pad, edge_tolerance, atol, tme):
     '''instantaneous method of tip detection'''
     width, height, channel_no = txt.shape
@@ -48,7 +49,7 @@ def txt_to_tip_dict(txt, nanstate, zero_txt, x_coord_mesh, y_coord_mesh,
     }
     return dict_out
 
-def txt_to_tip_dict_with_EP_state(txt, nanstate, zero_txt, x_coord_mesh, y_coord_mesh, 
+def txt_to_tip_dict_with_EP_state(txt, nanstate, zero_txt, x_coord_mesh, y_coord_mesh,
                     pad, edge_tolerance, atol):
     '''instantaneous method of tip detection. with one of three routines for interpolating EP state in use'''
     #calculate discrete flow map
@@ -81,4 +82,3 @@ def txt_to_tip_dict_with_EP_state(txt, nanstate, zero_txt, x_coord_mesh, y_coord
         'states_interpolated_linear': tuple(states_interpolated_linear)
     }
     return dict_out
-

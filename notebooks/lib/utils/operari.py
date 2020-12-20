@@ -33,7 +33,7 @@ def get_unique_file_name(path, width=3, ext_string='.csv'):
 	if not os.path.exists(path):
 		print("file name is unused - {}".format(path))
 		return path
-	
+
 	# otherwise, increment the highest number folder in the series
 	n = len(ext_string)
 	dirs = glob(path[:-n] + "*")
@@ -44,8 +44,8 @@ def get_unique_file_name(path, width=3, ext_string='.csv'):
 	new_path = "{0}_{1:0>{2}}".format(path[:-n], next_num, width)+ext_string
 
 	print("incremented file name is - {}".format(new_path))
-	return new_path    
-	
+	return new_path
+
 def get_unique_dir(path, width=3):
 	# if it doesn't exist, create
 	if not os.path.isdir(path):
@@ -70,12 +70,12 @@ def get_unique_dir(path, width=3):
 	return new_path
 
 def search_for_file (currdir = os.getcwd()):
-	'''#make functions for save file name, input cell frames, and input cell trajectories'''
-	#TODO: eventually make this ^take cell trajectories or cell positions
+	'''use a widget dialog to selecting a file.  Increasing the default fontsize seems too involved for right now.'''
 	root = Tk()
-	tempdir = filedialog.askopenfilename(parent=root, 
-										 initialdir=currdir, 
-										 title="Please select a file")#, 
+	# root.config(font=("Courier", 44))
+	tempdir = filedialog.askopenfilename(parent=root,
+										 initialdir=currdir,
+										 title="Please select a file")#,
 										 # filetypes = (("all files","*.*")))
 	root.destroy()
 	if len(tempdir) > 0:
@@ -144,12 +144,12 @@ def find_file(**kwargs):
 #     #plot tips, if any
 #     s1_values, s2_values, y_values, x_values = tips
 #     #     if len(n_values)>0:
-#     for j in range(len(x_values)): 
+#     for j in range(len(x_values)):
 #         ax.scatter(x = x_values[j], y = y_values[j], c='yellow', s=int(max_marker_size/(j+1)), zorder=3, marker = '*')
 #     return fig
 
 # def get_lifetime(trajectory_list):
-#     '''trajectory_list is a list of lists.  
+#     '''trajectory_list is a list of lists.
 #     return np.mean( [ len(trajectory) for trajectory in trajectory_list ], axis=0 )'''
 #     return np.mean( [ len(trajectory) for trajectory in trajectory_list ], axis=0 )
 # #    TODO: for a given .csv of tip positions, make their trajectories naively in trackpy
@@ -191,7 +191,7 @@ def process_tip_log_file(input_fn, include_EP=False, include_nonlinear_EP=True):
 				data_list.append(datum)
 		else:
 			if include_nonlinear_EP:
-				for x,y,s1,s2, sn,sil,sic in zip(x_lst,y_lst,s1_lst,s2_lst, 
+				for x,y,s1,s2, sn,sil,sic in zip(x_lst,y_lst,s1_lst,s2_lst,
 					states_nearest_lst, states_interpolated_linear_lst,
 					states_interpolated_cubic_lst):
 					# s = (s1,s2)
@@ -245,7 +245,7 @@ def produce_one_csv(list_of_files, file_out):
    # Convert the above object into a csv file and export
    result_obj.to_csv(file_out, index=False, encoding="utf-8")
    return True
-  
+
 def combine_csv_in_folder_to_one(folder_name, file_out = "../consolidated_rates.csv"):
 	os.chdir(folder_name)
 	# get all .csv files in the current working directory
@@ -296,14 +296,14 @@ class I0_File(object):
 		self.height= None
 		self.xres = None
 		self.yres = None
-		
+
 	def shape(self):
 		return np.array((self.width,self.height), dtype=np.int)
 	def area(self):
 		shape = self.shape()
 		da = self.xres()*self.yres()
 		return da*shape[0]*shape[1]
-	
+
 # - TODO: see whether this compressed array format can store 3 channels of float instances at each pixel
 # def compress_array(array, save_file='data.pkl.lzma'):
 #     '''array is a numpy array.'''
@@ -321,14 +321,10 @@ class I0_File(object):
 #     pickle.dump( data,  bz2.open( 'data.pkl.bz2',  'wb' ) ) # better loading speed for non-random numpy arrays
 
 # There also is the possibility to "pickle" directly into a compressed archive by doing:
-# import hickle as hkl 
+# import hickle as hkl
 # data = { 'name' : 'test', 'data_arr' : [1, 2, 3, 4] }
 # # Dump data to file
 # hkl.dump( data, 'new_data_file.hkl' )
 # # Load data from file
 # data2 = hkl.load( 'new_data_file.hkl' )
-# print( data == data2 )    
-
-
-
-
+# print( data == data2 )

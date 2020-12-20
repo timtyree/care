@@ -46,25 +46,26 @@ from skimage import measure, filters
 # from PIL import Image
 # import imageio
 
-#load the libraries
-from lib import *
-from lib.dist_func import *
-
-#load the libraries
-from lib.operari import *
-from lib.ProgressBar import *
-from lib.minimal_model import *
-from lib.TexturePlot import *
-from lib.get_tips import *
-from lib.minimal_model import *
-from lib.intersection import *
-from lib.tracking import link
-
-#load the measrue library for robust, simplified, fast tip detection
-from lib.measure import find_contours
-from lib.measure._utils_find_contours import *
-from lib.measure._utils_find_tips import *
-from lib.measure._find_tips import *
+# #load the libraries
+from .. import *
+# from lib import *
+# from lib.dist_func import *
+#
+# #load the libraries
+# from lib.operari import *
+# from lib.ProgressBar import *
+# from lib.minimal_model import *
+# from lib.TexturePlot import *
+# from lib.get_tips import *
+# from lib.minimal_model import *
+# from lib.intersection import *
+# from lib.tracking import link
+#
+# #load the measrue library for robust, simplified, fast tip detection
+# from lib.measure import find_contours
+# from lib.measure._utils_find_contours import *
+# from lib.measure._utils_find_tips import *
+# from lib.measure._find_tips import *
 
 # %autocall 1
 # %load_ext autoreload

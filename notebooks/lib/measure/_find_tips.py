@@ -1,12 +1,13 @@
 import numpy as np
-from ._utils_find_contours import *
-from ..intersection import *
-from ._utils_find_tips import *
+# from ._utils_find_contours import *
+# from ..intersection import *
+# from ._utils_find_tips import *
+from .. import *
 
 #TODO: cython this shiz/implement a local version that destroys topological information in exchange for speedup.
 def find_tips(contours1, contours2):
     '''returns tips with indices of parent contours.
-    contours1 and contours2 are a lists of numpy arrays.  
+    contours1 and contours2 are a lists of numpy arrays.
     each such numpy array is an Nx2 array representing a contiguous contour (i.e. continuous in local xy coordinates).'''
     s1_list = []; s2_list = []; x_lst = []; y_lst = []
     for n1, contour1_lst in enumerate(contours1):
@@ -47,11 +48,11 @@ def contours_to_simple_tips_pbc(contours1,contours2,width, height,jump_threshold
     y_lst = list of lists of intersection y coordinates cooresponding to the tuples in n_lst.
     width, height = the number of rows?,columns? of the input image
     jump_threshold = max distance in pixels to not be considered a jump
-    size_threshold = minimum number of vertices in a whole input contour to be considered 
-    
+    size_threshold = minimum number of vertices in a whole input contour to be considered
+
     pixels are taken to be centered at integer xy coordinates.
     (nota bene for my original use case: a lot of 5 vertex contours were observed in contours2,
-    where contours1 and contour2 are results of lewiner marching squares (that used explicit pbc).  )    
+    where contours1 and contour2 are results of lewiner marching squares (that used explicit pbc).  )
     '''
     contour1_lst_lst, contour2_lst_lst = preprocess_contours(contours1, contours2, width, height, jump_threshold = jump_threshold, size_threshold = size_threshold)
 
@@ -61,9 +62,9 @@ def contours_to_simple_tips_pbc(contours1,contours2,width, height,jump_threshold
 
 # @njit
 def find_tips_wrapped(contours1, contours2):
-    '''(deprecated) 
+    '''(deprecated)
     returns tips with indices of parent contours.
-    contours1 and contours2 are a lists of numpy arrays.  
+    contours1 and contours2 are a lists of numpy arrays.
     each such numpy array is an Nx2 array representing a contiguous contour (i.e. continuous in local xy coordinates).'''
     List()
     #     n_list = []; x_lst = []; y_lst = []
@@ -100,7 +101,7 @@ def find_tips_wrapped(contours1, contours2):
 # #compute as discrete flow map dtexture_dt
 # zero_txt = txt.copy()*0.
 
-# #calculate 
+# #calculate
 # dtexture_dt = zero_txt.copy()
 # get_time_step(txt, dtexture_dt)
 
