@@ -5,6 +5,7 @@ import trackpy, pandas as pd, numpy as np
 from .. import *
 from .track_tips import *
 from ..utils.dist_func import *
+from ..utils.utils_traj import *
 
 def filter_duplicate_trajectory_indices(pid_longest_lst,df_traj):
     '''slow run time. don't use.  duplicates removed earlier in the pipeline much more quickly.'''
@@ -23,35 +24,6 @@ def filter_duplicate_trajectory_indices(pid_longest_lst,df_traj):
                     #pop pid2
                     pid_longest_lst_filtered.remove(pid2)
     return pid_longest_lst_filtered
-
-def find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None):
-    '''
-    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None)
-    '''
-    #compute the speed of this longest trajectory using pbc
-    if jump_thresh is None:
-        thresh = np.min((width,height))/2 #threshold displacement to be considered a jump
-    else:
-        thresh = jump_thresh
-    distance_L2_pbc = get_distance_L2_pbc(width,height)
-    #     DT = 1.#np.mean(d.t.diff().dropna().values) #ms per frame
-    #     DS = 5/200 #cm per pixels
-    N = x_values.shape[0]
-    spd_lst = []
-    spd_lst_naive = []
-    for i in range(N-1):
-        #compute a speed for i = 0,1,2,...,N-1
-        pt_nxt = np.array((x_values[i+1],y_values[i+1]))
-        pt_prv = np.array((x_values[i],y_values[i]))
-        spd = distance_L2_pbc(pt_nxt,pt_prv)*DS/DT #pixels per ms
-        spd_lst.append(spd)
-        spd = np.linalg.norm(pt_nxt-pt_prv)
-        spd_lst_naive.append(np.linalg.norm(spd))
-    boo = (np.array(spd_lst_naive)>thresh)
-    #     boo.any()
-    jump_index_array = np.argwhere(boo).flatten()
-    return jump_index_array, spd_lst
-
 
 def unwrap_for_each_jump(x_values,y_values,jump_index_array, width=200,height=200):
     '''ux,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array) '''
