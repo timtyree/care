@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import measure, filters
-from lib.get_tips import *
-from lib.intersection import *
-from lib import *
+from .. import *
+# from lib.get_tips import *
+# from lib.intersection import *
+# from lib import *
 import matplotlib.cm as cm
 
-def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, 
+def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips,
 	figsize=(15,15), max_marker_size=800, lw=2,
 	color_values = None):
 	'''computes display data; returns fig.'''
@@ -25,19 +26,19 @@ def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips,
 	s1_values, s2_values, y_values, x_values, states_nearest, states_interpolated_linear, states_interpolated_cubic = tips
 	#     if len(n_values)>0:
 	if color_values is None:
-		for j in range(len(x_values)): 
+		for j in range(len(x_values)):
 			ax.scatter(x = x_values[j], y = y_values[j], c='yellow', s=int(max_marker_size/(j+1)), zorder=3, marker = '*')
 		pass
 	else:
 		vmin = 0.#np.min(color_values)
 		vmax = 1.#np.max(color_values)
 		cmap = plt.get_cmap('cividis')
-		for j in range(len(x_values)): 
-		    ax.scatter(x = x_values[j], y = y_values[j], c=color_values[j], s=int(max_marker_size/(j+1)), 
+		for j in range(len(x_values)):
+		    ax.scatter(x = x_values[j], y = y_values[j], c=color_values[j], s=int(max_marker_size/(j+1)),
 		               zorder=3, marker = '*', cmap=cmap, vmin=vmin, vmax=vmax)
 	return fig
 
-def show_buffer (txt, 
+def show_buffer (txt,
 	sigma       = 3.,#5#1
 	threshold   = 0.8,#9#0.95
 	V_threshold = 0.7,
@@ -53,7 +54,7 @@ def show_buffer (txt,
 
 	#calculate contours and tips
 	img_nxt = txt[..., 0]
-	img_inc = ifilter(dtexture_dt[..., 0])  #mask of instantaneously increasing voltages 
+	img_inc = ifilter(dtexture_dt[..., 0])  #mask of instantaneously increasing voltages
 	img_inc = filters.gaussian(img_inc,sigma=sigma, mode='wrap')
 	contours_raw = measure.find_contours(img_nxt, level=V_threshold,fully_connected='low',positive_orientation='low')
 	contours_inc = measure.find_contours(img_inc, level=threshold)#,fully_connected='low',positive_orientation='low')
@@ -70,7 +71,7 @@ def show_buffer (txt,
 	n_lst, x_lst, y_lst = get_tips(contours_raw, contours_inc)
 	tip_states = {'n': n_lst, 'x': x_lst, 'y': y_lst}
 
-	fig = plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips, 
+	fig = plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips,
 					  figsize=(5,5),max_marker_size=200, lw=1);
 	# fig.show()
 	return fig

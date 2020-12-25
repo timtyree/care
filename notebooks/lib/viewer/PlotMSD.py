@@ -3,9 +3,10 @@
 # 12.18.2020
 from ..my_initialization import *
 
-def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., round_t_to_n_digits=0):
+def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., round_t_to_n_digits=0, mint=100):
     #select the longest n trajectories
     df = pd.read_csv(input_file_name)
+    df = df[df.t>mint].copy() #chop off times before mint
     df.reset_index(inplace=True)
     s = df.groupby('particle').t.count()
     s = s.sort_values(ascending=False)
@@ -87,7 +88,7 @@ def generate_msd_figures_routine(file,n_tips):
     # get all .csv files in the working directory of ^that file
     folder_name = os.path.dirname(file)
     os.chdir(folder_name)
-    retval = !ls
+    retval = os.listdir()
     file_name_list = list(retval)
     # check each file if it ends in .csv before merging it
     def is_csv(file_name):
