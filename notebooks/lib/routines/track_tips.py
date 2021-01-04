@@ -11,7 +11,7 @@ def compute_track_tips_pbc(df, mem=2, sr=400,
     listed in the .csv, input_file_name using period boundary conditions (pbc).
     sr is the search range, which needs to be bigger than sqrt(max(width,height))
     to work with periodic boundary conditions.'''
-    distance_L2_pbc = get_distance_L2_pbc(width,height)
+    # distance_L2_pbc = get_distance_L2_pbc(width,height)
     # df = pd.read_csv(input_file_name)
     #assign each time a unique frame number
     t_list =  sorted(set(df.t.values))
@@ -35,7 +35,7 @@ def compute_track_tips_pbc(df, mem=2, sr=400,
     traj = trackpy.link_df(
         f=df.head(-1),t_column='frame',**link_kwargs)
     return traj
-def generate_track_tips_pbc(input_file_name, save_fn=None, mem=2, sr=400,
+def generate_track_tips_pbc(input_file_name, save_fn=None, mem=0, sr=400,
                        width=200, height=200, adaptive_step=0.5,
                        adaptive_stop=1e-5, **kwargs):
     '''performs compute_track_tips_pbc and then saves to csv using
@@ -48,3 +48,4 @@ def generate_track_tips_pbc(input_file_name, save_fn=None, mem=2, sr=400,
     traj = compute_track_tips_pbc(df, **kwargs)
     traj.to_csv(save_fn, index=False)
     return save_fn
+

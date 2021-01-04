@@ -22,7 +22,7 @@ cdef inline double _get_fraction(double from_value, double to_value,
 
 cdef inline double compute_theta(double[:] u, double[:] v):
     '''u and v are vectors here.'''
-    return np.arccos(np.dot(u,v) / (np.linalg.norm(u) * (np.linalg.norm(u))))
+    return np.abs(np.pi/2-np.arccos(np.dot(u,v) / (np.linalg.norm(u) * (np.linalg.norm(v)))))
 
 cdef inline bint is_in_box(double x, double y,double minx, 
                                 double maxx, double miny, double maxy):
@@ -79,12 +79,13 @@ def find_tips_for_linear_segment_pairs(list segments1, list segments2, int r0, i
     for segment1 in segments1:
         for segment2 in segments2:
             u = np.array(segment1)
-            v = np.array(segment2)
+            v = np.array(segment2) 
 
             du = np.subtract(u[1],u[0])
             dv = np.subtract(v[1],v[0])
+            # theta = -9999.#compute_theta(du,dv)
             theta = compute_theta(du,dv)
-            
+
             if (theta_threshold != 0.):
                 if np.abs(theta)<theta_threshold:
                     continue

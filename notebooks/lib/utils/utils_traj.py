@@ -153,46 +153,102 @@ def get_tips_in_range(xy_self,xy_others, pid_others, distance_L2_pbc,dist_thresh
                 pid_lst.append (  int(pid_other) )
     return pid_lst
 
-def identify_death_partner(df,cid,distance_L2_pbc):
-    # f = df
+def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None):
+    """identify birth mate using set difference.
+    Example Usage:
+    cid_birthmate, nearest_dist_birth, t_birth = identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None)
+    """
+    #self
     d = df[df.cid == cid]
-    # pid = sorted(set(d.particle.values))[0]
-    # d = f[f.particle == pid]
-    #identify the death partner
-    x,y,t = d.tail(1)[['x','y','t']].values.T
-    #at the time of birth/death, the suspects were...
-    # x_others,y_others,pid_others = f[(f.t==float(t))&(f.particle!=pid)][['x','y','particle']].values.T
-    x_others,y_others,cid_others = df[(df.t==float(t))&(df.cid!=cid)][['x','y','cid']].values.T
-    xy_others = np.vstack((x_others,y_others)).T
+    x,y,frm,t = d.head(1)[['x','y','frame','t']].values.T
+    frm_birth=frm
     xy_self = np.array((x,y)).T
-    nearest_cid, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
-    return nearest_cid, nearest_dist, t
+    #others that died in the same frame
+    if cid_others is None:
+        cid_others = df[(df.frame==int(frm))&(df.cid!=cid)]['cid'].values.T 
+    cid_others_nxt = df[(df.frame==int(frm)+1)&(df.cid!=cid)]['cid'].values.T
+    cid_others_prv = df[(df.frame==int(frm)-1)&(df.cid!=cid)]['cid'].values.T  
+    # cid_born_lst=sorted(set(list(cid_others_nxt)).difference(set(list(cid_others))))
+    cid_born_lst=sorted(set(list(cid_others)).difference(set(list(cid_others_prv))))
+    try:
+        assert(len(cid_born_lst)>0)
+    except Exception as e:
+        print((cid_others,cid_others_prv))
+        print(e)
+        assert(len(cid_born_lst)>0)
+    #at the time of birth/death, the suspects were...
+    cid_others=np.array(cid_born_lst)
+    boo = (df.frame!=df.frame)#tautologically False
+    for cid_other in cid_others:
+        boo |=(df.cid==cid_other)
+    boo &= (df.frame==int(frm_birth)) #select only the cid_others in the death frame
+    x_others,y_others = df[boo][['x','y']].values.T  
+    xy_others = np.vstack((x_others,y_others)).T
+    cid_birthmate, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
+    return cid_birthmate, nearest_dist, float(t)
 
-def identify_birth_partner(df,cid,distance_L2_pbc):
-    # f = df
+
+def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None):
+    """identify death mate using set difference.
+    Example Usage:
+    cid_deathmate, nearest_dist_death, t_death = identify_death_partner(df,cid,distance_L2_pbc)
+    """
+    #self
     d = df[df.cid == cid]
-    # pid = sorted(set(d.particle.values))[0]
-    # d = f[f.particle == pid]
-    #identify the death partner
-    x,y,t = d.head(1)[['x','y','t']].values.T
-    #at the time of birth/death, the suspects were...
-    # x_others,y_others,pid_others = f[(f.t==float(t))&(f.particle!=pid)][['x','y','particle']].values.T
-    x_others,y_others,cid_others = df[(df.t==float(t))&(df.cid!=cid)][['x','y','cid']].values.T
-    xy_others = np.vstack((x_others,y_others)).T
+    x,y,frm,t = d.tail(1)[['x','y','frame','t']].values.T
+    frm_death=frm
     xy_self = np.array((x,y)).T
-    nearest_cid, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
-    return nearest_cid, nearest_dist, t
+    #others that died in the same frame
+    if cid_others is None:#&(df.keep)
+        cid_others = df[(df.frame==int(frm))&(df.cid!=cid)&(df.keep)]['cid'].values.T  
+    cid_others_nxt = df[(df.frame==int(frm)+1)&(df.cid!=cid)]['cid'].values.T  
+    cid_died_lst=sorted(set(list(cid_others)).difference(set(list(cid_others_nxt))))
+    assert(len(cid_died_lst)>0)
+    #at the time of birth/death, the suspects were...
+    cid_others=np.array(cid_died_lst)
+    boo = (df.frame!=df.frame)#tautologically False
+    for cid_other in cid_others:
+        boo |=(df.cid==cid_other)
+    boo &= (df.frame==int(frm_death)) #select only the cid_others in the death frame
+    x_others,y_others = df[boo][['x','y']].values.T  
+    xy_others = np.vstack((x_others,y_others)).T
+    cid_deathmate, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
+    return cid_deathmate, nearest_dist, float(t)
 
-# def identify_birth_partner(df,d):
-#     f = df
-#     pid = sorted(set(d.particle.values))[0]
+
+
+
+# def identify_death_partner(df,cid,distance_L2_pbc):
+#     '''Example usage:
+#     nearest_cid, nearest_dist, t = identify_death_partner(df,cid,distance_L2_pbc)
+#     '''
+#     # f = df
+#     d = df[df.cid == cid]
+#     # pid = sorted(set(d.particle.values))[0]
 #     # d = f[f.particle == pid]
-#     #identify the birth partner
-#     x,y,t = d.head(1)[['x','y','t']].values.T
+#     #identify the death partner
+#     x,y,t = d.tail(1)[['x','y','t']].values.T
 #     #at the time of birth/death, the suspects were...
-#     x_others,y_others,pid_others = f[(f.t==float(t))&(f.particle!=pid)][['x','y','particle']].values.T
+#     # x_others,y_others,pid_others = f[(f.t==float(t))&(f.particle!=pid)][['x','y','particle']].values.T
+#     x_others,y_others,cid_others = df[(df.t==float(t))&(df.cid!=cid)][['x','y','cid']].values.T
 #     xy_others = np.vstack((x_others,y_others)).T
 #     xy_self = np.array((x,y)).T
-# #     return xy_self, xy_others
-#     nearest_pid, nearest_dist = get_neighboring_tip(xy_self,xy_others, pid_others)
-#     return nearest_pid, nearest_dist, t
+#     nearest_cid, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
+#     return nearest_cid, nearest_dist, t
+
+# def identify_birth_partner(df,cid,distance_L2_pbc):
+#     '''
+#     nearest_cid, nearest_dist, t_birth = identify_birth_partner(df,cid,distance_L2_pbc)'''
+#     # f = df
+#     d = df[df.cid == cid]
+#     # pid = sorted(set(d.particle.values))[0]
+#     # d = f[f.particle == pid]
+#     #identify the death partner
+#     x,y,t = d.head(1)[['x','y','t']].values.T
+#     #at the time of birth/death, the suspects were...
+#     # x_others,y_others,pid_others = f[(f.t==float(t))&(f.particle!=pid)][['x','y','particle']].values.T
+#     x_others,y_others,cid_others = df[(df.t==float(t))&(df.cid!=cid)][['x','y','cid']].values.T
+#     xy_others = np.vstack((x_others,y_others)).T
+#     xy_self = np.array((x,y)).T
+#     nearest_cid, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
+#     return nearest_cid, nearest_dist, t

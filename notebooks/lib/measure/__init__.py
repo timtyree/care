@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from ._find_contours import find_contours
 from ._utils_find_contours import *
 from ._utils_find_tips import *

@@ -1,8 +1,10 @@
 import numpy as np
 from ._find_tips_pbc_cy import lookup_segments
+from numba import njit
 #test based dev of needed functions
+# @njit
 def compute_theta(u,v):
-    return np.arccos(np.dot(u,v) / (np.linalg.norm(u) * (np.linalg.norm(u))))
+    return np.abs(np.pi/2-np.arccos(np.dot(u,v) / (np.linalg.norm(u) * np.linalg.norm(v))))
 
 def _get_box(u,v):
     minx = np.min((np.min(u[0,:]),np.min(v[0,:])))
@@ -36,7 +38,7 @@ def find_tips_for_linear_segment_pairs(segments1, segments2, r0,c0, theta_thresh
         for segment2 in segments2:
             u = np.array(segment1)
             v = np.array(segment2)
-
+            # theta = -9999.#compute_theta(du,dv)
             theta = compute_theta(u[1]-u[0],v[1]-v[0])
 
             if np.abs(theta)<theta_threshold:

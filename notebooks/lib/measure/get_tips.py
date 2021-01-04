@@ -2,66 +2,49 @@ from skimage import measure
 from numba import jit, njit
 from numba.typed import List
 import numpy as np, os
-from lib.intersection import *
+from .intersection import *
 from scipy.interpolate import interp2d
 
 #load the measure library for robust, simplified, fast tip detection
-from .measure import find_contours
-from .measure._utils_find_contours import *
-from .measure._utils_find_tips import *
-from .measure._find_tips import *
-
-# # @njit
-# def get_tips(contours_raw, contours_inc):
-#     '''returns tips with indices of parent contours'''
-#     n_list = []; x_lst = []; y_lst = []
-#     for n1, c1 in enumerate(contours_raw):
-#         for n2, c2 in enumerate(contours_inc):
-#             x1, y1 = (c1[:, 0], c1[:, 1])
-#             x2, y2 = (c2[:, 0], c2[:, 1])
-#             x, y = intersection(x1, y1, x2, y2)
-#             if len(x)>0:
-#                 s = (n1,n2)
-#                 x = list(x)
-#                 y = list(y)
-#                 n_list.append(s)
-#                 x_lst.append(x)
-#                 y_lst.append(y)
-#     return n_list, x_lst, y_lst
+from . import find_contours
+from ._utils_find_contours import *
+from ._utils_find_tips import *
+from ._find_tips import *
 
 
-# @njit#(cache=True)#, nogil = True)
-# def get_tips(contours_a,contours_b):
-#     '''returns tips with indices of parent contours returned as the nested list, n_list.
-#     tuple(contours_a),tuple(contours_b) are each tuples of m-by-2 np.ndarrays. m is any positive int.
-#     each member is a 1D line.
+@njit#(cache=True)#, nogil = True)
+def get_tips(contours_a,contours_b):
+    '''Must recieve contours that make no attempt to jump the boundaries
+    returns tips with indices of parent contours returned as the nested list, n_list.
+    tuple(contours_a),tuple(contours_b) are each tuples of m-by-2 np.ndarrays. m is any positive int.
+    each member is a 1D line.
 
-#     get_tips returns all intersections of
-#     contours_a with contours_b.
-#     will throw a TypingError exception if either input tuple is empty.
+    get_tips returns all intersections of
+    contours_a with contours_b.
+    will throw a TypingError exception if either input tuple is empty.
 
-#     if you get a nonsingular matrix error, make sure that you`re not comparing a contour to itself.'''
-#     n_list = List(); x_list = List(); y_list = List();
-#     ncr = len(contours_a); nci = len(contours_b)
-#     for n1 in prange(ncr):
-#         for n2 in prange(nci):
-# #     for n1, c1 in enumerate(contours_a):
-# #         for n2, c2 in enumerate(contours_b):
-#             c1 = contours_a[n1]
-#             c2 = contours_b[n2]
-#             x1 = c1[:, 0]
-#             y1 = c1[:, 1]
-#             x2 = c2[:, 0]
-#             y2 = c2[:, 1]
-#             x,y = intersection(x1, y1, x2, y2)
-#             if len(x)>0:
-#                 s = (n1,n2)
-#                 xl = list(x)
-#                 yl = list(y)
-#                 n_list.append(s)
-#                 x_list.append(xl)
-#                 y_list.append(yl)
-#     return n_list, x_list, y_list
+    if you get a nonsingular matrix error, make sure that you`re not comparing a contour to itself.'''
+    n_list = List(); x_list = List(); y_list = List();
+    ncr = len(contours_a); nci = len(contours_b)
+    for n1 in prange(ncr):
+        for n2 in prange(nci):
+#     for n1, c1 in enumerate(contours_a):
+#         for n2, c2 in enumerate(contours_b):
+            c1 = contours_a[n1]
+            c2 = contours_b[n2]
+            x1 = c1[:, 0]
+            y1 = c1[:, 1]
+            x2 = c2[:, 0]
+            y2 = c2[:, 1]
+            x,y = intersection(x1, y1, x2, y2)
+            if len(x)>0:
+                s = (n1,n2)
+                xl = list(x)
+                yl = list(y)
+                n_list.append(s)
+                x_list.append(xl)
+                y_list.append(yl)
+    return n_list, x_list, y_list
 
 def enumerate_tips(tips):
     '''returns n_list, x_list, y_list
@@ -101,48 +84,6 @@ def tips_to_list(tips):
     return x_lst, y_lst
 
 
-#deprecated - needs parameters
-# def get_contours(img_nxt,img_inc):
-#     contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
-#     contours_inc = measure.find_contours(img_inc, level=0.9,fully_connected='low',positive_orientation='low')
-#     return contours_raw,contours_inc
-
-#tip locating for stable parameters
-# img_inc = (img_nxt * ifilter(dtexture_dt[..., 0]))**2  #mask of instantaneously increasing voltages
-# img_inc = filters.gaussian(img_inc,sigma=2., mode='wrap')
-# contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
-# contours_inc = measure.find_contours(img_inc, level=0.0005)#,fully_connected='low',positive_orientation='low')
-
-
-# @jit
-# def get_contours(img_nxt,img_inc):
-#     contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
-#     contours_inc = measure.find_contours(img_inc, level=0.0005)#,fully_connected='low',positive_orientation='low')
-#     return contours_raw, contours_inc
-
-
-# def get_tips(contours_raw, contours_inc):
-#     '''returns tips with indices of parent contours'''
-#     n_list = []; x_lst = []; y_lst = []
-#     for n1, c1 in enumerate(contours_raw):
-#         for n2, c2 in enumerate(contours_inc):
-#             x1, y1 = (c1[:, 0], c1[:, 1])
-#             x2, y2 = (c2[:, 0], c2[:, 1])
-#             # tmp = intersection(x1, y1, x2, y2)
-#             x, y = intersection(x1, y1, x2, y2)
-#             # if a tip has been detected, save it and its contour ids
-#             if len(x)>0:
-#                 s = (n1,n2)
-#                 x = list(x)
-#                 # x.sort()
-#                 y = list(y)
-#                 # y.sort()
-#                 # tmp = (s,x,y)
-#                 # tips.append(tmp)
-#                 n_list.append(s)
-#                 x_lst.append(x)
-#                 y_lst.append(y)
-#     return n_list, x_lst, y_lst
 
 def my_numba_list_to_python_list(numba_lst):
     normal_list = []
@@ -175,7 +116,6 @@ def unpad(X, pad, width, rejection_distance):
     elif X >= width:
         X -= width
     return X
-
 
 # @njit
 def textures_to_padded_textures(txt,dtexture_dt, pad):
@@ -344,6 +284,8 @@ def get_state_interpolated(x, y, txt, nanstate, xcoord_mesh, ycoord_mesh,
 #     get_state_interpolated(x, y, txt.astype('float32'), nanstate, xcoord_mesh, ycoord_mesh,
 #                           channel_no = 3, rad = 0.5, kind='linear')
 #       )
+
+
 ##############################################
 ##  Get Electrophysiological (EP) State Data #
 ##############################################
@@ -368,27 +310,6 @@ def get_states(x_values, y_values, txt, pad,
         states_interpolated_linear.append(state_interpolated_linear)
         states_interpolated_cubic.append(state_interpolated_cubic)
     return states_nearest, states_interpolated_linear, states_interpolated_cubic
-
-
-# def get_states(tips_mapped, txt, pad,
-#               nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
-#     '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
-#     # tips_mapped gives tip locations using the correct image pixel coordinates, here.
-#     padded_txt  = pad_matrix(txt, pad)
-#     y_locations = np.array(tips_mapped[2]) + pad
-#     x_locations = np.array(tips_mapped[3]) + pad
-#
-#     states_nearest = states_interpolated_linear = states_interpolated_cubic = [];
-#     for x,y in zip(x_locations,y_locations):
-#         state_nearest = get_state_nearest(x,y,txt=padded_txt)
-#         state_interpolated_linear = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
-#                               channel_no = channel_no, rad = 0.5, kind='linear')
-#         state_interpolated_cubic = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
-#                               channel_no = channel_no, rad = 3.5, kind='cubic')
-#         states_nearest.append(state_nearest)
-#         states_interpolated_linear.append(state_interpolated_linear)
-#         states_interpolated_cubic.append(state_interpolated_cubic)
-#     return states_nearest, states_interpolated_linear, states_interpolated_cubic
 
 def add_states(tips_mapped, states_EP):
     tips_mapped = list(tips_mapped)
@@ -446,3 +367,89 @@ def get_grad_direction(texture):
                 out_Nx[y,x] = Nx/norm
                 out_Ny[y,x] = Ny/norm
     return out_Nx, out_Ny
+
+
+# ################################
+# deprecated
+# ################################
+
+#deprecated - needs parameters
+# def get_contours(img_nxt,img_inc):
+#     contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
+#     contours_inc = measure.find_contours(img_inc, level=0.9,fully_connected='low',positive_orientation='low')
+#     return contours_raw,contours_inc
+
+#tip locating for stable parameters
+# img_inc = (img_nxt * ifilter(dtexture_dt[..., 0]))**2  #mask of instantaneously increasing voltages
+# img_inc = filters.gaussian(img_inc,sigma=2., mode='wrap')
+# contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
+# contours_inc = measure.find_contours(img_inc, level=0.0005)#,fully_connected='low',positive_orientation='low')
+
+
+# @jit
+# def get_contours(img_nxt,img_inc):
+#     contours_raw = measure.find_contours(img_nxt, level=0.5,fully_connected='low',positive_orientation='low')
+#     contours_inc = measure.find_contours(img_inc, level=0.0005)#,fully_connected='low',positive_orientation='low')
+#     return contours_raw, contours_inc
+
+# # @njit
+# def get_tips(contours_raw, contours_inc):
+#     '''returns tips with indices of parent contours'''
+#     n_list = []; x_lst = []; y_lst = []
+#     for n1, c1 in enumerate(contours_raw):
+#         for n2, c2 in enumerate(contours_inc):
+#             x1, y1 = (c1[:, 0], c1[:, 1])
+#             x2, y2 = (c2[:, 0], c2[:, 1])
+#             x, y = intersection(x1, y1, x2, y2)
+#             if len(x)>0:
+#                 s = (n1,n2)
+#                 x = list(x)
+#                 y = list(y)
+#                 n_list.append(s)
+#                 x_lst.append(x)
+#                 y_lst.append(y)
+#     return n_list, x_lst, y_lst
+
+# def get_tips(contours_raw, contours_inc):
+#     '''returns tips with indices of parent contours'''
+#     n_list = []; x_lst = []; y_lst = []
+#     for n1, c1 in enumerate(contours_raw):
+#         for n2, c2 in enumerate(contours_inc):
+#             x1, y1 = (c1[:, 0], c1[:, 1])
+#             x2, y2 = (c2[:, 0], c2[:, 1])
+#             # tmp = intersection(x1, y1, x2, y2)
+#             x, y = intersection(x1, y1, x2, y2)
+#             # if a tip has been detected, save it and its contour ids
+#             if len(x)>0:
+#                 s = (n1,n2)
+#                 x = list(x)
+#                 # x.sort()
+#                 y = list(y)
+#                 # y.sort()
+#                 # tmp = (s,x,y)
+#                 # tips.append(tmp)
+#                 n_list.append(s)
+#                 x_lst.append(x)
+#                 y_lst.append(y)
+#     return n_list, x_lst, y_lst
+
+# def get_states(tips_mapped, txt, pad,
+#               nanstate, xcoord_mesh, ycoord_mesh, channel_no = 3):
+#     '''iterates through x_locations and y_locations contained in tips_mapped and returns the electrophysiological states'''
+#     # tips_mapped gives tip locations using the correct image pixel coordinates, here.
+#     padded_txt  = pad_matrix(txt, pad)
+#     y_locations = np.array(tips_mapped[2]) + pad
+#     x_locations = np.array(tips_mapped[3]) + pad
+#
+#     states_nearest = states_interpolated_linear = states_interpolated_cubic = [];
+#     for x,y in zip(x_locations,y_locations):
+#         state_nearest = get_state_nearest(x,y,txt=padded_txt)
+#         state_interpolated_linear = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+#                               channel_no = channel_no, rad = 0.5, kind='linear')
+#         state_interpolated_cubic = get_state_interpolated(x, y, padded_txt, nanstate, xcoord_mesh, ycoord_mesh,
+#                               channel_no = channel_no, rad = 3.5, kind='cubic')
+#         states_nearest.append(state_nearest)
+#         states_interpolated_linear.append(state_interpolated_linear)
+#         states_interpolated_cubic.append(state_interpolated_cubic)
+#     return states_nearest, states_interpolated_linear, states_interpolated_cubic
+

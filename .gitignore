@@ -6,10 +6,12 @@ __pycache__/
 
 # Figures and bulk output
 notebooks/Figures/
-
+notebooks/Data/
 # Log files
 # notebooks/Data/**/Log/*
+
 notebooks/Data/archive/
+notebooks/Data/test_data/
 notebooks/Data/ds_5_param_set_8/*.pdf
 notebooks/Data/ds_5_param_set_8/
 notebooks/Data/initial-conditions-suite-1/archive_diff_coeff_0.001/
@@ -159,3 +161,5 @@ notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_005_pro
 notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_004.csv
 notebooks/Data/ds_5_param_set_8/trajectories/tip_log_ds_5_sigma_0.5_threshold_0.9_005_traj_sr_1_mem_2.csv
 notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_004.csv
+notebooks/Data/test_data/fast_kernel_V_0.5/ic_200x200.001.13_log_filtered_alpha_0.5.csv
+notebooks/Data/test_data/fast_kernel_V_0.5/ic_200x200.001.13_log_filtered_alpha_0.6.csv

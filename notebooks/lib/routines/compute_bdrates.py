@@ -17,7 +17,9 @@ import time, os, sys, re
 #Goal: fix compute_bdrates_from_log_w_subsampling to compute from times instead of indices.
 
 def compute_bdrates_from_log_w_mean(src, min_time_to_next_event = 0, min_time = 100):
-    '''returns pandas.DataFrame instance with the mean rate for a given change in tip number and tip number.
+    '''returns df_output, gf
+    df_output is a pandas.DataFrame instance with the mean rate for a given change in tip number and tip number. time column is nonsense.
+    gf is ^that before taking the mean
     min_time_to_next_event is in units of milliseconds.  
     min_time is the time when bd events stop being considered garbage in milliseconds.
     src is a .csv filename.'''

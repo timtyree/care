@@ -14,7 +14,7 @@ cdef extern from "numpy/npy_math.h":
 
 cdef inline double _get_fraction(double from_value, double to_value,
                                  double level):
-    if (to_value == from_value):
+    if (to_value == from_value): 
         return 0
     return ((level - from_value) / (to_value - from_value))
 

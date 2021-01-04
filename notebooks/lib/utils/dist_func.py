@@ -31,7 +31,7 @@ def get_distance_L2_pbc(width=200,height=200):
     width, height are the shape of that 2D rectangle.'''
     @jit('f8(f8[:],f8[:])', nopython=True)
     def distance_L2_pbc(point_1, point_2):
-        '''assumes getting shortest distance between two points with periodic boundary conditions in 2D.'''
+        '''assumes getting shortest distance between two points with periodic boundary conditions in 2D.  point_1 and point_2 are iterables of length 2'''
         mesh_shape=np.array((width,height))
         dq2 = 0.
         #     for q1, q2, width in zip(point_1[:2], point_2[:2], mesh_shape):

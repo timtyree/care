@@ -70,7 +70,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 			#take measurements once every n frames
 			#compute as discrete flow map dtxt_dt
 			dtxt_dt = zero_txt.copy()
-			get_time_step(txt, dtxt_dt)
+			get_time_step(txt, dtxt_dt) 
 
 			#compute the images used to find isosurfaces
 			img    = txt[...,0]

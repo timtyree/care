@@ -11,12 +11,12 @@ if not 'nb_dir' in globals():
 #load the libraries
 from lib import *
 
-class y_axis_struct():
-	def __init__(self):
-		self.fields = {"x_values", "y_values", "y_err_1" "y_err_2",
-		self.label = "default y_axis_struct",
-		self.color = 'black'}
-		return self
+# class y_axis_struct():
+# 	def __init__(self):
+# 		self.fields = {"x_values", "y_values", "y_err_1" "y_err_2",
+# 		self.label = "default y_axis_struct",
+# 		self.color = 'black'}
+# 		return self
 
 ###########################################################
 ####### Plot results of birth-death data pipeline #########

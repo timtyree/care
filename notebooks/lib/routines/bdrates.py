@@ -30,12 +30,13 @@ import pandas as pd, numpy as np, os
 #     df.to_csv(output_file_name)
 #     return True
 
-def log_to_bdrates_routine(input_file_name, save_folder, min_time_between_samples):
+def log_to_bdrates_routine(input_file_name, save_folder, min_time_between_samples, output_file_name=None):
     '''input_file_name contains the log of spiral tips.  birth-death rates are computed and saved to output_file_name.
     subsampling is used, such that the time between two frames is no less than min_time_between_samples'''
     #compute the input/output absolute paths
     #     src = os.path.join(folder_name,os.path.basename(input_file_name))
-    output_file_name = os.path.basename(input_file_name).replace('log.csv','bdrates.csv')
+    if output_file_name is None:
+        output_file_name = os.path.basename(input_file_name).replace('log.csv','bdrates.csv')
     dst = os.path.join(save_folder,output_file_name)    
     df = compute_bdrates_from_log_w_subsampling(input_file_name,min_time_between_samples=min_time_between_samples)
 

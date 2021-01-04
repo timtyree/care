@@ -2,7 +2,7 @@
 from ..my_initialization import *
 from ..utils import *
 
-def decompose_trajectories(input_file_name, distance_L2_pbc,DS = 5./200.,DT=1.,
+def decompose_trajectories(df, distance_L2_pbc,DS = 5./200.,DT=1.,
     width=200,height=200,LT_thresh=1,tmin=100, jump_thresh=10.):
     '''
     reads trajectories from the .csv file, input_file_name.
@@ -11,15 +11,17 @@ def decompose_trajectories(input_file_name, distance_L2_pbc,DS = 5./200.,DT=1.,
     break the trajectories in input_file_name up into valid chunks indexed by the column `cid`.
     returns pandas.DataFrame
     '''
-    #list of length sorted trajectories
     # input_file_name = "/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8_fastkernel_V_0.5_archive/trajectories/ic_200x200.001.22_traj_sr_400_mem_2.csv"
-    df = pd.read_csv(input_file_name)
-    try:
-        df.drop(columns=['index'])
-        print('index col dropped')
-    except:
-        pass
+    # df = pd.read_csv(input_file_name)
+    # try:
+    #     df.drop(columns=['index'])
+    #     print('index col dropped')
+    # except:
+    #     pass
+
     # df.reset_index(inplace=True)
+
+    #list of length sorted trajectories
     s = df.groupby('particle').t.count()
     s = s.sort_values(ascending=False)
     #filter based on min trajectory length
@@ -32,7 +34,7 @@ def decompose_trajectories(input_file_name, distance_L2_pbc,DS = 5./200.,DT=1.,
     # if distance_L2_pbc is None:
     #     distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
     df['cid'] = -9999
-    df = chunk_traj(df,pid_lst=pid_longest_lst,width=width,height=height,jump_thresh=10., LT_thresh=1,distance_L2_pbc=distance_L2_pbc, DS=DS, DT=DT)
+    df = chunk_traj(df,pid_lst=pid_longest_lst,width=width,height=height,jump_thresh=jump_thresh, LT_thresh=LT_thresh,distance_L2_pbc=distance_L2_pbc, DS=DS, DT=DT)
     assert(df.cid.max()>0)
     return df
     # d_lst = chunk_traj(df,pid_lst=pid_longest_lst,width=width,height=height,jump_thresh=10., LT_thresh=1,distance_L2_pbc=None):
@@ -60,11 +62,12 @@ def retrack_trajectories(df,distance_L2_pbc,lifetime_thresh = 50,angle_threshold
             df,pid2counter = patch_traj_head(df,cid,pid2counter, distance_L2_pbc, lifetime_thresh, jump_thresh, angle_threshold, mode='backward')
         elif not (d.particle2<0).all():
             d = df[df.cid==cid]
-            print(f"Warning: some but not all rows where cid=={cid} already had a value for particle2!")
-            print(f"They were pid2 were in {{ {set(d.particle2)} }}")
-            print(f"Whilst pid2counter=={pid2counter}.")
-            print(f"\nd.head()=={d.head()}")
-            print(f"\nd.tail()=={d.tail()}")
+            #I don't think this matters, perhaps.
+            # print(f"Warning: some but not all rows where cid=={cid} already had a value for particle2!")
+            # print(f"They were pid2 were in {{ {set(d.particle2)} }}")
+            # print(f"Whilst pid2counter=={pid2counter}.")
+            # print(f"\nd.head().particle2.values=={d.head().particle2.values}")
+            # print(f"\nd.tail().particle2.values=={d.tail().particle2.values}")
     return df,pid2counter
 
 def patch_traj_head(df,cid,pid2counter, distance_L2_pbc, lifetime_thresh, jump_thresh, angle_threshold, mode='backward'):

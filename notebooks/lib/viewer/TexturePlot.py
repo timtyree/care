@@ -5,6 +5,7 @@ from .. import *
 # from lib.get_tips import *
 # from lib.intersection import *
 # from lib import *
+from ..model.minimal_model import *
 import matplotlib.cm as cm
 
 def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips,
