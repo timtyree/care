@@ -9,25 +9,27 @@ notebooks/Figures/
 notebooks/Data/
 # Log files
 # notebooks/Data/**/Log/*
+notebooks/lib/model/lookup_tables/
 
-notebooks/Data/archive/
-notebooks/Data/test_data/
-notebooks/Data/ds_5_param_set_8/*.pdf
-notebooks/Data/ds_5_param_set_8/
-notebooks/Data/initial-conditions-suite-1/archive_diff_coeff_0.001/
-notebooks/Data/initial-conditions-suite-1/ic-wj/
-notebooks/Data/initial-conditions-suite-1/ic-in/
-notebooks/Data/initial-conditions-suite-1/ic-out/
-notebooks/Data/initial-conditions-suite-1/ds_5_param_set_8/Log/
-notebooks/Data/initial-conditions-suite-1/ds_5_param_set_8/trajectories/
+# notebooks/Data/archive/
+# notebooks/Data/test_data/
+# notebooks/Data/ds_5_param_set_8/*.pdf
+# notebooks/Data/ds_5_param_set_8/
+# notebooks/Data/initial-conditions-suite-1/archive_diff_coeff_0.001/
+# notebooks/Data/initial-conditions-suite-1/ic-wj/
+# notebooks/Data/initial-conditions-suite-1/ic-in/
+# notebooks/Data/initial-conditions-suite-1/ic-out/
+# notebooks/Data/initial-conditions-suite-1/ds_5_param_set_8/Log/
+# notebooks/Data/initial-conditions-suite-1/ds_5_param_set_8/trajectories/
+# notebooks/Data/initial-conditions-suite-2/
 
-notebooks/Data/initial-conditions-suite-2/
-# notebooks/Data/initial-conditions-suite-2/ic-wj/
-# notebooks/Data/initial-conditions-suite-2/ic-in/
-# notebooks/Data/initial-conditions-suite-2/ic-out/
-# notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8/Log/
-# notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8/trajectories/
-# notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8/
+# not needed
+# # notebooks/Data/initial-conditions-suite-2/ic-wj/
+# # notebooks/Data/initial-conditions-suite-2/ic-in/
+# # notebooks/Data/initial-conditions-suite-2/ic-out/
+# # notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8/Log/
+# # notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8/trajectories/
+# # notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8/
 
 # Distribution / packaging
 .Python

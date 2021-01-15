@@ -4,8 +4,6 @@
 # The model from Luo-Rudy (1990) modified as described 
 # in Qu et alli (2000) to exhibit spiral defect chaos
 # implemented on a square computational domain.
-#TODO: use lookup table instead of using comp_ionic_currents
-#TODO: ask WJ if he knows of any analytic solutions for the parameters of the FK model in terms of parameters of the LR model
 from numba import njit, jit
 import numpy as np
 
@@ -34,11 +32,13 @@ if method=='cuda':
 # 	return 1 if a<=b else 0 # nan yields 1
 # # return 0 if a>b else 1 # nan yields 0
 
+
+
 # /*------------------------------------------------------------------------
 #  * periodic boundary conditions for each read from textures
 #  *------------------------------------------------------------------------
 #  */
-# @njitsu
+@njitsu
 def pbc(S,x,y):
 	'''S=texture with size 512,512,3
 	(x, y) pixel coordinates of texture with values 0 to 1.
@@ -60,7 +60,7 @@ def pbc(S,x,y):
 #  *-------------------------------------------------------------------------
 #  */ 
 
-# @njitsu
+@njitsu
 def laplacian(inVfs, x, y, cddx, cddy, V):
 	#five point stencil
 	dVltdt = (
@@ -84,15 +84,19 @@ def laplacian(inVfs, x, y, cddx, cddy, V):
 #  * comp transient gating variables
 #  *------------------------------------------------------------------------
 #  */
-# @njitsu
+@njitsu
 def comp_transient_gating_variable(var, tau, varinfty):
 	return (varinfty - var)/tau
+
+@njitsu
+def comp_solution_gating_variable(var, tau, varinfty, dt):
+	return varinfty - (varinfty-var)*np.exp(-dt/tau)
 
 # /*------------------------------------------------------------------------
 #  * comp transient intercellular calcium concentration
 #  *------------------------------------------------------------------------
 #  */
-# @njitsu
+@njitsu
 def comp_transient_intracellular_calcium_LR(Isi, Ca_i):
 	#intracellular calcium concentration
 	dCa_i_dt = -10**-4*Isi + 0.07 * (10**-4 - Ca_i)
@@ -102,6 +106,114 @@ def comp_transient_intracellular_calcium_LR(Isi, Ca_i):
 #  * comp transient voltage at pixel
 #  *------------------------------------------------------------------------
 #  */
+
+def get_comp_rate_of_voltage_change_at_pixel_LR(ds = 0.015, width =200, height=200, 
+	Cm=1., diffCoef=0.001,	Na_i = 18, Na_o = 140, K_i  = 145, K_o  = 5.4, Ca_o = 1.8,
+	method='njit', **kwargs):
+	"""Returns jit compiling function comp_rate_of_change_at_pixel_LR
+	#default spatial discretization
+	ds = 0.015 #cm/pixel
+	width =200 #pixels
+	height=200 #pixels
+
+	#default electrical properties of myocardial tissue 
+	Cm=1. # µF/cm^2 membrane capacitance determined by gap junctions between myocardial cells
+	diffCoef=0.001 #cm^2/ms diffusion constant determined by membrane resistance"""
+
+	#spatial discretization
+	cddx = width  / ds  #if this is too big than the simulation will blow up (at a given timestep)
+	cddy = height / ds #if this is too big than the simulation will blow up (at a given timestep)
+	cddx *= cddx
+	cddy *= cddy
+	
+	#physical parameters
+	R = 8.3145  # J/(mol * °K) universal gas constant 
+	T = 273.15+37#°K physiologically normal body temperature 37°C
+	F = 96485.3321233100184 # C/mol faraday's constant
+
+	EK1 = 10**3 * R*T/F * np.log (K_o/K_i) #mV
+	comp_ionic_currents = get_comp_ionic_currents(K_i=K_i,K_o=K_o,ENa=54.4,EK=-77.0,method=method,**kwargs)
+	comp_gating_constants = get_comp_gating_constants(method=method)
+
+	if method=='njit':
+		njitsu = njit
+	if method=='cuda':
+		import numba.cuda.njit as njitsu
+	@njitsu
+	def comp_rate_of_voltage_change_at_pixel_LR(inVc, C, Cgate, x, y):
+
+		##################################################
+		# Read Channels from Buffer
+		##################################################
+		# C = pbc(inVc, x, y)
+		V    = C[0] #mV transmembrane voltage 
+		Ca_i = C[1] # calcium concentration inside the cell 
+		#gating variables
+		# Cgate = pbc(inmhjdfx, x, y)
+		m = Cgate[0] #activation gate parameter (Na)
+		h = Cgate[1] #fast inactivation gate parameter (INa)
+		j = Cgate[2] #slow inactivation gate parameter (INa)
+		d = Cgate[3] #activation gate parameter (Isi)
+		f = Cgate[4] #inactivation gate parameter (Isi)
+		x_var = Cgate[5] #activation gate parameter (IK)
+		
+		##################################################
+		# Compute Ionic Current Density
+		##################################################
+		Iion, dCa_i_dt = comp_ionic_currents(V, m, h, j, d, f, x_var, Ca_i)
+
+		##################################################
+		# Compute transient term for transmembrane voltage
+		##################################################
+		dVltdt  = laplacian(inVc, x, y, cddx, cddy, V)	
+		dVltdt *= float(diffCoef)
+		dVltdt -= float(Iion/Cm)
+
+		##################################################
+		# Return rate of change of voltage and Ca_i
+		##################################################
+		return np.array([dVltdt,dCa_i_dt],dtype=np.float64) # = outVc
+	return comp_rate_of_voltage_change_at_pixel_LR
+
+def get_comp_exact_flow_map_gating_variables(method='njit'):
+	if method=='njit':
+		njitsu = njit
+	if method=='cuda':
+		import numba.cuda.njit as njitsu
+	comp_gating_constants=get_comp_gating_constants(method=method)
+	@njitsu
+	def comp_exact_flow_map_gating_variables(inCgate, outCgate, V, dt):
+
+		m = inCgate[0] #activation gate parameter (Na)
+		h = inCgate[1] #fast inactivation gate parameter (INa)
+		j = inCgate[2] #slow inactivation gate parameter (INa)
+		d = inCgate[3] #activation gate parameter (Isi)
+		f = inCgate[4] #inactivation gate parameter (Isi)
+		x_var = inCgate[5] #activation gate parameter (IK)
+
+		retval=comp_gating_constants(V)
+		tau_m, tau_h, tau_j, tau_d, tau_f, tau_x, m_infty, h_infty, j_infty, d_infty, f_infty, x_infty=retval
+
+		# if np.isclose(tau_h,0.,atol=0.0000000001):
+		# 	tau_h = 1.e-3
+
+		##################################################
+		# Return updated  gating variables
+		##################################################
+		outCgate[0]=comp_solution_gating_variable(m, tau_m, m_infty, dt)
+		outCgate[1]=comp_solution_gating_variable(h, tau_h, h_infty, dt)
+		outCgate[2]=comp_solution_gating_variable(j, tau_j, j_infty, dt)
+		outCgate[3]=comp_solution_gating_variable(d, tau_d, d_infty, dt)
+		outCgate[4]=comp_solution_gating_variable(f, tau_f, f_infty, dt)
+		outCgate[5]=comp_solution_gating_variable(x_var, tau_x, x_infty, dt)
+		# return Cgate
+		# txt_out = np.array([
+		# 	dVltdt,
+		# 	dCa_i_dt
+		# 	],dtype=np.float64)
+		# return txt_out
+
+	return comp_exact_flow_map_gating_variables
 
 def get_comp_rate_of_change_at_pixel_LR(ds = 0.015, width =200, height=200, 
 	Cm=1., diffCoef=0.001,	Na_i = 18, Na_o = 140, K_i  = 145, K_o  = 5.4, Ca_o = 1.8,
@@ -162,7 +274,7 @@ def get_comp_rate_of_change_at_pixel_LR(ds = 0.015, width =200, height=200,
 		njitsu = njit
 	if method=='cuda':
 		import numba.cuda.njit as njitsu
-	# @njitsu
+	@njitsu
 	def comp_rate_of_change_at_pixel_LR(inVmhjdfxc, x, y):
 
 		##################################################
@@ -243,7 +355,7 @@ def get_comp_rate_of_change_at_pixel_LR(ds = 0.015, width =200, height=200,
 # # In Qu2000.pdf, the partial differential equation was integrated
 # # using the alternating direction implicit method with a time step of 0.1 ms.
 
-# @njitsu
+@njitsu
 def comp_next_time_step(dt_prev, dV):
 	''' returns the size of the next time step
 	Adaptive time stepping as described in Luo1990.pdf.
@@ -301,7 +413,7 @@ def get_comp_ionic_currents(K_i=145.0,K_o=5.4,ENa=54.4,EK=-77.0,method='njit',**
 	# ENa = RT/F * np.log(Na_o/Na_i)
 	# EK = RT/F * np.log((K_o + PRNaK * Na_o)/(K_i + PRNaK * Na_i))
 	# EK  = -77. #mV #from Qu2000.pdf
-	EK1 = R*T/F * np.log (K_o/K_i)
+	EK1 = 10**3*R*T/F * np.log (K_o/K_i)
 	EKp = EK1
 	# EK1 = -87.94
 	Eb = -59.87 #mV
@@ -313,7 +425,7 @@ def get_comp_ionic_currents(K_i=145.0,K_o=5.4,ENa=54.4,EK=-77.0,method='njit',**
 		import numba.cuda.njit as njitsu
 
 	#precompute parameters
-	# @njitsu
+	@njitsu
 	def comp_ionic_currents(V, m, h, j, d, f, x, Ca_i):
 		'''Returns the electrical transmembrane current flux 
 		in units of µA/cm^2 using the model parameters described
@@ -355,7 +467,7 @@ def get_comp_ionic_currents(K_i=145.0,K_o=5.4,ENa=54.4,EK=-77.0,method='njit',**
 		####################
 		#Time-dependent potassium current
 		if V>-100:#mV
-			x1=2.837*(np.exp(0.04*(V+77.0))-1.0)/(V+77.0)*np.exp(0.04*(V+35.0))
+			x1=2.837*(np.exp(0.04*(V+77.0))-1.0)/((V+77.0)*np.exp(0.04*(V+35.0)))
 		else:
 			x1=1.0
 		IK=GK*x*x1*(V-EK)
@@ -378,31 +490,38 @@ def get_comp_ionic_currents(K_i=145.0,K_o=5.4,ENa=54.4,EK=-77.0,method='njit',**
 		####################
 		# Return net ionic current
 		####################
-		Iion=INa+IK1T+Isi
+		Iion=INa+IK1T+Isi+IK
 		return Iion, dCa_i_dt
 	return comp_ionic_currents
 
 
-def get_comp_gating_constants(method='njit'):#**kwargs):
+def get_comp_gating_constants(V_max=100.,method='njit'):
+	'''fixes overflow errors by setting unreasonably large voltage arguments to V_max.'''
 	#precompute parameters
 	if method=='njit':
 		njitsu = njit
 	if method=='cuda':
 		import numba.cuda.njit as njitsu
 
-	# @njitsu
+	@njitsu
 	def comp_gating_constants(V):
 		'''from Table 1 of Luo1990.pdf
 		ay is the rate constant for y ion channels/gates opening (msec).
 		by is the rate constant for y ion channels/gates closing (msec).
+		sets unreasonably large voltage arguments to V_max and unreasonably small voltage arguements to -V_max
 		'''
+		if V>V_max: #mV
+			V=V_max
+		if V<-V_max:
+			V=-V_max
+
 		####################
 		# Inward Ion Gates
 		####################
 		#Fast sodium current
 		am=0.32*(V+47.13)/(1.0-np.exp(-0.1*(V+47.13)))
 		bm=0.08*np.exp(-V/11.)
-		if V>=-40.0:#mV sodium gates are closed
+		if V>=-40.0:#mV sodium gates close
 			ah=0.0 
 			aj=0.0
 			bh=1.0/(0.13*np.exp((V+10.66)/-11.1))
@@ -425,7 +544,7 @@ def get_comp_gating_constants(method='njit'):#**kwargs):
 		#Time-dependent potassium current
 		ax=0.0005*np.exp(0.083*(V+50.0))/(1.0+np.exp(0.057*(V+50.0)))
 		bx=0.0013*np.exp(-0.06*(V+20.0))/(1.0+np.exp(-0.04*(V+20.0)))
-		
+	
 		####################
 		# Compute rates
 		####################

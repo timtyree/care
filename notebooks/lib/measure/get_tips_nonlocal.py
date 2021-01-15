@@ -1,15 +1,20 @@
+#use the nonlocal topological method to detect tips.  
+# also records topologcially preserved values.
+#Tim Tyree
+#9.13.2021
+
 from skimage import measure
 from numba import jit, njit
 from numba.typed import List
 import numpy as np, os
-from .intersection import *
+from . import *
+# from .intersection import *
 from scipy.interpolate import interp2d
 
-#load the measure library for robust, simplified, fast tip detection
-from . import find_contours
-from ._utils_find_contours import *
-from ._utils_find_tips import *
-from ._find_tips import *
+# from . import find_contours
+# from ._utils_find_contours import *
+# from ._utils_find_tips import *
+# from ._find_tips import *
 
 
 @njit#(cache=True)#, nogil = True)

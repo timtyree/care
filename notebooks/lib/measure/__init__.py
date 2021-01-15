@@ -1,10 +1,20 @@
 #!/usr/bin/python
+from .get_tips_nonlocal import *
+from .interpolate import *
+from .intersection import *
 from ._find_contours import find_contours
 from ._utils_find_contours import *
 from ._utils_find_tips import *
 from ._find_tips import *
 from ._find_tips_pbc_cy import *
 from ._find_tips_kernel_cy import *
+
+#deprecated method with topological knots measured
+# from .utils_measure_tips_cpu import *
+
+
+
+
 # from ._find_tips_pbc_cy import lookup_segments
 # from ._find_tips_kernel_cy import find_intersections
 # from ._find_tips_kernel import *
