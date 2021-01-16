@@ -2,8 +2,8 @@
 # Generate Birth Death Rates for Given Initial Conditions
 # Tim Tyree
 # 10.28.2020
-from .. import * 
-from ..measure.measure import *  
+from .. import *
+from ..measure.measure import *
 #^this import is not the best practice. however, minimalism reigns the pythonic.
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
 
@@ -14,10 +14,10 @@ beep = lambda x: os.system("echo -n '\\a';sleep 0.2;" * x)
 if not 'here_dir' in globals():
 	here_dir = os.getcwd()
 def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
-	V_threshold, theta_threshold,
-	tmin_early_stopping, save_every_n_frames, round_output_decimals, 
-	timing, printing, logging, asserting, beeping, saving, 
-	data_dir_log, completed_ic_dir, print_log_dir, **kwargs):
+	V_threshold, theta_threshold,dsdpixel,
+	tmin_early_stopping, save_every_n_frames, round_output_decimals,
+	timing, printing, logging, asserting, beeping, saving,
+	data_dir_log, completed_ic_dir, print_log_dir, param_fn, **kwargs):
 	'''generates a log of tip locations on 2D grid with periodic boundary conditions.
 	default key word arguments are returned by lib.routines.kwargs.get_kwargs(initial_condition_dir).'''
 	level1 = V_threshold
@@ -47,7 +47,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 		assert (float(time_start) is not None)
 	tip_state_lst = []
 	t = time_start
-	dict_out_lst = []  
+	dict_out_lst = []
 	num_steps = int(np.around((tmax-t)/h))
 
 	#precompute anything that needs precomputing
@@ -57,6 +57,13 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 		print(f"starting simulation.  integrating no further than time {tmax:.3f} milliseconds.")
 	if timing:
 		start = time.time()
+
+	param_dir = os.path.join(here_dir,'lib/model')
+	param_dict = json.load(open(os.path.join(param_dir,param_fn)))
+	get_time_step=fetch_get_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
+	time_step=fetch_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
+
+
 	##########################################
 	#run the simulation, measuring regularly
 	##########################################
@@ -70,7 +77,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 			#take measurements once every n frames
 			#compute as discrete flow map dtxt_dt
 			dtxt_dt = zero_txt.copy()
-			get_time_step(txt, dtxt_dt) 
+			get_time_step(txt, dtxt_dt)
 
 			#compute the images used to find isosurfaces
 			img    = txt[...,0]
@@ -110,9 +117,9 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 			# contours2 = find_contours(dimgdt, level = 0.0)
 
 			# #find_tips and measure tip topological/EP state
-			# s1_list, s2_list, x_lst, y_lst, v_lst, f_lst, s_lst = measure_system(contours1, contours2, width, height, txt, 
-			# 																	 jump_threshold = jump_threshold, 
-			# 																	 size_threshold = size_threshold, 
+			# s1_list, s2_list, x_lst, y_lst, v_lst, f_lst, s_lst = measure_system(contours1, contours2, width, height, txt,
+			# 																	 jump_threshold = jump_threshold,
+			# 																	 size_threshold = size_threshold,
 			# 																	 pad=pad, decimals=decimals)
 			# n_tips = x_lst.size
 			# dict_out = {
@@ -126,7 +133,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 			# 	'f':f_lst,
 			# 	's':s_lst,
 			# }
-			
+
 			#record data for current time
 			dict_out_lst.append(dict_out)
 
@@ -154,7 +161,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 		# print(f"current max voltage is {np.nanmax(txt[...,0]):.4f}.")
 		# print(f"current max fast variable is {np.nanmax(txt[...,1]):.4f}.")
 		# print(f"current max slow variable is {np.nanmax(txt[...,2]):.4f}.")
-		print(f"number of tips is = {n_tips}.") 
+		print(f"number of tips is = {n_tips}.")
 		if n_tips==0:
 			print(f"zero tips remaining at time t = {t:.1f} ms.")
 	if beeping:
@@ -180,13 +187,12 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	#input ic moved to output
 	if logging:
 		if not log.closed:
-			log.close()		
-
+			log.close()
 	return kwargs
 
 if __name__=='__main__':
 	for ic in sys.argv[1:]:
 		kwargs = get_kwargs(ic)
 		kwargs = generate_tip_logs_from_ic(ic, **kwargs)
-		print(f"completed birth_death_rates_from_ic: {ic}")
+		print(f"completed generate_tip_logs_from_ic: {ic}")
 		print(f"csv of spiral tip data stored in: {kwargs['completed_ic_dir']}")

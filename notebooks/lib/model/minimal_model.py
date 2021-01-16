@@ -15,7 +15,7 @@ import numpy as np
 @njit
 def Tanh(x):
     return np.math.tanh(x)
-    
+
 # /*------------------------------------------------------------------------
 #  * applying periodic boundary conditions for each texture call
 #  *------------------------------------------------------------------------
@@ -63,102 +63,111 @@ def step(a,b):
 #  * time step at a pixel
 #  *------------------------------------------------------------------------
 #  */
-@njit
-def time_step_at_pixel(inVfs, x, y):#, h):
+def get_time_step_at_pixel(width,height,DX,DY,diffCoef,C_m,tau_pv,tau_v1,tau_v2,
+    tau_pw,tau_mw,tau_d,tau_0,tau_r,tau_si,K,V_sic,V_c,V_v,**kwargs):
     # define parameters
-    width    = int(inVfs.shape[0])
-    height   = int(inVfs.shape[1])
-    DX       = 0.025 #cm/pxl
-    DY       = 0.025 #cm/pxl
+    # width    = int(inVfs.shape[0])
+    # height   = int(inVfs.shape[1])
+    # DX       = 0.025 #cm/pxl
+    # DY       = 0.025 #cm/pxl
     cddx     = 1/DX**2
     cddy     = 1/DY**2
-    diffCoef = 0.0005 # cm^2 / ms
-    C_m      = 1.000  # 􏰎microFarad/cm^2 
-
-    #parameter set 8 of FK model from Fenton & Cherry (2002)
-    tau_pv   = 13.03
-    tau_v1   = 19.6
-    tau_v2   = 1250
-    tau_pw   = 800
-    tau_mw   = 40
-    tau_d    = 0.45# also interesting to try, but not F&C8's 0.45: 0.407#0.40#0.6#
-    tau_0    = 12.5
-    tau_r    = 33.25
-    tau_si   = 29#
-    K        = 10
-    V_sic    = 0.85#
-    V_c      = 0.13
-    V_v      = 0.04
+    # diffCoef = 0.0005 # cm^2 / ms
+    # C_m      = 1.000  # 􏰎microFarad/cm^2
+    #
+    # #parameter set 8 of FK model from Fenton & Cherry (2002)
+    # tau_pv   = 13.03
+    # tau_v1   = 19.6
+    # tau_v2   = 1250
+    # tau_pw   = 800
+    # tau_mw   = 40
+    # tau_d    = 0.45# also interesting to try, but not F&C8's 0.45: 0.407#0.40#0.6#
+    # tau_0    = 12.5
+    # tau_r    = 33.25
+    # tau_si   = 29#
+    # K        = 10
+    # V_sic    = 0.85#
+    # V_c      = 0.13
+    # V_v      = 0.04
     C_si     = 1  # I didn't find this (trivial) multiplicative constant in Fenton & Cherry (2002).  The value C_si = 1 was used in Kaboudian (2019).
     dx, dy   = (1, 1)# size of a pixel
 
-    # /*------------------------------------------------------------------------
-    #  * reading from textures
-    #  *------------------------------------------------------------------------
-    #  */
-    C = pbc(inVfs, x, y)
-    vlt = C[0]#volts
-    fig = C[1]#fast var
-    sig = C[2]#slow var
+    @njit
+    def time_step_at_pixel(inVfs, x, y):#, h):
+        # /*------------------------------------------------------------------------
+        #  * reading from textures
+        #  *------------------------------------------------------------------------
+        #  */
+        C = pbc(inVfs, x, y)
+        vlt = C[0]#volts
+        fig = C[1]#fast var
+        sig = C[2]#slow var
 
-    # /*-------------------------------------------------------------------------
-    #  * Calculating right hand side vars
-    #  *-------------------------------------------------------------------------
-    #  */
-    p = step(V_c, vlt)
-    q = step(V_v, vlt)
-    
-    #original FK model
-    #     tau_mv = (1.0 - q) * tau_v1 + q * tau_v2
-    #FK model with tau_v2 and tau_v1 switched
-    tau_mv = (1.0 - q) * tau_v2 + q * tau_v1
-    
-    Ifi = -fig * p * (vlt - V_c) * (1.0 - vlt) / tau_d
-    Iso = vlt * (1.0 - p) / tau_0 + p / tau_r
+        # /*-------------------------------------------------------------------------
+        #  * Calculating right hand side vars
+        #  *-------------------------------------------------------------------------
+        #  */
+        p = step(V_c, vlt)
+        q = step(V_v, vlt)
 
-    tn = Tanh(K * (vlt - V_sic))
-    Isi = -sig * (1.0 + tn) / (2.0 * tau_si)
-    Isi *= C_si
-    dFig2dt = (1.0 - p) * (1.0 - fig) / tau_mv - p * fig / tau_pv
-    dSig2dt = (1.0 - p) * (1.0 - sig) / tau_mw - p * sig / tau_pw
+        #original FK model
+        tau_mv = (1.0 - q) * tau_v1 + q * tau_v2
+        #FK model with tau_v2 and tau_v1 switched
+        # tau_mv = (1.0 - q) * tau_v2 + q * tau_v1
 
-    #five point stencil
-    dVlt2dt = (
-        (pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
-         pbc(inVfs, x - 1, y)[0]) * cddx +
-        (pbc(inVfs, x, y + 1)[0] - 2.0 * C[0] +
-         pbc(inVfs, x, y - 1)[0]) * cddy)
-    dVlt2dt *= diffCoef
-    
-    #(deprecated) nine point stencil
-    # 	dVlt2dt = (1. - 1. / 3.) * (
-    # 		(pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
-    # 		 pbc(inVfs, x - 1, y)[0]) * cddx +
-    # 		(pbc(inVfs, x, y + 1)[0] - 2.0 * C[0] +
-    # 		 pbc(inVfs, x, y - 1)[0]) * cddy) + (1. / 3.) * 0.5 * (
-    # 			 pbc(inVfs, x + 1, y + 1)[0] + pbc(
-    # 				 inVfs, x + 1, y - 1)[0] + pbc(inVfs, x - 1, y - 1)[0] +
-    # 			 pbc(inVfs, x - 1, y + 1)[0] - 4.0 * C[0]) * (cddx + cddy)
-    # 	dVlt2dt *= diffCoef
-    
-    I_sum = Isi + Ifi + Iso
-    dVlt2dt -= I_sum / C_m
-    return np.array((dVlt2dt,dFig2dt,dSig2dt),dtype=np.float64)
+        Ifi = -fig * p * (vlt - V_c) * (1.0 - vlt) / tau_d
+        Iso = vlt * (1.0 - p) / tau_0 + p / tau_r
 
-@njit
-def get_time_step (texture, out):
-    width  = int(texture.shape[0])
-    height = int(texture.shape[1])
-    for x in range(width):
-        for y in range(height):
-            out[x,y] = time_step_at_pixel(texture,x,y)
+        tn = Tanh(K * (vlt - V_sic))
+        Isi = -sig * (1.0 + tn) / (2.0 * tau_si)
+        Isi *= C_si
+        dFig2dt = (1.0 - p) * (1.0 - fig) / tau_mv - p * fig / tau_pv
+        dSig2dt = (1.0 - p) * (1.0 - sig) / tau_mw - p * sig / tau_pw
 
-@njit # or perhaps @jit, which probably won't speed up time_step
-def time_step (texture, h, zero_txt):
-    dtexture_dt = zero_txt.copy()
-    get_time_step(texture, dtexture_dt)
-    texture += h * dtexture_dt
+        #five point stencil
+        dVlt2dt = (
+            (pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
+             pbc(inVfs, x - 1, y)[0]) * cddx +
+            (pbc(inVfs, x, y + 1)[0] - 2.0 * C[0] +
+             pbc(inVfs, x, y - 1)[0]) * cddy)
+        dVlt2dt *= diffCoef
 
+        #(deprecated) nine point stencil
+        # 	dVlt2dt = (1. - 1. / 3.) * (
+        # 		(pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
+        # 		 pbc(inVfs, x - 1, y)[0]) * cddx +
+        # 		(pbc(inVfs, x, y + 1)[0] - 2.0 * C[0] +
+        # 		 pbc(inVfs, x, y - 1)[0]) * cddy) + (1. / 3.) * 0.5 * (
+        # 			 pbc(inVfs, x + 1, y + 1)[0] + pbc(
+        # 				 inVfs, x + 1, y - 1)[0] + pbc(inVfs, x - 1, y - 1)[0] +
+        # 			 pbc(inVfs, x - 1, y + 1)[0] - 4.0 * C[0]) * (cddx + cddy)
+        # 	dVlt2dt *= diffCoef
+
+        I_sum = Isi + Ifi + Iso
+        dVlt2dt -= I_sum / C_m
+        return np.array((dVlt2dt,dFig2dt,dSig2dt),dtype=np.float64)
+    return time_step_at_pixel
+
+def fetch_get_time_step(width,height,DX=0.025,DY=0.025, **param_dict):
+    time_step_at_pixel=get_time_step_at_pixel(width,height,DX=DX,DY=DY, **param_dict)
+    @njit
+    def get_time_step (texture, out):
+        # width  = int(texture.shape[0])
+        # height = int(texture.shape[1])
+        for x in range(width):
+            for y in range(height):
+                out[x,y] = time_step_at_pixel(texture,x,y)
+    return get_time_step
+
+def fetch_time_step(width,height,DX=0.025,DY=0.025, **param_dict):
+    #time_step_at_pixel=get_time_step_at_pixel(width,height,DX=DX,DY=DY)
+    get_time_step=fetch_get_time_step(width,height,DX=DX,DY=DY, **param_dict)
+    @njit # or perhaps @jit, which probably won't speed up time_step
+    def time_step (texture, h, zero_txt):
+        dtexture_dt = zero_txt.copy()
+        get_time_step(texture, dtexture_dt)
+        texture += h * dtexture_dt
+    return time_step
 #######################################
 # Auxiliary functions
 #######################################
