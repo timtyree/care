@@ -37,7 +37,7 @@ cdef inline tuple _intersect_two_lines(double a1,double b1,double c1,double a2,d
     return x,y
 
 # cdef inline tuple find_tips_for_linear_segment_pairs(list segments1, list segments2, int r0, int c0, double theta_threshold=0.):
-def find_tips_for_linear_segment_pairs(list segments1, list segments2, int r0, int c0, double theta_threshold=0.):
+def find_tips_for_linear_segment_pairs(list segments1, list segments2, int r0, int c0):#, double theta_threshold=0.):
     '''lst_x,lst_y,lst_theta, lst_grad_ux,lst_grad_uy, lst_grad_vx,lst_grad_vy = find_tips_for_linear_segment_pairs(segments1, segments2)'''
     #allocate memory for all variables created in the for loop
     #runtimes are slightly faster when allocating memory this way.
@@ -83,12 +83,11 @@ def find_tips_for_linear_segment_pairs(list segments1, list segments2, int r0, i
 
             du = np.subtract(u[1],u[0])
             dv = np.subtract(v[1],v[0])
-            # theta = -9999.#compute_theta(du,dv)
-            theta = compute_theta(du,dv)
-
-            if (theta_threshold != 0.):
-                if np.abs(theta)<theta_threshold:
-                    continue
+            theta = -9999.#compute_theta(du,dv)
+            # theta = compute_theta(du,dv)
+            # if (theta_threshold != 0.):
+            #     if np.abs(theta)<theta_threshold:
+            #         continue
 
             #compute line for segment u
             x1=u[0][1];y1=u[0][0];x2=u[1][1];y2=u[1][0];
@@ -124,7 +123,7 @@ def find_tips_for_linear_segment_pairs(list segments1, list segments2, int r0, i
                 lst_theta.append(theta)
     return lst_x,lst_y,lst_theta, lst_grad_ux,lst_grad_uy, lst_grad_vx,lst_grad_vy
 
-def find_intersections(array1,array2,level1,level2,theta_threshold = 0.):
+def find_intersections(array1,array2,level1,level2):#,theta_threshold = 0.):
     '''iterates over array1 (concurrently over array2) and find any line segments corresponding to the isolines level1 or level2.
     Considers only intersection points that intersect within the present pixel.
     Considers only intersection points that intersect at an angle of at least theta_threshold (radians).
@@ -200,7 +199,7 @@ def find_intersections(array1,array2,level1,level2,theta_threshold = 0.):
             segments1 = lookup_segments(ul1,ll1,ur1,lr1,r0,r1,c0,c1,level1,square_case1)
             segments2 = lookup_segments(ul2,ll2,ur2,lr2,r0,r1,c0,c1,level2,square_case2)
 
-            lst_x,lst_y,lst_theta, lst_grad_ux, lst_grad_uy, lst_grad_vx, lst_grad_vy = find_tips_for_linear_segment_pairs(segments1, segments2, r0, c0, theta_threshold=theta_threshold)
+            lst_x,lst_y,lst_theta, lst_grad_ux, lst_grad_uy, lst_grad_vx, lst_grad_vy = find_tips_for_linear_segment_pairs(segments1, segments2, r0, c0)#, theta_threshold=theta_threshold)
 
             lst_values_x.extend(lst_x)
             lst_values_y.extend(lst_y)
