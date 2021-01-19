@@ -1,0 +1,5 @@
+set xlabel "t (ms)" font "Helvetica,16"
+set ylabel "V_{mem} (mV)" font "Helvetica,16"
+set tics font "Helvetica,16"
+plot filename
+pause -1
