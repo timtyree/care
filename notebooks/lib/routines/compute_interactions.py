@@ -1,6 +1,7 @@
 # compute_interactions.py
 from ..my_initialization import *
 def compute_df_interactions(input_file_name,DS=5./200.):
+    '''input_file_name is a .csv of spiral tip trajecotries'''
     #list of length sorted trajectories
     df = pd.read_csv(input_file_name)
     df = df[df.t>100].copy()
@@ -8,9 +9,7 @@ def compute_df_interactions(input_file_name,DS=5./200.):
     s = df.groupby('particle').t.count()
     s = s.sort_values(ascending=False)
     pid_longest_lst = list(s.index.values)#[:n_tips])
-    #     DS = 5./200.
     #compute lifetime_of_sibling
-    #     pid2counter = 1
     r0_lst = []; rT_lst=[]; Tdiff_lst = []; Tavg_lst = []; pid_lst = []; pid_other_lst = []; pid_death_lst=[]
     for pid in pid_longest_lst:
         # pid = pid_longest_lst[0]

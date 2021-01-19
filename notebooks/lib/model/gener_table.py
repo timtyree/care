@@ -34,7 +34,7 @@ def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,dtype=np.float64
     rtoverffull=R*T/F
     rtoverf=rtoverffull#0.02650
     # write(6,*)rtoverffull,rtoverf
-    xk0=5.4
+    xk0=5.4#7. higher K_o should give shorter APD#
     # c     gx1=0.282*2.837*sqrt(5.4/xk0)
     # c modified to:
     gx1=0.423*2.837*sqrt(5.4/xk0)
@@ -44,7 +44,7 @@ def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,dtype=np.float64
     xnai=18.
     xki=145.
     vx1=1000.*rtoverf*log((xk0+pr*xna0)/(xki+pr*xnai))
-    # vx1=-87.94#in LuoRudy1990.pdf 
+    # vx1=-87.94#in LuoRudy1990.pdf
     vx1=-77.62#from wj's original table#### EK1 = -87.94mv in LuoRudy1990.pdf
     vk1=1000.*rtoverf*log(xk0/145.)
     # write(6,*)'xk0,gx1,gk1,vx1,vk1'

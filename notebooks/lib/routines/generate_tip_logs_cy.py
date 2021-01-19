@@ -84,7 +84,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 			dimgdt = dtxt_dt[...,0]
 
 			# find_intersections
-			retval = find_intersections(img,dimgdt,level1,level2,theta_threshold=theta_threshold)
+			retval = find_intersections(img,dimgdt,level1,level2)
 			lst_values_x,lst_values_y,lst_values_theta, lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy = retval
 			x_values = np.array(lst_values_x)
 			y_values = np.array(lst_values_y)

@@ -2,6 +2,110 @@ from .. import *
 from ..model.LR_model_optimized import *
 from ..utils.stack_txt_LR import stack_txt, unstack_txt
 
+
+def get_one_step_map_w_Istim(nb_dir,dt,**kwargs):
+    '''returns dt,one_step_map'''
+    dt, arr39, one_step_method = get_one_step_explicit_synchronous_splitting_w_Istim(nb_dir,dt,**kwargs)
+    @njit
+    def one_step_map_w_Istim(txt, txt_Istim):
+        #unstack txt
+        inVc,outVc,inmhjdfx,outmhjdfx,dVcdt = unstack_txt(txt)
+        #integrate by dt
+        one_step_method(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt,txt_Istim)
+        # t+=dt
+        #stack txt
+        # txt_nxt=stack_txt(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)
+        # return txt_nxt
+    return dt,one_step_map_w_Istim
+
+
+def get_one_step_explicit_synchronous_splitting_w_Istim(nb_dir,dt=0.01,width=200,height=200,ds=5.,diffCoef=0.001,Cm=1.):
+    '''returns dt, arr39, one_step_explicit_synchronous_splitting_w_Istim
+    precomputes lookup table, arr39 and returns a jit compiling one_step method
+    '''
+    #precompute lookup table
+    arr39=get_arr39(dt,nb_dir)
+    v_values=arr39[:,0]
+    lookup_params=get_lookup_params(v_values,dv=0.1)
+    comp_dVcdt=get_comp_dVcdt(width=width, height=height, diffCoef=diffCoef, ds=ds, Cm=Cm)
+
+    @njit
+    def one_step_explicit_synchronous_splitting_w_Istim(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt,txt_Istim):
+        '''
+        for each pixel:
+            advances V and Ca_i by dt/2 for each pixel using forward euler integration
+        and then,
+        for each pixel:
+            advances gating variables using the exact flow map resulting from V
+            advances V and Ca_i by dt/2 for each pixel using forward euler integration
+        enforces agreement between inVc and outVc and between inmhjdfx and outmhjdfx (to avoid any confusion)
+        '''
+        for x in range(width):
+            for y in range(height):
+                #extract local variables
+                Vc = inVc[x,y]; V=Vc[0]
+                inCgate = inmhjdfx[x,y]
+
+                #parse the row linearly interpolated from lookup table
+                arr_interp=lookup_params(V,arr39)
+                IK1T=arr_interp[13]    # 'xttab',
+                x1=arr_interp[14]    # 'x1',
+
+                #half step voltage and calcium
+                dVcdt_val=comp_dVcdt(inVc, x, y, inCgate, IK1T, x1)
+                #include the effect of external stimulus current
+                Istim = txt_Istim[x,y]
+                dVcdt_val[0]-=Istim/Cm
+                #record the result
+                outVc_val=Vc+0.5*dt*dVcdt_val
+                outVc[x,y]=outVc_val.copy()
+        for x in range(width):
+            for y in range(height):
+                #parse the row linearly interpolated from lookup table with updated voltage
+                inCgate  = inmhjdfx[x,y]
+                outCgate = outmhjdfx[x,y]
+                Vc = outVc[x,y]; V  = Vc[0]
+                arr_interp=lookup_params(V,arr39)
+                # x_infty,tau_x,m_infty,tau_m,h_infty,tau_h,j_infty,tau_j,d_infty,tau_d,f_infty,tau_f,IK1T,x1,e1,em,eh,ej,ed,ef=arr_interp[1:]
+                IK1T=arr_interp[13]    # 'xttab',
+                x1=arr_interp[14]    # 'x1',
+
+                #full step the gating variables of step size dt (dt is encoded in arr39)
+                comp_exact_next_gating_var(inCgate,outCgate,arr_interp)
+                inmhjdfx[x,y]=outCgate.copy()
+                outmhjdfx[x,y]=outCgate.copy()
+
+                #half step voltage and calcium
+                dVcdt_val=comp_dVcdt(outVc, x, y, outCgate, IK1T, x1)
+                #include the effect of external stimulus current
+                Istim = txt_Istim[x,y]
+                dVcdt_val[0]-=Istim/Cm
+                #record the result
+                outVc_val=Vc+0.5*dt*dVcdt_val
+                outVc[x,y]=outVc_val.copy()
+                inVc[x,y]=outVc_val.copy()
+
+                #compute the current voltage/sodium flow map
+                Vc = outVc[x,y]; V  = Vc[0]
+                arr_interp=lookup_params(V,arr39)
+                # x_infty,tau_x,m_infty,tau_m,h_infty,tau_h,j_infty,tau_j,d_infty,tau_d,f_infty,tau_f,IK1T,x1,e1,em,eh,ej,ed,ef=arr_interp[1:]
+                IK1T=arr_interp[13]    # 'xttab',
+                x1=arr_interp[14]    # 'x1',
+                dVcdt_val=comp_dVcdt(outVc, x, y, outCgate, IK1T, x1)
+                #record rate of change of voltage and calcium current
+                dVcdt[x,y]=dVcdt_val.copy()
+
+                #save texture to output
+                # txt_nxt[x,y]=stack_pxl(outVc_val,outVc_val,outCgate,outCgate,dVcdt_val)
+
+        # #copy out to in
+        # inmhjdfx=outmhjdfx.copy()
+        # outVc=inVc.copy()
+        # np.stack(*(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)).T
+    return dt, arr39, one_step_explicit_synchronous_splitting_w_Istim
+
+
+
 def get_one_step_explicit_synchronous_splitting(nb_dir,dt=0.01,width=200,height=200,ds=5.,diffCoef=0.001,Cm=1.):
     '''returns dt, arr39, one_step_explicit_synchronous_splitting
     precomputes lookup table, arr39 and returns a jit compiling one_step method
@@ -31,13 +135,13 @@ def get_one_step_explicit_synchronous_splitting(nb_dir,dt=0.01,width=200,height=
 
                 #parse the row linearly interpolated from lookup table
                 arr_interp=lookup_params(V,arr39)
-                IK1T=arr_interp[13]    # 'xttab', 
-                x1=arr_interp[14]    # 'x1', 
+                IK1T=arr_interp[13]    # 'xttab',
+                x1=arr_interp[14]    # 'x1',
 
                 #half step voltage and calcium
                 dVcdt_val=comp_dVcdt(inVc, x, y, inCgate, IK1T, x1)
                 outVc_val=Vc+0.5*dt*dVcdt_val
-                outVc[x,y]=outVc_val.copy()     
+                outVc[x,y]=outVc_val.copy()
         for x in range(width):
             for y in range(height):
                 #parse the row linearly interpolated from lookup table with updated voltage
@@ -46,8 +150,8 @@ def get_one_step_explicit_synchronous_splitting(nb_dir,dt=0.01,width=200,height=
                 Vc = outVc[x,y]; V  = Vc[0]
                 arr_interp=lookup_params(V,arr39)
                 # x_infty,tau_x,m_infty,tau_m,h_infty,tau_h,j_infty,tau_j,d_infty,tau_d,f_infty,tau_f,IK1T,x1,e1,em,eh,ej,ed,ef=arr_interp[1:]
-                IK1T=arr_interp[13]    # 'xttab', 
-                x1=arr_interp[14]    # 'x1', 
+                IK1T=arr_interp[13]    # 'xttab',
+                x1=arr_interp[14]    # 'x1',
 
                 #full step the gating variables of step size dt (dt is encoded in arr39)
                 comp_exact_next_gating_var(inCgate,outCgate,arr_interp)
@@ -64,7 +168,7 @@ def get_one_step_explicit_synchronous_splitting(nb_dir,dt=0.01,width=200,height=
                 Vc = outVc[x,y]; V  = Vc[0]
                 arr_interp=lookup_params(V,arr39)
                 # x_infty,tau_x,m_infty,tau_m,h_infty,tau_h,j_infty,tau_j,d_infty,tau_d,f_infty,tau_f,IK1T,x1,e1,em,eh,ej,ed,ef=arr_interp[1:]
-                IK1T=arr_interp[13]    # 'xttab', 
+                IK1T=arr_interp[13]    # 'xttab',
                 x1=arr_interp[14]    # 'x1',
                 dVcdt_val=comp_dVcdt(outVc, x, y, outCgate, IK1T, x1)
                 #record rate of change of voltage and calcium current
@@ -76,8 +180,9 @@ def get_one_step_explicit_synchronous_splitting(nb_dir,dt=0.01,width=200,height=
         # np.stack(*(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)).T
     return dt, arr39, one_step_explicit_synchronous_splitting
 
-def get_one_step_map(nb_dir,dt):
-    dt, arr39, one_step_method = get_one_step_explicit_synchronous_splitting(nb_dir,dt)
+def get_one_step_map(nb_dir,dt,**kwargs):
+    '''returns dt,one_step_map'''
+    dt, arr39, one_step_method = get_one_step_explicit_synchronous_splitting(nb_dir,dt,**kwargs)
     @njit
     def one_step_map(txt):
         #unstack txt
@@ -210,4 +315,3 @@ def get_one_step_map(nb_dir,dt):
 #         #     txt[...,0][boo]=V_max
 
 #     return one_step_forward_euler
-
