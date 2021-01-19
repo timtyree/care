@@ -43,9 +43,15 @@ def generate_track_tips_pbc(input_file_name, save_fn=None, mem=0, sr=400,
     if save_fn is None:
         save_fn = os.path.abspath(input_file_name).replace('/Log','/trajectories').replace('log.csv', f'traj_sr_{sr}_mem_{mem}.csv')
     df = pd.read_csv(input_file_name)
-    df.drop_duplicates(subset=['x','y'],keep='first',inplace=True,ignore_index=True)
+    df.drop_duplicates(subset=['t','x','y'],keep='first',inplace=True,ignore_index=True)
     # df.dropduplicate(inplace=True)1
     traj = compute_track_tips_pbc(df, **kwargs)
+    #save results
+    dirname = os.path.dirname(input_file_name).split('/')[-1]
+    folder_name=os.path.dirname(input_file_name)
+    save_folder = folder_name.replace(dirname,'trajectories')
+    if not os.path.exists(save_folder):
+        os.mkdir(save_folder)
+    os.chdir(save_folder)
     traj.to_csv(save_fn, index=False)
     return save_fn
-

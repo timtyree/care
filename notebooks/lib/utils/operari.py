@@ -7,6 +7,26 @@ import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
 from tkinter import filedialog, Tk
 from glob import glob
 
+
+def get_all_files_matching_pattern(file,trgt):
+	"""returns a list of files in same folder as file.
+	all files in list end in the string trgt.
+	Example, trgt='_unwrap.csv'.
+	"""
+	# get all .csv files in the working directory of ^that file
+	folder_name = os.path.dirname(file)
+	os.chdir(folder_name)
+	retval = os.listdir()#!ls
+	file_name_list = list(retval)
+	# check each file if it ends in .csv before merging it
+
+	def is_trgt(file_name,trgt):
+		return file_name[-len(trgt):]==trgt
+	# def is_csv(file_name):
+	#     return file_name[-4:]=='_unwrap.csv'
+	file_name_list = [os.path.abspath(f) for f in file_name_list if is_trgt(f,trgt)]
+	return file_name_list
+
 def init_filesystem_bd(base_folder, results_folder = 'ds_5_param_set_8', subfolder_list = None):
 	if subfolder_list is None:
 		subfolder_list = ('birth-death-rates', 'trajectories', 'Log')

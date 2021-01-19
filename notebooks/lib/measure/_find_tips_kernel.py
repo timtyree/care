@@ -1,29 +1,33 @@
 import numpy as np
 from ._find_tips_pbc_cy import lookup_segments
 from numba import njit
-#test based dev of needed functions
-# @njit
-def compute_theta(u,v):
-    return np.abs(np.pi/2-np.arccos(np.dot(u,v) / (np.linalg.norm(u) * np.linalg.norm(v))))
 
+@njit
+def compute_theta(u,v):
+    arg=np.dot(u,v) / (np.linalg.norm(u) * np.linalg.norm(v))
+    if np.abs(arg)>.9999:
+        arg=1.
+    return np.abs(np.pi/2-np.arccos(arg))
+@njit
 def _get_box(u,v):
     minx = np.min((np.min(u[0,:]),np.min(v[0,:])))
     maxx = np.max((np.max(u[0,:]),np.max(v[0,:])))
     miny = np.min((np.min(u[1,:]),np.min(v[1,:])))
     maxy = np.max((np.max(u[1,:]),np.max(v[1,:])))
     return minx, maxx, miny, maxy
-
+@njit
 def is_in_box(x,y,minx, maxx, miny, maxy):
     return ((x>=minx) & (maxx>=x)) & ((y>=miny) & (maxy>=y))
-
+@njit
 def intersection_2d_implicit(x1,y1,c1,x2,y2,c2):
     return _intersect_two_lines(x1,y1,c1,x2,y2,c2)
+@njit
 def _intersect_two_lines(a1,b1,c1,a2,b2,c2):
     '''asserts a*x + b*y + c = 0 for <-> collocate both lines.  note this is an involution.'''
     x = (b1*c2 - b2*c1)/(a1*b2 - a2*b1)
     y = (a2*c1 - a1*c2)/(a1*b2 - a2*b1)
     return x,y
-
+@njit
 def find_tips_for_linear_segment_pairs(segments1, segments2, r0,c0, theta_threshold=0.):
     '''lst_x,lst_y,lst_theta, lst_grad_ux,lst_grad_uy, lst_grad_vx,lst_grad_vy = find_tips_for_linear_segment_pairs(segments1, segments2)'''
     lst_x = []
@@ -39,7 +43,9 @@ def find_tips_for_linear_segment_pairs(segments1, segments2, r0,c0, theta_thresh
             u = np.array(segment1)
             v = np.array(segment2)
             # theta = -9999.#compute_theta(du,dv)
-            theta = compute_theta(u[1]-u[0],v[1]-v[0])
+            du=u[1]-u[0]
+            dv=v[1]-v[0]
+            theta = compute_theta(du,dv)
 
             if np.abs(theta)<theta_threshold:
                 continue
@@ -81,7 +87,7 @@ def find_tips_for_linear_segment_pairs(segments1, segments2, r0,c0, theta_thresh
                 lst_grad_vy.append(grad_vy)
                 lst_theta.append(theta)
     return lst_x,lst_y,lst_theta, lst_grad_ux,lst_grad_uy, lst_grad_vx,lst_grad_vy
-
+@njit
 def find_intersections(array1,array2,level1,level2,theta_threshold = 0.):
     '''iterates over array1 (concurrently over array2) and find any line segments corresponding to the isolines level1 or level2.
     Considers only intersection points that intersect within the present pixel.
@@ -123,7 +129,7 @@ def find_intersections(array1,array2,level1,level2,theta_threshold = 0.):
             if square_case1 in [0, 15]:
                 # only do anything if there's a line passing through the
                 # square. Cases 0 and 15 are entirely below/above the contour.
-                continue    
+                continue
 
             #find any segments for array2
             ul2 = array2[r0, c0]
@@ -155,5 +161,3 @@ def find_intersections(array1,array2,level1,level2,theta_threshold = 0.):
             lst_values_grad_vx.extend(lst_grad_vx)
             lst_values_grad_vy.extend(lst_grad_vy)
     return lst_values_x,lst_values_y,lst_values_theta, lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy
-
-

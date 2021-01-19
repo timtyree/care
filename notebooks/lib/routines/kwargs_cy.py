@@ -1,5 +1,5 @@
 import os
-def get_kwargs(ic):
+def get_kwargs(ic, ds=5, results_folder=None, param_fn = 'param_set_8.json'):
 	'''default parameters for routines'''
 	beeping   = False
 	asserting = False
@@ -11,8 +11,8 @@ def get_kwargs(ic):
 	recording = True
 	V_threshold = 0.5  #unitless 0 to 1
 	theta_threshold = 0. #radians
-	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds 
-	dsdpixel = 0.025  # cm # the distance between two adjacent pixels to 5/200= 0.025 cm
+	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
+	dsdpixel = ds/200#0.025  # cm # the distance between two adjacent pixels to 5/200= 0.025 cm
 	# edge_tolerance = 6#20#3#6#10#3#10#3
 	# atol = 1e-10#unused by tip logger - 1e-9#1e-11#1e-9#1e-11
 	# decimals = 6
@@ -21,14 +21,15 @@ def get_kwargs(ic):
 	# max_buffers_to_save = 0
 	# buffers_saved = 0
 	# start_saving_buffers_at_step = 0
-
+	if results_folder is None:
+		results_folder = f'ds_{ds}_param_set_8'
 	# recording_if_odd = False
 
 	#parameters for making tip trajectories from tip logs
 	LT_thresh = 0# this might be the one causeing odd tips 2 #milliseconds
 	tmin = 100#milliseconds
-	mem  = 2  # frames
-	sr   = 3  #pixels  #search range for tracking spiral tips in pixels
+	mem  = 0  # frames
+	sr   = 400  #pixels  #search range for tracking spiral tips in pixels
 	save_every_n_frames = 40 # 1 measurement per 1 ms for h=0.025 ms appears reasonable to resolve nearby births
 	tmin_early_stopping = 100 # milliseconds earliest time to stop recording in the absense of spiral tips
 	round_output_decimals = 5
@@ -39,14 +40,14 @@ def get_kwargs(ic):
 		'beeping':beeping,
 		'asserting':asserting,
 		'printing':printing,
-		'plotting':plotting,  #TODO: test when plotting=True
+		'plotting':plotting,  #TODO(later): test when plotting=True
 		'logging':logging,
 		'saving':saving,
 		'V_threshold':V_threshold,  #unitless 0 to 1
 		'theta_threshold':theta_threshold,
 		# 'color_values':color_values,
 		'h':h , #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
-		'dsdpixel':dsdpixel, 
+		'dsdpixel':dsdpixel,
 		# 'nsteps':nsteps,
 		'save_every_n_frames':save_every_n_frames,
 		# 'max_buffers_to_save':max_buffers_to_save,
@@ -86,7 +87,7 @@ def get_kwargs(ic):
 	input_fn = ic
 	data_fn = os.path.basename(input_fn)
 	base_dir = '/'.join(os.path.dirname(input_fn).split('/')[:-1])
-	base_save_folder_name = 'ds_5_param_set_8'
+	base_save_folder_name = results_folder
 	base_save_dir = os.path.join(base_dir, base_save_folder_name)
 
 	#define subfolders
@@ -124,7 +125,8 @@ def get_kwargs(ic):
 		'data_dir_tips':data_dir_tips,
 		'data_dir_log':data_dir_log,
 		'print_log_dir':print_log_dir,
-		'completed_ic_dir':completed_ic_dir
+		'completed_ic_dir':completed_ic_dir,
+		'param_fn':param_fn
 	}
 	kwargs.update(kwargs_io)
 
