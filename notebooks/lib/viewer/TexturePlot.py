@@ -8,6 +8,22 @@ from .. import *
 from ..model.minimal_model import *
 import matplotlib.cm as cm
 
+
+def show_buffer_LR(txt,figsize=(9,9),rgb_channels=(0,-2,1)):
+	"""Visualize the buffer (plain)"""
+	# print(np.max(txt[...,0]))
+	img=txt[...,rgb_channels].copy()#chnl]#0,1,V,Ca_i,INa,IK
+	mn=np.min(img[...,0]);mx=np.max(img[...,0])
+	img[...,0]=(img[...,0]-mn)/(mx-mn)
+	# mn=np.min(img[...,1]);mx=np.max(img[...,1])
+	# img[...,1]=(img[...,1]-mn)/(mx-mn)
+	mn=np.min(img[...,2]);mx=np.max(img[...,2])
+	img[...,2]=(img[...,2]-mn)/(mx-mn)
+	fig,ax=plt.subplots(figsize=figsize)
+	ax.imshow(img)#,cmap='gray',vmin=-80, vmax=15)
+	ax.axis('off')
+	return fig
+
 def plot_buffer(img_nxt, img_inc, contours_raw, contours_inc, tips,
 	figsize=(15,15), max_marker_size=800, lw=2,
 	color_values = None):

@@ -1,5 +1,6 @@
 from .. import *
 from . import *
+from ..model.LR_model_optimized import *
 def load_buffer_LR(input_file_name, Ca_i_initial = 2*10**-4, Vmax = 35., Vmin = -85.):
     '''
     load_buffer_LR maps the 3 channel/variable initial conditions in txt_ic

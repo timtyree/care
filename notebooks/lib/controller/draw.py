@@ -2,6 +2,15 @@ from numba import njit
 from numba.typed import List
 import numpy as np
 
+# @njit
+def get_semicircle(txt,deg,x0,y0):
+    #make the initialization mesh
+    img = 0*txt[...,0].copy()
+    color_left_of_line(out=img, x0=x0, y0=y0, deg = deg, value=1.)  #make left of line mesh 0 or 1
+    color_outside_range(out=img, x0=x0,y0=y0,r=64*2, val=0.0)  #make circle mesh 0 or 1
+    #already done: hadamard product of the two.
+    return img
+
 @njit
 def color_within_range(x0,y0,r, out, val=1.0, width=512,height=512):
 	for x in range(width):
@@ -41,7 +50,7 @@ def color_left_of_line(out, x0, y0, deg = 45, value=10.):
         l = linear_interpolate_row_to_column(y, x0=x0, y0=y0, deg = deg)
         for x in range(width):
             if x<l:
-                img[y,x] = value
+                out[y,x] = value
 
 @njit
 def linear_interpolate_row_to_column(y, x0, y0, deg = 45):
@@ -54,6 +63,24 @@ def linear_interpolate_row_to_column(y, x0, y0, deg = 45):
     dx = np.around(np.tan(theta)*dy)
     x  = x0 + dx
     return int(x)
+
+def get_blank_txt_LR(width,height,V_initial=-85.,Ca_i_initial = 2*10**-4):
+    zero_c2=np.zeros(shape=(width,height,2), dtype=np.float64, order='C')
+    zero_c6=np.zeros(shape=(width,height,6), dtype=np.float64, order='C')
+    #allocate memory to texture
+    inVc=zero_c2.copy()
+    inVc[...,0]+=V_initial
+    inVc[...,1]+=Ca_i_initial
+    outVc=inVc.copy()
+    inmhjdfx=zero_c6.copy()
+    #open the gates that are open at equilibrium at the resting potential (h, j, f)
+    inmhjdfx[...,1]=1.
+    inmhjdfx[...,2]=1.
+    inmhjdfx[...,4]=1.
+    outmhjdfx=inmhjdfx.copy()
+    dVcdt=zero_c2.copy()
+    txt=stack_txt(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)
+    return txt
 
  # @njit
 # def linear_interpolate_to_row(y, r0, c0, r1, c1):

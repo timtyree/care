@@ -430,7 +430,7 @@ def _get_lookup_params(v_values,arr39):
 #  */
 def get____pbc(width):
 	# @cuda.jit('void(float64)', device=True, inline=True)
-	@njit#('void(float64)')
+	@njit#('float64(float64)')
 	def _pbc(x):
 		'''writes to x,y to obey periodic boundary conditions
 		(x, y) pixel coordinates of texture with values 0 to 1.
@@ -439,6 +439,7 @@ def get____pbc(width):
 			x = int(width - 1)
 		elif ( x > (width - 1) ):	# // Right P.B.C.
 			x = int(0)
+		return x
 	return _pbc
 
 # @njit
@@ -470,8 +471,8 @@ def get__laplacian(width,height,cddx,cddy):
 	def _laplacian(inVfs, x, y, V):
 		rx=x+1; lx=x-1
 		ry=y+1; ly=y-1
-		pbcx(rx);pbcx(lx);
-		pbcy(ry);pbcy(ly);
+		rx=pbcx(rx);lx=pbcx(lx);
+		ry=pbcy(ry);ly=pbcy(ly);
 		#five point stencil
 		dVltdt = float(
 			(inVfs[ rx, y,0] - 2.0 * V +

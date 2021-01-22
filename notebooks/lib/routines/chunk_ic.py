@@ -4,7 +4,7 @@
 #6.6.2020
 import numpy as np, os, sys
 #I don't believe these are needed
-from lib.operari import search_for_file, load_buffer
+# from lib.operari import search_for_file, load_buffer
 
 #########################
 #### chunking initial conditions into pieces
@@ -29,6 +29,102 @@ def _precision(arr):
 def _dtype(arr):
 	val = arr[0,0]
 	return type(val)
+
+def chunk_1800x1800_into_ninths_npz(txt_in, save_folder,count,typeout='float64'):
+	'''suppose file_name is a bare string with the extension  ".npz"
+	suppose txt_in is a numpy array that is (1800,1800,The_Rest)
+	count is the ic number of the most recent ic00X file saved (increments by 1 before saving).
+	'''
+	count+=1
+	foo_file_name_out = lambda cnt:f'ic{cnt:03}.npz'
+	txt=txt_in.astype(typeout).copy()
+	cwd=os.getcwd()
+	os.chdir(save_folder)
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[0:600,0:600]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[600:1200,0:600]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[1200:1800,0:600]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[0:600,600:1200]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[600:1200,600:1200]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[1200:1800,600:1200]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[0:600,1200:1800]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[600:1200,1200:1800]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = foo_file_name_out(count);count+=1
+	txt_out = txt[1200:1800,1200:1800]
+	np.savez_compressed(save_fn,txt_out)
+	os.chdir(cwd)
+	return count
+
+def chunk_600x600_into_ninths_npz(txt_in, file_name, save_folder,typeout='float32'):
+	'''suppose file_name is a bare string with the extension ".npz"
+	suppose txt_in is a numpy array that is (600,600,The_Rest)
+	'''
+	file_name=os.path.basename(file_name)
+	file_name=os.path.join(*file_name.split('.')[:-1])
+	txt=txt_in.astype(typeout).copy()
+	cwd=os.getcwd()
+	os.chdir(save_folder)
+	save_fn = file_name+'.11.npz'
+	txt_out = txt[0:200,0:200]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.12.npz'
+	txt_out = txt[200:400,0:200]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.13.npz'
+	txt_out = txt[400:600,0:200]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.21.npz'
+	txt_out = txt[0:200,200:400]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.22.npz'
+	txt_out = txt[200:400,200:400]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.23.npz'
+	txt_out = txt[400:600,200:400]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.31.npz'
+	txt_out = txt[0:200,400:600]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.32.npz'
+	txt_out = txt[200:400,400:600]
+	np.savez_compressed(save_fn,txt_out)
+
+	save_fn = file_name+'.33.npz'
+	txt_out = txt[400:600,400:600]
+	np.savez_compressed(save_fn,txt_out)
+	os.chdir(cwd)
+	return True
+
 
 def chunk_600x600_into_ninths(txt,file_name, save_folder):
 	'''suppose file_name is a bare string with no extension such as ".npz"

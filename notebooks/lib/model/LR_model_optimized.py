@@ -157,14 +157,16 @@ def get_comp_ionic_flux(GNa=16.,GK1=0.6047,Gsi=0.052,EK1=-87.94,Eb=-59.87,ENa=54
 		#Fast sodium current
 		INa = GNa*m**3*h*j*(V-ENa)
 		#Slow inward current
-		Esi=7.7-13.0287*np.log(Ca_i)#mV
+		# Esi=7.7-13.0287*np.log(Ca_i)#mV  #from Luo1990.pdf
+		Esi=-82.3-13.0287*np.log(Ca_i)#mV  #from lr_d0.f (WJ)
 		Isi=Gsi*d*f*(V-Esi)
 		#time dependent potassium current 
 		IK=x_var*x1#GK*x_var*x1#
 		#total electric current
 		Iion=INa+IK1T+Isi+IK
 		#calcium uptake rate (dominated by activity of the sarcoplasmic reticulum)
-		dCa_i_dt=-10**-4*Isi+0.07*(10**-4-Ca_i)
+		# dCa_i_dt=-10**-4*Isi+0.07*(10**-4-Ca_i) #mM #from Luo1990.pdf
+		dCa_i_dt=-10**-7 * Isi + 0.07*(10**-7 - Ca_i)   #M  #from lr_d0.f (WJ)
 		return Iion, dCa_i_dt#INa,IK1T,Isi,IK# GNa,m**3*h*j,(V-ENa)#,#
 	return comp_ionic_flux
 
