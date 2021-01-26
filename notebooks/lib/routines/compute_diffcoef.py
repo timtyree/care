@@ -1,20 +1,17 @@
 # compute_diffcoeff.py
 from ..my_initialization import *
+from scipy import stats
 
-def compute_diffusion_coeffs(input_file_name,tau_min=.15,tau_max=0.5):
-    '''input_file_name is of the form:
-    emsd_longest_by_trial_tips_ntips_1_Tmin_0.15_Tmax_0.5.csv
+def compute_diffusion_coeffs(input_file_name,tau_min=0.,tau_max=0.5,**kwargs):
+    '''consider input_file_name = emsd_longest_by_trial_tips_ntips_1_Tmin_0.15_Tmax_0.5.csv
     Example Usage:
         retval= compute_diffusion_coeffs_for_msd(input_file_name,tau_min=.15,tau_max=0.5)'''
-    #select ranges that look linear
-    tau_min=.15#0
-    tau_max=0.5#$1.#0.2#seconds
+    #select ranges that look linear are tau_min=.15 and tau_max=0.5
 
     #load csv msd data
-    df=pd.read_csv(input_file_name,index_col=0)
+    df=pd.read_csv(input_file_name)
 
-
-    #initialize output dataframe
+    #initialize output dataframe by counting the number of trials that apppear in each tip log, listed in src
     ef=df.groupby('src').src.count()
     sv=ef.index;nv=ef.values
     df2=pd.DataFrame({'src':sv,'N':nv})
@@ -58,31 +55,40 @@ def compute_diffusion_coeffs(input_file_name,tau_min=.15,tau_max=0.5):
     df2.to_csv(savefn)
     return savefn
 
-def generate_diffcoeff_figures(input_file_name,tau_min=.15,tau_max=0.5,saving=True,
-        R2_thresh=0.94,duration_thresh=2.5,fontsize=22,figsize_2=(15,4.5)
-    ):
+def generate_diffcoeff_figures(input_file_name,trial_folder_name, dir_out=None, tau_min=.0,tau_max=0.5,saving=True,
+        R2_thresh=0.,duration_thresh=0.,fontsize=22,figsize_2=(15,4.5),**kwargs):
     '''input_file_name is of the form:
-    diffcoeff_emsd_longest_by_trial_tips_ntips_1_Tmin_0.15_Tmax_0.5.csv'''
-    df=pd.read_csv(input_file_name,index_col=0)
+        emsd_longest_by_trial_tips_ntips_1.csv'''
+    if dir_out is None:
+        #compute the diffusion coefficient summary
+        os.chdir(os.path.dirname(input_file_name))
+        dir_out="diffcoeff_summary_"+os.path.basename(input_file_name)
 
+
+    # diffcoeff_emsd_longest_by_trial_tips_ntips_1_Tmin_0.15_Tmax_0.5.csv'''
+    df=pd.read_csv(os.path.abspath(input_file_name),index_col=0)
+    df=df[~df.D_expval.isnull()].copy()#drop trials that gave no tips long enough
+    num_trials_total=df.N.values.shape[0]
+    print(f"generating diffcoeff_figures for {os.path.basename(trial_folder_name)}")
     #filter results by whether a D_expval was found
-    print(f"""num. trials that didn't show a tip lasing longer than 150ms
-    is {df[df.D_expval<-1000].N.size}.""")
+    # print(f"""num. trials that didn't show a tip lasing longer than 150ms is {df[df.D_expval<-1000].N.size}.""")
     df=df[df.D_expval>=-1000].copy()
 
     #filter results by whether a D_expval was found
-    print(f"""num. trials that didn't show am Rsquared of at least {R2_thresh} is {df[df.D_expval<R2_thresh].N.size}.""")
+    # print(f"""num. trials that didn't show am Rsquared of at least {R2_thresh} is {df[df.D_expval<R2_thresh].N.size}.""")
     df=df[df.Rsquared>=R2_thresh].copy()
+    print(f"""\tnum. trials that didn't show a tip lasing longer than {tau_min*10**3:.0f}ms is {df[df.D_expval<-1000].N.size}, and that didn't show am Rsquared of at least {R2_thresh} is {df[df.D_expval<R2_thresh].N.size}""")
+
 
     #plot results
     x_values= df.duration_of_traj.values
     y_values= df.D_expval.values
     yerr_values= df.D_stderr.values
 
-    sl=input_file_name.split('/')
-    trial_folder_name=sl[-3]
-    nb_dir='/home/timothytyree/Documents/GitHub/care/notebooks/'
-    savefig_folder = os.path.join(nb_dir,f'Figures/msd/'+trial_folder_name)
+    # nb_dir='/home/timothytyree/Documents/GitHub/care/notebooks/'
+    here_dir=os.path.dirname(os.path.abspath(input_file_name))
+    os.chdir(here_dir)
+    savefig_folder = 'fig'#os.path.join(here_dir,'fig')#f'Figures/msd/'+trial_folder_name)
     if not os.path.exists(savefig_folder):
         os.mkdir(savefig_folder)
     os.chdir(savefig_folder)
@@ -104,8 +110,8 @@ def generate_diffcoeff_figures(input_file_name,tau_min=.15,tau_max=0.5,saving=Tr
         plt.show()
     else:
         plt.tight_layout()
-        os.chdir(savefig_folder)
-        savefig_fn=input_file_name.replace('.csv','_plot_1.png')
+        # os.chdir(savefig_folder)
+        savefig_fn=os.path.basename(input_file_name).replace('.csv','_plot_1.png')
         plt.savefig(savefig_fn, dpi=300)
         # print(f"saved figure in \n\t{savefig_fn}")
         plt.close()
@@ -126,16 +132,16 @@ def generate_diffcoeff_figures(input_file_name,tau_min=.15,tau_max=0.5,saving=Tr
     ax.set_xlabel(r'$\Delta D$ (cm$^2$/s)',fontsize=fontsize)
     ax.set_ylabel(r'$R^2$',fontsize=fontsize)
     ax.set_ylim([R2_thresh,1])
-    ax.set_xlim([0,0.05])
+    # ax.set_xlim([0,0.05])
 
     ax=axs[1]
     ax.scatter(yerr_values,y_values, alpha=0.5)
     ax.set_xlabel(r'$\Delta D$ (cm$^2$/s)',fontsize=fontsize)
     ax.set_ylabel(r'$D$ (cm$^2$/s)',fontsize=fontsize)
-    ax.set_xlim([0,0.05])
+    # ax.set_xlim([0,0.05])
 
     ax=axs[2]
-    ax.hist(y_values,bins=5, alpha=0.5)
+    ax.hist(y_values,bins=15, alpha=0.5)
     ax.set_ylabel(r'frequency',fontsize=fontsize)
     ax.set_xlabel(r'$D$ (cm$^2$/s)',fontsize=fontsize)
 
@@ -150,23 +156,24 @@ def generate_diffcoeff_figures(input_file_name,tau_min=.15,tau_max=0.5,saving=Tr
         plt.show()
     else:
         plt.tight_layout()
-        os.chdir(savefig_folder)
-        savefig_fn=input_file_name.replace('.csv','_plot_2.png')
+        # os.chdir(savefig_folder)
+        savefig_fn=os.path.basename(input_file_name).replace('.csv','_plot_2.png')
         plt.savefig(savefig_fn, dpi=300)
-        print(f"saved figure in \n\t{savefig_fn}")
+        # print(f"saved two figures in {savefig_folder}")
         plt.close()
 
     ######################
     # Compute summary row
     ######################
+    df[df.D_expval<-1000].N.size
     num_trials_considered=df.N.values.shape[0]
     # print(f"number of trials considered = {num_trials_considered}.")
     c=df.describe().T[['mean','std']].T
 
     # input_file_name='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8_fastkernel_V_0.4_archive/msd/emsd_longest_by_trial_tips_ntips_1.csv'
-    sl=input_file_name.split('/')
-    trial_name=sl[-3]
-    n_tips=eval(sl[-1][sl[-1].find('ntips_')+len('ntips_'):].split('_')[0])
+    sll=os.path.basename(input_file_name)
+    trial_name=trial_folder_name
+    n_tips=eval(sll[sll.find('ntips_')+len('ntips_'):].split('_')[0])
     mean_D, stdev_D=c[['D_expval']].values
     mean_D=float(mean_D);stdev_D=float(stdev_D)
     mean_stderr_D=float(c[['D_stderr']].values[0])
@@ -178,14 +185,16 @@ def generate_diffcoeff_figures(input_file_name,tau_min=.15,tau_max=0.5,saving=Tr
                          "mean_D":[mean_D], "stdev_D":[stdev_D],
                          "mean_stderr_D":[mean_stderr_D], "stdev_stderr_D":[stdev_stderr_D],
                         "num_trials_considered":[num_trials_considered],
-                        "num_trials_computed":[171],
+                        "num_trials_computed":[num_trials_total],
                          "tau_min":[tau_min],"tau_max":[tau_max],
                          "R2_thresh":[R2_thresh], "duration_thresh":[duration_thresh]})
 
     #save results to csv
     os.chdir(os.path.dirname(input_file_name))
-    savefn=("diffcoeff_summary_"+os.path.basename(input_file_name))#.replace('.csv',f'_summary.csv')
-    df_out.to_csv(savefn)
-    print(f"csv saved to {savefn}.")
-    return savefn
+    if dir_out is None:
+        dir_out=os.path.abspath("diffcoeff_summary_"+os.path.basename(input_file_name))
+    df_out.to_csv(dir_out)
+    print(f"saved diffcoeff_summary to {os.path.dirname(dir_out)}")
+    print(f"the total number of trials considered in summary is {num_trials_considered}")
+    return dir_out
     #TODO: collect each diffcoeff_summary_ into one csv located in initial-conditions-2/

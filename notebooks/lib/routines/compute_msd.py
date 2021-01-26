@@ -74,12 +74,12 @@ def unwrap_for_each_jump(x_values,y_values,jump_index_array, width=200,height=20
     return xv,yv
 
 
-def unwrap_traj_and_center(d):
+def unwrap_traj_and_center(d, DS = 5/200):
     '''d is a dataframe of 1 trajectory with pbc.  edits d to have pbc-unwrapped x,y coords and returns d.'''
     if d.t.values.shape[0]<=1:
         return None
     DT = np.mean(d.t.diff().dropna().values) #ms per frame
-    DS = 5/200
+    # DS = 5/200
     x_values = d.x.values.astype('float64')
     y_values = d.y.values.astype('float64')
     jump_index_array, spd_lst = find_jumps(x_values,y_values,DS=DS,DT=DT)
@@ -197,7 +197,7 @@ def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,
         #compute ensemble mean squared displacement
         emsd = trackpy.motion.emsd(df_traj, mpp=1., fps=1.,max_lagtime=40000)
         #cast ensemble mean squared displacement into units of cm^2 and seconds
-        return pd.DataFrame({'msd':DS**2*emsd.values, 'lagt':emsd.index.values*DT/10**3, 'src':input_file_name})
+        return pd.DataFrame({'msd':DS**2*emsd.values, 'lagt':emsd.index.values*DT/10**3, 'src':os.path.basename(input_file_name)})
     except ValueError as e:#ValueError: No objects to concatenate
         print("ValueError: No objects to concatenate")
         print(f"\ttrial that failed: {input_file_name.split('/')[-1]}")
@@ -219,18 +219,18 @@ def compute_average_msd(df, DT=1.):
     msd_values = np.array(msd_lst)
     return t_values, msd_values
 
-def compute_average_std_msd(df, DT=1.):
+def compute_average_std_msd(df,DT):
     '''df is a pandas.DataFrame instance that has fields src, lagt, and msd'''
     src_lst = sorted(set(df.src.values))
-#     src_lst = src_lst#[:10]
     ff = df.copy()#pd.concat([df[df.src==src] for src in src_lst])
-    dt = DT/10**3
+    dt = DT/10**3 #seconds per frame
     t_values = np.array(sorted(set(ff.lagt.values)))
     t_values = np.arange(np.min(t_values),np.max(t_values),dt)
     # averaging msd over trials
     msd_lst = []
     std_lst = []
     for t in t_values:
+        #this binning is robust to floating point error
         boo = (ff.lagt>=t-dt/2)&(ff.lagt<=t+dt/2)
         msd_vals=ff[boo].msd
         msd_lst.append(msd_vals.mean())
@@ -269,18 +269,18 @@ def PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim
         plt.tight_layout()
         os.chdir(savefig_folder)
         plt.savefig(savefig_fn, dpi=300)
-        print(f"saved figure in \n\t{savefig_fn}")
+        print(f"saved figure in \n\t{savefig_folder}")
         plt.close()
     return {'t':t_values,'msd':msd_values}
 
-def generate_msd_figures_routine(file,n_tips, DT=1., V_thresh=None):
+def generate_msd_figures_routine(input_file_name,n_tips, **kwargs):#V_thresh=None):
     '''file is an unwrapped trajectory csv file'''
-    if V_thresh==None:
-        if file.find('_V_')!=-1:
-            V_thresh = eval(file[file.find('_V_')+len('_V_'):].split('_')[0])
-    input_file_name=file
+    # if V_thresh==None:
+    #     if file.find('_V_')!=-1:
+    #         V_thresh = eval(file[file.find('_V_')+len('_V_'):].split('_')[0])
+    # input_file_name=file
     # get all .csv files in the working directory of ^that file
-    folder_name = os.path.dirname(file)
+    folder_name = os.path.dirname(input_file_name)
     os.chdir(folder_name)
     retval = os.listdir()#!ls
     file_name_list = list(retval)
@@ -288,17 +288,22 @@ def generate_msd_figures_routine(file,n_tips, DT=1., V_thresh=None):
     trgt='_unwrap.csv'
     def is_csv(file_name,trgt):
         return file_name[-len(trgt):]==trgt
-    # def is_csv(file_name):
-    #     return file_name[-4:]=='_unwrap.csv'
     file_name_list = [f for f in file_name_list if is_csv(f,trgt)]
-    # remove all files with 'threshold'
-    # file_name_list = [f for f in file_name_list if f.find('threshold')==-1]
-    # return generate_msd_figures_routine_for_list(file_name_list,n_tips, DT, V_thresh)
+    return generate_msd_figures_routine_for_list(file_name_list,n_tips,**kwargs)
 
-# def generate_msd_figures_routine_for_list(file_name_list, n_tips, DT=1., V_thresh=None):
+def generate_msd_figures_routine_for_list(file_name_list, n_tips,output_file_name=None,save_folder=None,**kwargs):
+    '''file_name_list is a list of _unwrap.csv files.
+    returns a string indicating the output_file_name beginning in emsd_...'''#, V_thresh=None
     # file=file_name_list[0]
     # folder_name = os.path.dirname(file)
+    input_file_name=os.path.abspath(file_name_list[0])
+    folder_name = os.path.dirname(input_file_name)
+    os.chdir(folder_name)
     print(f"Num. file names in list = {len(file_name_list)}.")
+    df=pd.read_csv(input_file_name)
+    #compute DT explicitely
+    DT = np.mean(df.t.diff().dropna().values) #ms per frame
+
     #compute ensemble mean squared displacement for the longest n_tips for each trial in file_name_list
     os.chdir(folder_name)
     dict_out_lst=[compute_emsd_for_longest_trajectories(input_file_name, n_tips=n_tips) for input_file_name in file_name_list]
@@ -309,38 +314,45 @@ def generate_msd_figures_routine(file,n_tips, DT=1., V_thresh=None):
     df = pd.concat(dict_out_lst)
     df.reset_index(inplace=True,drop=True)
     #save results
-    dirname = os.path.dirname(file).split('/')[-1]
-    folder_name=os.path.dirname(file)
-    save_folder = folder_name.replace(dirname,'msd')
+    dirname = os.path.dirname(input_file_name).split('/')[-1]
+    folder_name=os.path.dirname(input_file_name)
+    if save_folder is None:
+        save_folder = folder_name.replace(dirname,'msd')
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
+    if output_file_name is None:
+        output_file_name = f"emsd_longest_by_trial_tips_ntips_{n_tips}.csv"
     os.chdir(save_folder)
-    output_file_name = f"emsd_longest_by_trial_tips_ntips_{n_tips}.csv"
     df.to_csv(output_file_name, index=False)
 
     #compute average msd by trial for a subset of trials
     src_lst = sorted(set(df.src.values))
-    src_lst = src_lst#[:10]
-
+    # src_lst = src_lst#[:10]
     ff = df.copy()#pd.concat([df[df.src==src] for src in src_lst])
+    # dt = DT/10**3 #seconds per frame
+    # t_values = np.array(sorted(set(ff.lagt.values)))
+    # t_values = np.arange(np.min(t_values),np.max(t_values),dt)#no floating point error
 
-    dt = DT/10**3
-    t_values = np.array(sorted(set(ff.lagt.values)))
-    t_values = np.arange(np.min(t_values),np.max(t_values),dt)#no floating point error
-
-    t_values, msd_values, std_values = compute_average_std_msd(df, DT=1.)
+    t_values, msd_values, std_values = compute_average_std_msd(df,DT)
     #     t_values, msd_values = compute_average_msd(df, DT=1.)
 
     sl=input_file_name.split('/')
     trial_folder_name=sl[-3]
 
-    savefig_folder = os.path.join(nb_dir,f'Figures/msd/'+trial_folder_name)#V_{V_thresh}')
-    if V_thresh is not None:
-        savefig_folder = os.path.join(nb_dir,f'Figures/msd/'+trial_folder_name)#V_{V_thresh}')
+
+    # savefig_folder = os.path.join(nb_dir,f'Figures/msd/'+trial_folder_name)#V_{V_thresh}')
+    # if V_thresh is not None:
+    #     savefig_folder = os.path.join(nb_dir,f'Figures/msd/'+trial_folder_name)#V_{V_thresh}')
+    # if save_folder is None:
+    #     savefig_folder = 'fig'
+    #     savefig_folder=os.path.abspath(savefig_folder)
+    # savefig_folder=os.path.join(save_folder,'/fig')
+    os.chdir(save_folder)
+    savefig_folder='fig'
     if not os.path.exists(savefig_folder):
         os.mkdir(savefig_folder)
     os.chdir(savefig_folder)
-
+    savefig_folder=os.getcwd()
     # generate plots of msd's
     savefig_fn = os.path.basename(output_file_name).replace('.csv','_long_time_std.png')
     retval = PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,4],ylim=[0,10],saving = True,fontsize =22,figsize=(9,6),D=3.5)
@@ -350,6 +362,6 @@ def generate_msd_figures_routine(file,n_tips, DT=1., V_thresh=None):
 
     savefig_fn = os.path.basename(output_file_name).replace('.csv','_very_short_time_std.png')
     retval = PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,0.05],ylim=[0,0.2],saving = True,fontsize =22,figsize=(9,6),D=3.5)
-    return ff, retval
+    return output_file_name
 
 # beep(4)

@@ -19,7 +19,7 @@ def get_one_step_map_w_Istim(nb_dir,dt,**kwargs):
     return dt,one_step_map_w_Istim
 
 
-def get_one_step_explicit_synchronous_splitting_w_Istim(nb_dir,dt=0.01,width=200,height=200,ds=5.,diffCoef=0.001,Cm=1.):
+def get_one_step_explicit_synchronous_splitting_w_Istim(nb_dir,dt=0.01,width=200,height=200,ds=5.,diffCoef=0.001,Cm=1.,**kwargs):
     '''returns dt, arr39, one_step_explicit_synchronous_splitting_w_Istim
     precomputes lookup table, arr39 and returns a jit compiling one_step method
     '''
@@ -106,7 +106,7 @@ def get_one_step_explicit_synchronous_splitting_w_Istim(nb_dir,dt=0.01,width=200
 
 
 
-def get_one_step_explicit_synchronous_splitting(nb_dir,dt=0.01,width=200,height=200,ds=5.,diffCoef=0.001,Cm=1.):
+def get_one_step_explicit_synchronous_splitting(nb_dir,dt=0.01,width=200,height=200,ds=5.,diffCoef=0.001,Cm=1.,**kwargs):
     '''returns dt, arr39, one_step_explicit_synchronous_splitting
     precomputes lookup table, arr39 and returns a jit compiling one_step method
     '''

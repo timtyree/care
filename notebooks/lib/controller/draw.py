@@ -1,13 +1,14 @@
 from numba import njit
 from numba.typed import List
 import numpy as np
+from ..utils.stack_txt_LR import *
 
 # @njit
 def get_semicircle(txt,deg,x0,y0):
     #make the initialization mesh
     img = 0*txt[...,0].copy()
     color_left_of_line(out=img, x0=x0, y0=y0, deg = deg, value=1.)  #make left of line mesh 0 or 1
-    color_outside_range(out=img, x0=x0,y0=y0,r=64*2, val=0.0)  #make circle mesh 0 or 1
+    color_outside_range(out=img, x0=x0,y0=y0,r=64, val=0.0)  #make circle mesh 0 or 1
     #already done: hadamard product of the two.
     return img
 
@@ -38,7 +39,7 @@ def make_coordinate_textures(txt):
     for y in range(txt.shape[0]):
         for x in range(txt.shape[1]):
             txtx[x,y] = x
-            txty[x,y] = y   
+            txty[x,y] = y
     return txtx, txty
 
 # @njit  #njit crashes rn
@@ -172,4 +173,3 @@ def initialize_mesh(width,height,channel_no, value, zero=None):
 
 retval = list(rescale_scores(np.linspace(0,1,10**5)))
 print(len(retval))
-

@@ -7,6 +7,24 @@ import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
 from tkinter import filedialog, Tk
 from glob import glob
 
+def get_all_trial_folders_not_archived(ic_suite_fn):
+    os.chdir(ic_suite_fn)
+    dir_lst=os.listdir()
+    trial_folder_name_lst=[]
+    for dir_run in dir_lst:
+        # dir_run=dir_lst[0]
+        trial_folder_name=dir_run
+        #test if trial_folder_name is not a folder
+        boo  = os.path.isdir(trial_folder_name)
+        #test if trial_folder_name starts with ic
+        boo &=trial_folder_name[:2]!='ic'
+        #test if trial_folder_name contains archiv
+        boo &=trial_folder_name.find('archiv')==-1
+        #if not, append it to the trial_folder_name_lst
+        if boo:
+            trial_folder_name_lst.append(trial_folder_name)
+    return trial_folder_name_lst
+
 
 def get_all_files_matching_pattern(file,trgt):
 	"""returns a list of files in same folder as file.

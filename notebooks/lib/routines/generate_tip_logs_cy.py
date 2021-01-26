@@ -62,6 +62,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	param_dict = json.load(open(os.path.join(param_dir,param_fn)))
 	get_time_step=fetch_get_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
 	time_step=fetch_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
+	compute_all_spiral_tips= get_compute_all_spiral_tips(mode='simp',width=width,height=height)
 
 
 	##########################################

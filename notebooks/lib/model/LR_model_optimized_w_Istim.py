@@ -10,6 +10,21 @@ import numpy as np
 import os
 from math import log
 
+def get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs):
+	#make null stimulus
+	ds=dsdpixel*width
+	txt_Istim_none=np.zeros(shape=(width,height,1), dtype=np.float64, order='C')
+	dt, kernelA, kernelB=get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds)
+
+	#get one step map
+	txt_Istim=txt_Istim_none.copy()
+	@njit
+	def one_step_map(txt,txt_Istim):
+		kernelA(txt,txt_Istim)
+		kernelB(txt,txt_Istim)
+
+	return dt, one_step_map
+
 @njit
 def comp_transient_gating_variable(var, tau, varinfty):
 	return (varinfty - var)/tau
@@ -24,6 +39,7 @@ def get_comp_dVcdt(width=200,height=200,diffCoef=0.001,ds=5.,Cm=1.):
 	cddy = height / ds #if this is too big than the simulation will blow up (at a given timestep)
 	cddx *= cddx
 	cddy *= cddy
+	laplacian=get__laplacian(width,height,cddx,cddy)
 	@njit
 	def comp_dVcdt(inVc,x,y,inCgate,IK1T,x1):
 		'''Example Usage:
@@ -254,7 +270,7 @@ def get_forward_integrate_kernel(nb_dir,dt,width,height,ds,diffCoef=0.001,Cm=1.)
 
 def get_arr39(dt,nb_dir):
 	cwd=os.getcwd()
-
+	dt=float(dt)
 	#generate lookup tables for timestep
 	os.chdir(os.path.join(nb_dir,'lib/model'))
 	cmd=f"python3 gener_table.py {dt}"
@@ -262,7 +278,7 @@ def get_arr39(dt,nb_dir):
 	#load lookup table for constant timestep, dt.
 	os.chdir(os.path.join(nb_dir,'lib/model','lookup_tables'))
 	table_fn=f"luo_rudy_dt_{dt}.npz"
-	table_data=np.load(table_fn)
+	table_data=np.load(table_fn)#,allow_pickle=True)
 	#convert table_data to a numpy array
 	kwds=table_data.get('kwds')
 	cols=kwds[-1].split('_')[1:]
@@ -377,16 +393,18 @@ def _get_comp_ionic_flux(GNa=16.,GK1=0.6047,Gsi=0.052,EK1=-87.94,Eb=-59.87,ENa=5
 		#Fast sodium current
 		INa = GNa*m**3*h*j*(V-ENa)
 		#Slow inward current
-		if Ca_i<10**-6:
-			Ca_i=10**-6
-		Esi=7.7-13.0287*log(Ca_i)#mV
+		# if Ca_i<10**-6:
+		# 	Ca_i=10**-6
+		# Esi=7.7-13.0287*np.log(Ca_i)#mV  #from Luo1990.pdf
+		Esi=-82.3-13.0287*np.log(Ca_i)#mV  #from lr_d0.f (WJ)
 		Isi=Gsi*d*f*(V-Esi)
 		#time dependent potassium current
 		IK=x_var*x1#GK*x_var*x1#
 		#total electric current
 		Iion=INa+IK1T+Isi+IK
 		#calcium uptake rate (dominated by activity of the sarcoplasmic reticulum)
-		dCa_i_dt=-10**-4*Isi+0.07*(10**-4-Ca_i)
+		# dCa_i_dt=-10**-4*Isi+0.07*(10**-4-Ca_i) #mM #from Luo1990.pdf
+		dCa_i_dt=-10**-7 * Isi + 0.07*(10**-7 - Ca_i)   #M  #from lr_d0.f (WJ)
 		dVcdt[0]=float(Iion)
 		dVcdt[1]=float(dCa_i_dt)#= np.array((Iion, dCa_i_dt))#,dtype=np.float64)#INa,IK1T,Isi,IK# GNa,m**3*h*j,(V-ENa)#,#
 	return comp_ionic_flux

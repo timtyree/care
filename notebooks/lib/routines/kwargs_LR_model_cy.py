@@ -1,17 +1,17 @@
 import os
-def get_kwargs(ic):
+def get_kwargs(ic, results_folder):
 	'''default parameters for routines'''
-	beeping   = False
-	asserting = False
-	printing  = False
-	plotting  = False #works but not with logger
-	logging   = False #seems to be failing to give up the GIL
-	saving    = True
-	timing    = False
-	recording = True
-	V_threshold = 25.#mV  
+	# beeping     = False
+	asserting   = False
+	printing    = False
+	plotting    = False #works but not with logger
+	logging     = False #seems to be failing to give up the GIL
+	saving      = True
+	# timing      = False
+	recording   = True
+	V_threshold = -50.#mV #values up to -30 mV are not completely unreasonable
 	# theta_threshold = 0. #radians
-	h = 0.1#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds 
+	h = 0.1#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
 	# ds = 5
 	dsdpixel = 0.025  # cm # the distance between two adjacent pixels to 5/200= 0.025 cm
 	# edge_tolerance = 6#20#3#6#10#3#10#3
@@ -22,22 +22,20 @@ def get_kwargs(ic):
 	# max_buffers_to_save = 0
 	# buffers_saved = 0
 	# start_saving_buffers_at_step = 0
-
 	# recording_if_odd = False
-
 	#parameters for making tip trajectories from tip logs
 	LT_thresh = 0# this might be the one causeing odd tips 2 #milliseconds
 	tmin = 100#milliseconds
 	mem  = 0  # frames
 	sr   = 400  #pixels  #search range for tracking spiral tips in pixels
-	save_every_n_frames = 10 # 1 measurement per 1 ms for h=0.025 ms appears reasonable to resolve nearby births
+	save_every_n_frames = 20 # 1 measurement per 1 ms for h=0.025 ms appears reasonable to resolve nearby births
 	tmin_early_stopping = 100 # milliseconds earliest time to stop recording in the absense of spiral tips
 	round_output_decimals = 5
-	tmax_sec = 300 #maximum time to be integrated in seconds
+	tmax_sec = 1#300 #maximum time to be integrated in seconds
 	tmax = tmax_sec*10**3
 
 	kwargs = {
-		'beeping':beeping,
+		# 'beeping':beeping,
 		'asserting':asserting,
 		'printing':printing,
 		'plotting':plotting,  #TODO: test when plotting=True
@@ -47,13 +45,13 @@ def get_kwargs(ic):
 		# 'theta_threshold':theta_threshold,
 		# 'color_values':color_values,
 		'h':h , #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
-		'dsdpixel':dsdpixel, 
+		'dsdpixel':dsdpixel,
 		# 'nsteps':nsteps,
 		'save_every_n_frames':save_every_n_frames,
 		# 'max_buffers_to_save':max_buffers_to_save,
 		# 'buffers_saved_counter':buffers_saved,
 		# 'start_saving_buffers_at_step':start_saving_buffers_at_step,
-		'timing':timing,
+		# 'timing':timing,
 		# 'recording_if_odd':recording_if_odd,
 		'recording':recording,
 		'saving':saving,
@@ -87,7 +85,7 @@ def get_kwargs(ic):
 	input_fn = ic
 	data_fn = os.path.basename(input_fn)
 	base_dir = '/'.join(os.path.dirname(input_fn).split('/')[:-1])
-	base_save_folder_name = 'ds_5_LR_model'
+	base_save_folder_name = results_folder
 	base_save_dir = os.path.join(base_dir, base_save_folder_name)
 
 	#define subfolders

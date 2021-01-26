@@ -17,18 +17,54 @@ from .. import *
 # from lib.intersection import *
 # from lib.minimal_model import *
 
-# @njit   
-def compute_all_spiral_tips(t,img,dimgdt,level1,level2,width=200,height=200):
-    #compute all spiral tips present
-    retval = find_intersections(img,dimgdt,level1,level2)#,theta_threshold=theta_threshold)
-    # level2=V_threshold
-    # retval = find_intersections(img1,img2,level1,level2,theta_threshold=theta_threshold)
+def get_compute_all_spiral_tips(mode='full',width=200,height=200):
+    '''Example Usage:
+    	compute_all_spiral_tips= get_compute_all_spiral_tips(mode='simp',width=width,height=height):
+    '''
+    if mode == 'full':
+        # @njit
+        def compute_all_spiral_tips(t,img,dimgdt,level1,level2):
+            #compute all spiral tips present
+            retval = find_intersections(img,dimgdt,level1,level2)#,theta_threshold=theta_threshold)
+            lst_values_x,lst_values_y,lst_values_theta, lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy = retval
+            return format_spiral_tips(t,img,dimgdt,level1,level2,lst_values_x,lst_values_y,
+                lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy,width,height)
+    else:
+        #simple version
+        # @njit
+        def compute_all_spiral_tips(t,img,dimgdt,level1,level2):
+            #compute all spiral tips present
+            retval = find_intersections(img,dimgdt,level1,level2)#,theta_threshold=theta_threshold)
+            return format_spiral_tips_simple(t,retval)
+
+    return compute_all_spiral_tips
+
+# @njit('Dict??')
+def format_spiral_tips_simple(t,retval):
     lst_values_x,lst_values_y,lst_values_theta, lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy = retval
-    return format_spiral_tips(t,img,dimgdt,level1,level2,lst_values_x,lst_values_y,lst_values_theta, 
-        lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy,width,height) 
-# @njit   
-def format_spiral_tips(t,img,dimgdt,level1,level2,lst_values_x,lst_values_y,lst_values_theta, 
-        lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy,width,height):  
+    # x_values = np.array(lst_values_x)
+    # y_values = np.array(lst_values_y)
+    # EP states given by bilinear interpolation with periodic boundary conditions
+    # v_lst    = interpolate_img(x_values,y_values,width,height,img=img)
+    # dvdt_lst = interpolate_img(x_values,y_values,width,height,img=dimgdt)
+    n_tips = len(lst_values_x)
+    dict_out = {
+        't': float(t),
+        'n': n_tips,
+        'x': lst_values_x,
+        'y': lst_values_y,
+        'grad_ux': lst_values_grad_ux,
+        'grad_uy': lst_values_grad_uy,
+        'grad_vx': lst_values_grad_vx,
+        'grad_vy': lst_values_grad_vy}
+        # 'v':v_lst,
+        # 'dvdt':dvdt_lst}
+    return dict_out
+
+
+# @njit
+def format_spiral_tips(t,img,dimgdt,level1,level2,lst_values_x,lst_values_y,lst_values_theta,
+        lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy,width,height):
     x_values = np.array(lst_values_x)
     y_values = np.array(lst_values_y)
     # EP states given by bilinear interpolation with periodic boundary conditions

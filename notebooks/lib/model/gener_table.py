@@ -5,7 +5,9 @@
 from numpy import sqrt, exp, log
 import numpy as np
 
-def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,dtype=np.float64, order='F'):
+def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,
+    K_o=5.4,#7,#5.4,
+    dtype=np.float64, order='F'):
     # implicit real*8(a-h,o-z)
     # common/par/backcon,xk0,rtoverf
     # parameter (ndimtab=2500)
@@ -34,7 +36,7 @@ def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,dtype=np.float64
     rtoverffull=R*T/F
     rtoverf=rtoverffull#0.02650
     # write(6,*)rtoverffull,rtoverf
-    xk0=5.4#7. higher K_o should give shorter APD#
+    xk0=K_o#,5.4#7. higher K_o should give shorter APD#
     # c     gx1=0.282*2.837*sqrt(5.4/xk0)
     # c modified to:
     gx1=0.423*2.837*sqrt(5.4/xk0)
@@ -45,7 +47,7 @@ def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,dtype=np.float64
     xki=145.
     vx1=1000.*rtoverf*log((xk0+pr*xna0)/(xki+pr*xnai))
     # vx1=-87.94#in LuoRudy1990.pdf
-    vx1=-77.62#from wj's original table#### EK1 = -87.94mv in LuoRudy1990.pdf
+    # vx1=-77.62#from wj's original table#### EK1 = -87.94mv in LuoRudy1990.pdf
     vk1=1000.*rtoverf*log(xk0/145.)
     # write(6,*)'xk0,gx1,gk1,vx1,vk1'
     # write(6,*)xk0,gx1,gk1,vx1,vk1
@@ -282,7 +284,7 @@ def xt(v,rtoverf,xk0,backcon=1.):
 #command line interface
 if __name__ == '__main__':
     import sys,os
-    save_deserialized=False
+    save_deserialized=True
     #suppose float arguments are a list of time step sizes
     dt_lst = [float(x) for x in sys.argv[1:]]
     if len(dt_lst)==0:
@@ -306,13 +308,13 @@ if __name__ == '__main__':
             #save deserialized results for timestep dt
             arr10,arr11,arr12,arr13,arr39=retval
             fmt='%12.6f'#'%.18e'
-            np.savetxt(fname=save_fn.replace('.npz','_arr10.csv'),
-                                X=arr10.T,fmt=fmt,delimiter=',')
-            np.savetxt(fname=save_fn.replace('.npz','_arr11.csv'),
-                                X=arr11.T,fmt=fmt,delimiter=',')
-            np.savetxt(fname=save_fn.replace('.npz','_arr12.csv'),
-                                X=arr12.T,fmt=fmt,delimiter=',')
-            np.savetxt(fname=save_fn.replace('.npz','_arr13.csv'),
+            # np.savetxt(fname=save_fn.replace('.npz','_arr10.csv'),
+            #                     X=arr10.T,fmt=fmt,delimiter=',')
+            # np.savetxt(fname=save_fn.replace('.npz','_arr11.csv'),
+            #                     X=arr11.T,fmt=fmt,delimiter=',')
+            # np.savetxt(fname=save_fn.replace('.npz','_arr12.csv'),
+            #                     X=arr12.T,fmt=fmt,delimiter=',')
+            # np.savetxt(fname=save_fn.replace('.npz','_arr13.csv'),
                                 X=arr13.T,fmt=fmt,delimiter=',')
             np.savetxt(fname=save_fn.replace('.npz','_arr39.csv'),
                                 X=arr39.T,fmt=fmt,delimiter=',')

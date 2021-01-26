@@ -5,10 +5,13 @@ __pycache__/
 *.so
 
 # Figures and bulk output
+
 notebooks/Figures/
 notebooks/Data/
+doc/diffusion/
 # Log files
 # notebooks/Data/**/Log/*
+
 notebooks/lib/model/lookup_tables/
 
 # notebooks/Data/archive/

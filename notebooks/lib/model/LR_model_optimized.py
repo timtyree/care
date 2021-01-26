@@ -1,13 +1,14 @@
 #!/bin/bash/env python3
 #Timothy Tyree
 #1.13.2021
-# The model from Luo-Rudy (1990) modified as described 
+# The model from Luo-Rudy (1990) modified as described
 # in Qu et alli (2000) to exhibit spiral defect chaos
 # implemented on a square computational domain.
 # Uses lookup table instead of using comp_ionic_currents
-from numba import njit, jit
-import numpy as np
+from numba import njit, jit, float64
+import numpy as np, pandas as pd
 import os
+from math import log
 
 @njit
 def comp_transient_gating_variable(var, tau, varinfty):
@@ -24,18 +25,23 @@ def get_comp_dVcdt(width=200,height=200,diffCoef=0.001,ds=5.,Cm=1.):
 	cddy = height / ds #if this is too big than the simulation will blow up (at a given timestep)
 	cddx *= cddx
 	cddy *= cddy
+	laplacian=get__laplacian(width,height,cddx,cddy)
 	@njit
 	def comp_dVcdt(inVc,x,y,inCgate,IK1T,x1):
+		'''Example Usage:
+		dVcdt_val=comp_dVcdt(inVc,x,y,inCgate,IK1T,x1)
+		'''
 		V,Ca_i = inVc[x,y].T
 		# Compute Ionic Current Density
 		Iion, dCa_i_dt=comp_ionic_flux(V,inCgate,IK1T,x1,Ca_i)
 		# Compute transient term for transmembrane voltage
-		dVltdt  = laplacian(inVc, x, y, cddx, cddy, V)
+		dVltdt  = laplacian(inVc, x, y, V)
 		dVltdt *= float(diffCoef)
 		dVltdt -= float(Iion/Cm)
-		dVcdt_val=np.array([dVltdt,dCa_i_dt],dtype=np.float64)
+		dVcdt_val=np.array([dVltdt,dCa_i_dt],dtype=float64)
 		return dVcdt_val
 	return comp_dVcdt
+
 
 def get_arr39(dt,nb_dir):
 	cwd=os.getcwd()
@@ -45,13 +51,15 @@ def get_arr39(dt,nb_dir):
 	os.system(cmd)
 	#load lookup table for constant timestep, dt.
 	os.chdir(os.path.join(nb_dir,'lib/model','lookup_tables'))
-	table_fn=f"luo_rudy_dt_{dt}.npz"
-	table_data=np.load(table_fn)    
-	#convert table_data to a numpy array
-	kwds=table_data.get('kwds')
-	cols=kwds[-1].split('_')[1:]
-	keys=list(table_data.keys())
-	arr39=table_data[keys[-1]].T  
+	# table_fn=f"luo_rudy_dt_{dt}.npz"
+	# table_data=np.load(table_fn)
+	# #convert table_data to a numpy array
+	# kwds=table_data.get('kwds')
+	# cols=kwds[-1].split('_')[1:]
+	# keys=list(table_data.keys())
+	# arr39=table_data[keys[-1]].T
+	table_fn=f"luo_rudy_dt_{dt}_arr39.csv"
+	arr39=pd.read_csv(table_fn,header=None).values
 	#return to original working directory
 	os.chdir(cwd)
 	return arr39
@@ -67,25 +75,25 @@ def comp_exact_next_gating_var(inCgate,outCgate,arr_interp):
 	x_var = inCgate[5] #activation gate parameter (IK)
 
 	#parse the linearly interpolated row
-	x_infty =arr_interp[1]    # 'xinf1', 
-	# tau_x =arr_interp[2]    # 'xtau1', 
-	m_infty=arr_interp[3]    # 'xinfm', 
-	# tau_m=arr_interp[4]    # 'xtaum', 
-	h_infty=arr_interp[5]    # 'xinfh', 
-	# tau_h=arr_interp[6]    # 'xtauh', 
+	x_infty =arr_interp[1]    # 'xinf1',
+	# tau_x =arr_interp[2]    # 'xtau1',
+	m_infty=arr_interp[3]    # 'xinfm',
+	# tau_m=arr_interp[4]    # 'xtaum',
+	h_infty=arr_interp[5]    # 'xinfh',
+	# tau_h=arr_interp[6]    # 'xtauh',
 	j_infty=arr_interp[7]    # 'xinfj',
-	# tau_j=arr_interp[8]    # 'xtauj', 
-	d_infty=arr_interp[9]    # 'xinfd', 
-	# tau_d=arr_interp[10]    # 'xtaud', 
-	f_infty=arr_interp[11]    # 'xinff', 
-	# tau_f=arr_interp[12]    # 'xtauf', 
-	#     IK1T=arr_interp[13]    # 'xttab', 
-	x1=arr_interp[14]    # 'x1', 
+	# tau_j=arr_interp[8]    # 'xtauj',
+	d_infty=arr_interp[9]    # 'xinfd',
+	# tau_d=arr_interp[10]    # 'xtaud',
+	f_infty=arr_interp[11]    # 'xinff',
+	# tau_f=arr_interp[12]    # 'xtauf',
+	#     IK1T=arr_interp[13]    # 'xttab',
+	x1=arr_interp[14]    # 'x1',
 	e1=arr_interp[15]    # 'e1',
-	em=arr_interp[16]    # 'em', 
-	eh=arr_interp[17]    # 'eh', 
+	em=arr_interp[16]    # 'em',
+	eh=arr_interp[17]    # 'eh',
 	ej=arr_interp[18]    # 'ej',
-	ed=arr_interp[19]    # 'ed', 
+	ed=arr_interp[19]    # 'ed',
 	ef=arr_interp[20]    # 'ef'
 
 	outCgate[0]=comp_soln_gating_var(m,m_infty, em)
@@ -93,7 +101,7 @@ def comp_exact_next_gating_var(inCgate,outCgate,arr_interp):
 	outCgate[2]=comp_soln_gating_var(j,j_infty, ej)
 	outCgate[3]=comp_soln_gating_var(d,d_infty, ed)
 	outCgate[4]=comp_soln_gating_var(f,f_infty, ef)
-	outCgate[5]=comp_soln_gating_var(x_var,x_infty, e1)  
+	outCgate[5]=comp_soln_gating_var(x_var,x_infty, e1)
 
 @njit
 def comp_curr_transient_gating_var(inCgate,outCgate,arr_interp):
@@ -106,25 +114,25 @@ def comp_curr_transient_gating_var(inCgate,outCgate,arr_interp):
 	x_var = inCgate[5] #activation gate parameter (IK)
 
 	#parse the linearly interpolated row
-	x_infty =arr_interp[1]    # 'xinf1', 
-	tau_x =arr_interp[2]    # 'xtau1', 
-	m_infty=arr_interp[3]    # 'xinfm', 
-	tau_m=arr_interp[4]    # 'xtaum', 
-	h_infty=arr_interp[5]    # 'xinfh', 
-	tau_h=arr_interp[6]    # 'xtauh', 
+	x_infty =arr_interp[1]    # 'xinf1',
+	tau_x =arr_interp[2]    # 'xtau1',
+	m_infty=arr_interp[3]    # 'xinfm',
+	tau_m=arr_interp[4]    # 'xtaum',
+	h_infty=arr_interp[5]    # 'xinfh',
+	tau_h=arr_interp[6]    # 'xtauh',
 	j_infty=arr_interp[7]    # 'xinfj',
-	tau_j=arr_interp[8]    # 'xtauj', 
-	d_infty=arr_interp[9]    # 'xinfd', 
-	tau_d=arr_interp[10]    # 'xtaud', 
-	f_infty=arr_interp[11]    # 'xinff', 
-	tau_f=arr_interp[12]    # 'xtauf', 
-	# IK1T=arr_interp[13]    # 'xttab', 
-	# x1=arr_interp[14]    # 'x1', 
+	tau_j=arr_interp[8]    # 'xtauj',
+	d_infty=arr_interp[9]    # 'xinfd',
+	tau_d=arr_interp[10]    # 'xtaud',
+	f_infty=arr_interp[11]    # 'xinff',
+	tau_f=arr_interp[12]    # 'xtauf',
+	# IK1T=arr_interp[13]    # 'xttab',
+	# x1=arr_interp[14]    # 'x1',
 	# e1=arr_interp[15]    # 'e1',
-	# em=arr_interp[16]    # 'em', 
-	# eh=arr_interp[17]    # 'eh', 
+	# em=arr_interp[16]    # 'em',
+	# eh=arr_interp[17]    # 'eh',
 	# ej=arr_interp[18]    # 'ej',
-	# ed=arr_interp[19]    # 'ed', 
+	# ed=arr_interp[19]    # 'ed',
 	# ef=arr_interp[20]    # 'ef'
 
 	outCgate[0]=comp_transient_gating_variable(m,tau_m,m_infty)
@@ -133,7 +141,7 @@ def comp_curr_transient_gating_var(inCgate,outCgate,arr_interp):
 	outCgate[3]=comp_transient_gating_variable(d,tau_d,d_infty)
 	outCgate[4]=comp_transient_gating_variable(f,tau_f,f_infty)
 	outCgate[5]=comp_transient_gating_variable(x_var,tau_x,x_infty)
-	
+
 def get_comp_ionic_flux(GNa=16.,GK1=0.6047,Gsi=0.052,EK1=-87.94,Eb=-59.87,ENa=54.4,GK=0.423):
 	# #maximum conductances
 	# GNa = 16.     #mS/cm^2 from Qu2000.pdf #GNa=23 in Luo1990.pdf
@@ -160,7 +168,7 @@ def get_comp_ionic_flux(GNa=16.,GK1=0.6047,Gsi=0.052,EK1=-87.94,Eb=-59.87,ENa=54
 		# Esi=7.7-13.0287*np.log(Ca_i)#mV  #from Luo1990.pdf
 		Esi=-82.3-13.0287*np.log(Ca_i)#mV  #from lr_d0.f (WJ)
 		Isi=Gsi*d*f*(V-Esi)
-		#time dependent potassium current 
+		#time dependent potassium current
 		IK=x_var*x1#GK*x_var*x1#
 		#total electric current
 		Iion=INa+IK1T+Isi+IK
@@ -199,37 +207,68 @@ def get_lookup_params(v_values,dv=0.1):
 #  * periodic boundary conditions for each read from textures
 #  *------------------------------------------------------------------------
 #  */
-@njit
-def pbc(S,x,y):
-	'''S=texture with size 512,512,3
-	(x, y) pixel coordinates of texture with values 0 to 1.
-	tight boundary rounding is in use.'''
-	width  = int(S.shape[0])
-	height = int(S.shape[1])
-	if ( x < 0  ):				# // Left P.B.C.
-		x = width - 1
-	elif ( x > (width - 1) ):	# // Right P.B.C.
-		x = 0
-	if( y < 0 ):				# //  Bottom P.B.C.
-		y = height - 1
-	elif ( y > (height - 1)):	# // Top P.B.C.
-		y = 0
-	return S[x,y]
+def get____pbc(width):
+	# @cuda.jit('void(float64)', device=True, inline=True)
+	@njit#('float64(float64)')
+	def _pbc(x):
+		'''writes to x,y to obey periodic boundary conditions
+		(x, y) pixel coordinates of texture with values 0 to 1.
+		tight boundary rounding is in use.'''
+		if ( x < 0  ):				# // Left P.B.C.
+			x = int(width - 1)
+		elif ( x > (width - 1) ):	# // Right P.B.C.
+			x = int(0)
+		return x
+	return _pbc
+
+# @njit
+# def pbc(S,x,y):
+# 	'''S=texture with size 512,512,3
+# 	(x, y) pixel coordinates of texture with values 0 to 1.
+# 	tight boundary rounding is in use.'''
+# 	width  = int(S.shape[0])
+# 	height = int(S.shape[1])
+# 	if ( x < 0  ):				# // Left P.B.C.
+# 		x = width - 1
+# 	elif ( x > (width - 1) ):	# // Right P.B.C.
+# 		x = 0
+# 	if( y < 0 ):				# //  Bottom P.B.C.
+# 		y = height - 1
+# 	elif ( y > (height - 1)):	# // Top P.B.C.
+# 		y = 0
+# 	return S[x,y]
 
 # /*-------------------------------------------------------------------------
 #  * Laplacian
 #  *-------------------------------------------------------------------------
-#  */ 
-
-@njit
-def laplacian(inVfs, x, y, cddx, cddy, V):
-	#five point stencil
-	dVltdt = (
-	    (pbc(inVfs, x + 1, y)[0] - 2.0 * V +
-	     pbc(inVfs, x - 1, y)[0]) * cddx +
-	    (pbc(inVfs, x, y + 1)[0] - 2.0 * V +
-	     pbc(inVfs, x, y - 1)[0]) * cddy)
-	return dVltdt
+#  */
+def get__laplacian(width,height,cddx,cddy):
+	pbcx=get____pbc(width)
+	pbcy=get____pbc(height)
+	# @cuda.jit('float64(float64[:,:,:], int32, int32, float64)', device=True, inline=True)
+	@njit
+	def _laplacian(inVfs, x, y, V):
+		rx=x+1; lx=x-1
+		ry=y+1; ly=y-1
+		rx=pbcx(rx);lx=pbcx(lx);
+		ry=pbcy(ry);ly=pbcy(ly);
+		#five point stencil
+		dVltdt = float(
+			(inVfs[ rx, y,0] - 2.0 * V +
+			 inVfs[ lx, y,0]) * cddx +
+			(inVfs[ x, ry,0] - 2.0 * V +
+			 inVfs[ x, ly,0]) * cddy)
+		return dVltdt
+	return _laplacian
+# @njit
+# def laplacian(inVfs, x, y, cddx, cddy, V):
+# 	#five point stencil
+# 	dVltdt = (
+# 	    (pbc(inVfs, x + 1, y)[0] - 2.0 * V +
+# 	     pbc(inVfs, x - 1, y)[0]) * cddx +
+# 	    (pbc(inVfs, x, y + 1)[0] - 2.0 * V +
+# 	     pbc(inVfs, x, y - 1)[0]) * cddy)
+# 	return dVltdt
 #(deprecated) nine point stencil
 # 	dVlt2dt = (1. - 1. / 3.) * (
 # 		(pbc(inVfs, x + 1, y)[0] - 2.0 * C[0] +
@@ -243,14 +282,14 @@ def laplacian(inVfs, x, y, cddx, cddy, V):
 # /*-------------------------------------------------------------------------
 #  * Adaptive time steping
 #  *-------------------------------------------------------------------------
-#  */ 
+#  */
 
 @njit
 def comp_next_time_step(dt_prev, dV):
 	''' returns the size of the next time step
 	Adaptive time stepping as described in Luo1990.pdf.
-	During the stimulus, a fixed time step (0.05 or 0.01 msec) 
-	should be used to minimize variability in the stimulus duration 
+	During the stimulus, a fixed time step (0.05 or 0.01 msec)
+	should be used to minimize variability in the stimulus duration
 	caused by the time discretizationprocedure.
 	'''
 	dVmax = 0.8 #mV
