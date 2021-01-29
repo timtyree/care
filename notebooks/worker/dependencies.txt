@@ -1,0 +1,3 @@
+#suppose get_txt.sh has run
+# os.system('chmod +x get_txt.sh')
+# os.system(f'./get_txt.sh {txt_id}') 

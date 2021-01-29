@@ -1,3 +1,5 @@
+import numpy as np
+
 def chunk_array(txt_in,width_out,height_out,typeout='float64'):
     '''returns txt_out_lst
     suppose file_name is a bare string with the extension  ".npz"
@@ -14,7 +16,6 @@ def chunk_array(txt_in,width_out,height_out,typeout='float64'):
             arr=txt_in[x:x+width_out,y:y+height_out]
             txt_out_lst.append(arr.astype(typeout))
     return txt_out_lst
-
 
 if __name__=="__main__":
     width_in=500;height_in=500;chnlno=2
