@@ -2,7 +2,7 @@
 from ..my_initialization import *
 from scipy import stats
 
-def compute_diffusion_coeffs(input_file_name,tau_min=0.,tau_max=0.5,**kwargs):
+def compute_diffusion_coeffs(input_file_name,tau_min=0.15,tau_max=0.5,**kwargs):
     '''consider input_file_name = emsd_longest_by_trial_tips_ntips_1_Tmin_0.15_Tmax_0.5.csv
     Example Usage:
         retval= compute_diffusion_coeffs_for_msd(input_file_name,tau_min=.15,tau_max=0.5)'''
@@ -55,7 +55,7 @@ def compute_diffusion_coeffs(input_file_name,tau_min=0.,tau_max=0.5,**kwargs):
     df2.to_csv(savefn)
     return savefn
 
-def generate_diffcoeff_figures(input_file_name,trial_folder_name, dir_out=None, tau_min=.0,tau_max=0.5,saving=True,
+def generate_diffcoeff_figures(input_file_name,trial_folder_name, dir_out=None, tau_min=.15,tau_max=0.5,saving=True,
         R2_thresh=0.,duration_thresh=0.,fontsize=22,figsize_2=(15,4.5),**kwargs):
     '''input_file_name is of the form:
         emsd_longest_by_trial_tips_ntips_1.csv'''

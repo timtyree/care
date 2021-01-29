@@ -36,9 +36,9 @@ def produce_one_csv(list_of_files, file_out):
 	   df.drop(columns=['Unnamed: 0'])
    df.to_csv(file_out, index=False, encoding="utf-8")
 
-def gen_diffcoeff_table(input_folder,trial_folder_name_lst=None,**kwargs):
+def gen_diffcoeff_table(input_folder,trial_folder_name_lst=None, tau_min=0.15,tau_max=0.5,**kwargs):
 	'''Example input_folder is at {nbdir}/Data/initial-conditions-suite-2'''
-	diffcoeff_fn_base=input_folder+"/ds_5_param_set_4/msd/diffcoeff_emsd_longest_by_trial_tips_ntips_1_Tmin_0.15_Tmax_0.5.csv"
+	diffcoeff_fn_base=input_folder+f"/ds_5_param_set_4/msd/diffcoeff_emsd_longest_by_trial_tips_ntips_1_Tmin_{tau_min}_Tmax_{tau_max}.csv"
 	foo_dfn=lambda trial_folder_name:diffcoeff_fn_base.replace('ds_5_param_set_4',trial_folder_name)
 	if trial_folder_name_lst is None:
 		#list some collections of trials
