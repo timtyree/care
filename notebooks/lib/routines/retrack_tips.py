@@ -2,8 +2,8 @@
 from ..my_initialization import *
 from ..utils import *
 
-def decompose_trajectories(df, distance_L2_pbc,DS = 5./200.,DT=1.,
-    width=200,height=200,LT_thresh=1,tmin=100, jump_thresh=10.):
+def decompose_trajectories(df, distance_L2_pbc,DS,DT,
+    width,height,LT_thresh,tmin, jump_thresh=10., **kwargs):
     '''
     reads trajectories from the .csv file, input_file_name.
     remove any trajectories with no more than LT_thresh rows.
@@ -40,7 +40,7 @@ def decompose_trajectories(df, distance_L2_pbc,DS = 5./200.,DT=1.,
     # d_lst = chunk_traj(df,pid_lst=pid_longest_lst,width=width,height=height,jump_thresh=10., LT_thresh=1,distance_L2_pbc=None):
     # return d_lst
 
-def retrack_trajectories(df,distance_L2_pbc,lifetime_thresh = 50,angle_threshold = np.pi/4,LT_thresh=1.,DS = 5./200.,width=200,height=200, jump_thresh=10.):
+def retrack_trajectories(df,distance_L2_pbc,LT_thresh,DS,width,height, jump_thresh=20., lifetime_thresh = 50,angle_threshold = np.pi/4, **kwargs):
     '''takes df returned by decompose_trajectories
     compute a new particle2 field for df, which is partitioned by the list d_lst,
     performing patches between two trajectories if the following conditions all hold:

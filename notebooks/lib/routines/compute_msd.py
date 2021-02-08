@@ -25,7 +25,7 @@ def filter_duplicate_trajectory_indices(pid_longest_lst,df_traj):
                     pid_longest_lst_filtered.remove(pid2)
     return pid_longest_lst_filtered
 
-def unwrap_for_each_jump(x_values,y_values,jump_index_array, width=200,height=200):
+def unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height, **kwargs):
     '''ux,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array) '''
     yv = y_values.copy()
     xv = x_values.copy()
@@ -74,7 +74,7 @@ def unwrap_for_each_jump(x_values,y_values,jump_index_array, width=200,height=20
     return xv,yv
 
 
-def unwrap_traj_and_center(d, DS = 5/200):
+def unwrap_traj_and_center(d, width, height, DS, **kwargs):
     '''d is a dataframe of 1 trajectory with pbc.  edits d to have pbc-unwrapped x,y coords and returns d.'''
     if d.t.values.shape[0]<=1:
         return None
@@ -82,8 +82,9 @@ def unwrap_traj_and_center(d, DS = 5/200):
     # DS = 5/200
     x_values = d.x.values.astype('float64')
     y_values = d.y.values.astype('float64')
-    jump_index_array, spd_lst = find_jumps(x_values,y_values,DS=DS,DT=DT)
-    xv,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array, width=200,height=200)
+    jump_index_array, spd_lst = find_jumps(x_values,y_values,width,height,DS,DT,**kwargs)
+    # find_jumps(x_values,y_values,DS=DS,DT=DT)
+    xv,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array, width=width,height=height)
 
     #subtract off the initial position for plotting's sake
     xv -= xv[0]
@@ -106,14 +107,14 @@ def preprocess_log(input_file_name):
     output_file_name = generate_track_tips_pbc(input_file_name, save_fn=None)
     return output_file_name
 
-def unwrap_trajectories(input_file_name, output_file_name):
+def unwrap_trajectories(input_file_name, output_file_name, width, height, DS, **kwargs):
     # load trajectories
     df = pd.read_csv(input_file_name)
     pid_lst = sorted(set(df.particle.values))
     #(duplicates filtered earlier_ _  _ _ ) filter_duplicate_trajectory_indices is slow (and can probs be accelerated with a sexy pandas one liner)
     pid_lst_filtered = pid_lst#filter_duplicate_trajectory_indices(pid_lst,df)
     # pid_lst_filtered = filter_duplicate_trajectory_indices(pid_lst,df)
-    df = pd.concat([unwrap_traj_and_center(df[df.particle==pid]) for pid in pid_lst_filtered])
+    df = pd.concat([unwrap_traj_and_center(df[df.particle==pid], width, height, DS, **kwargs) for pid in pid_lst_filtered])
     #save results
     # dirname = os.path.dirname(input_file_name).split('/')[-1]
     dirname='trajectories'
@@ -159,18 +160,42 @@ def unwrap_trajectories(input_file_name, output_file_name):
 # assert (jump_index_array.size==0)
 
 # def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., round_t_to_n_digits=0):
-def get_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., round_t_to_n_digits=0):
-    #select the longest n trajectories
-    df = pd.read_csv(input_file_name)
-    df.reset_index(inplace=True)
-    try:
-        s = df.groupby('particle').t.count()
-    except KeyError as e:#("KeyError") as e:
-        # print(e)
-        print( f"\t trial that failed: {input_file_name.split('/')[-1]}")
-        return None
-    s = s.sort_values(ascending=False)
-    pid_longest_lst = list(s.index.values[:n_tips])
+def get_longest_trajectories(input_file_name, width, height, n_tips = 1,DS = 5/200,DT = 2., round_t_to_n_digits=0, jump_thresh=20., **kwargs):
+    if n_tips==1:
+        #select the longest trajectories that moves
+        df = pd.read_csv(input_file_name)
+        df.reset_index(inplace=True)
+        try:
+            s = df.groupby('particle').t.count()
+        except KeyError as e:#("KeyError") as e:
+            # print(e)
+            print( f"\t trial that failed: {input_file_name.split('/')[-1]}")
+            return None
+        s = s.sort_values(ascending=True)
+        pid_longest_lst = list(s.index.values)#[:n_tips])
+        pid=pid_longest_lst.pop()
+        std_diffx=df[(df.particle==pid)].x.diff().dropna().std()
+        boo=False
+        if std_diffx:#.diff().dropna().x.std
+            if std_diffx>0:
+                boo=True
+        while not boo:
+            pid=pid_longest_lst.pop()
+            std_diffx=df[(df.particle==pid)].x.diff().dropna().std()
+            boo=False
+            if std_diffx:#.diff().dropna().x.std
+                if std_diffx>0:
+                    boo=True
+        pid_longest_lst=[pid]
+    else:
+        try:
+            s = df.groupby('particle').t.count()
+        except KeyError as e:#("KeyError") as e:
+            # print(e)
+            print( f"\t trial that failed: {input_file_name.split('/')[-1]}")
+            return None
+        s = s.sort_values(ascending=False)
+        pid_longest_lst = list(s.index.values[:n_tips])
     #     df_traj = pd.concat([df[df.particle==pid] for pid in pid_longest_lst])
 
     #truncate trajectories to their first apparent jump (pbc jumps should have been removed already)
@@ -179,7 +204,7 @@ def get_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., roun
         d = df[(df.particle==pid)].copy()
         x_values, y_values = d[['x','y']].values.T
         index_values = d.index.values.T
-        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=20.)#.25)
+        jump_index_array, spd_lst = find_jumps(x_values,y_values,width,height, DS=DS,DT=DT, jump_thresh=jump_thresh, **kwargs)#.25)
         if len(jump_index_array)>0:
             ji = jump_index_array[0]
             d.drop(index=index_values[ji:], inplace=True)
@@ -188,10 +213,16 @@ def get_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., roun
 
     #round trajectory times to remove machine noise from floating point arithmatic
     df_traj['t'] = df_traj.t.round(round_t_to_n_digits)
+    # df_traj['x'] = df_traj.x.round(6)
+    # df_traj['y'] = df_traj.y.round(6)
+    df_traj['grad_ux'] = df_traj.grad_ux.round(5)
+    df_traj['grad_uy'] = df_traj.grad_uy.round(5)
+    df_traj['grad_vx'] = df_traj.grad_vx.round(5)
+    df_traj['grad_vy'] = df_traj.grad_vy.round(5)
     #     assert ( (np.array(sorted(set(df_traj['particle'].values)))==np.array(sorted(pid_longest_lst))).all())
     return df_traj
 
-def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., round_t_to_n_digits=0):
+def compute_emsd_for_longest_trajectories(input_file_name,n_tips,DS,DT, round_t_to_n_digits=0, **kwargs):
     df_traj=get_longest_trajectories(input_file_name,n_tips,DS,DT,round_t_to_n_digits)
     try:
         #compute ensemble mean squared displacement
@@ -203,7 +234,7 @@ def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,
         print(f"\ttrial that failed: {input_file_name.split('/')[-1]}")
         return None
 
-def compute_average_msd(df, DT=1.):
+def compute_average_msd(df, DT):
     src_lst = sorted(set(df.src.values))
     src_lst = src_lst#[:10]
     ff = df.copy()#pd.concat([df[df.src==src] for src in src_lst])

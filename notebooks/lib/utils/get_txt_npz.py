@@ -1,27 +1,15 @@
 import os, numpy as np
 from .chunk_array import chunk_array
 from .gdown import download_file_from_google_drive
+#install dependencies
+# os.system('python3 -m pip install --upgrade pip')
+# os.system('python3 -m pip install gdown')
+#suppose get_txt.sh has run
+# os.system('chmod +x get_txt.sh')
+# os.system(f'./get_txt.sh {txt_id}')
 
-def load_buffer(data_dir,**kwargs):
-	cwd=os.getcwd()
-	if data_dir[-4:]=='.npy':
-		txt = np.load(data_dir)
-	elif data_dir[-4:]=='.npz':
-		txt = np.load(data_dir,**kwargs)
-		txt = txt[txt.files[0]]  #only take the first buffer because there's typically one
-	elif data_dir[-4:]=='.txt':
-		txt = np.loadtxt(data_dir,**kwargs)
-		widthxheight,chno=txt.shape#(1800, 1800, 18)
-		width=int(np.sqrt(widthxheight))
-		height=width#1800
-		txt = txt.reshape((width,height,chno)).copy() #only take the first buffer because there's typically one
-	else:
-		print(f"Warning: file format not supported {data_dir}.")
-		raise Exception(f"Warning: file format not supported {data_dir}.")
-	os.chdir(cwd)
-	return txt
-
-def run_downloader(gid,txt_ic_fn='ic/ic1800x1800.txt'):
+def run_downloader(gid):
+	txt_ic_fn='ic/ic1800x1800.npz'
 	destination=txt_ic_fn
 	retval=download_file_from_google_drive(gid, destination)
 	return None
@@ -33,27 +21,27 @@ def get_gid(txt_id):
 	#two gid's per texture lowers the load on google drive servers
 	if txt_id==0:#at time, 1210
 		if decision(0.5):
-			gid='15Dw_ZVj1AodyqSQpBdrvggxSBkL5-YIp'
+			gid='1OYtQNnp5KnGfKMkskk7GeDQSCe3Mo7Gu'
 		else:
-			gid='18XXdQXfjMbDKCREmOOG7Pat7eCeGaJm9'
+			gid='1LTQxE9sacdb3BidFYeefqKUzEA_HiSOu'
 	if txt_id==1:#at time, 2020
 		if decision(0.5):
-			gid='1zyAZab_5U4jD6Xn6OK_kKKSSTh65dHkX'
+			gid='1td_6aQHFWzvunt1kU14ViW5DZ69rUhMD'
 		else:
-			gid='1e5ojFGN2mHN8YJlDvTBHxkVfJPZTZXvq'
+			gid='1qf2-Cf5Bbfjos5QDxp2FZtyJoL3FU4zO'
 	if txt_id==2:#at time, 2830
 		if decision(0.5):
-			gid='1cBQ-knunPqiDlshhptUzZlvFV6luR_Aj'
+			gid='12dLQ_YFwSAvuuZc1lhNsKPcv4QXZB86u'
 		else:
-			gid='1-mRKafJypVeopGZxiEZohrMT4o8kcIyp'
+			gid='1MCM6hVxC0Ch73ZnK97PKhjPChHI0PRxx'
 	if txt_id==3:#at time, 3640
 		if decision(0.5):
-			gid='1EOMR7izLM0bS4GVXr9daSHo9FtsW56vo'
+			gid='14SipoA-gemvfyuA5v9tAUQRP3Firmu8G'
 		else:
-			gid='1Hu-w9vChqRAR4EZSuLqZbG7qh5gFgBbL'
+			gid='1vmeI5SyyveaZ00qEeiqb04MVDssw9s5p'
 	return gid
 
-def download_txt(txt_id,worker_dir,rm_father_ic=True):
+def download_txt(txt_id,worker_dir):
 	'''returns the first gdrive download file found in the directory, worker_dir.'''
 	os.chdir(worker_dir)
 	if not os.path.exists('ic'):
@@ -74,19 +62,17 @@ def download_txt(txt_id,worker_dir,rm_father_ic=True):
 	# if txt_id==3:
 	# 	# run_downloader(gid='14SipoA-gemvfyuA5v9tAUQRP3Firmu8G')
 	os.chdir(worker_dir)
-	txt=load_buffer('ic/ic1800x1800.txt')#[0]#,allow_pickle=True)
-	if rm_father_ic:
-		os.remove('ic/ic1800x1800.txt')
+	txt=load_buffer('ic/ic1800x1800.npz')[0]#,allow_pickle=True)
 	# txt=load_buffer('ic/ic1800x1800.npz')[0]#,allow_pickle=True)
 	return txt
 
-def get_txt_lst(txt_id1,width,height,worker_dir,**kwargs):
+def get_txt_lst(txt_id1,width,height,worker_dir):
 	txt_in=download_txt(txt_id1,worker_dir)
 	array_lst = chunk_array(txt_in, width, height, typeout='float64')
 	return array_lst
 
-def get_txt(txt_id1,txt_id2,width,height,worker_dir,**kwargs):
-	array_lst=get_txt_lst(txt_id1,width,height,worker_dir,**kwargs)
+def get_txt(txt_id1,txt_id2,width,height,worker_dir):
+	array_lst=get_txt_lst(txt_id1,width,height,worker_dir)
 	# N=len(array_lst)
 	try:
 		txt=array_lst[txt_id2]
@@ -97,7 +83,21 @@ def get_txt(txt_id1,txt_id2,width,height,worker_dir,**kwargs):
 		txt_id2=random.randint(0,len(array_lst)-1)
 		print (f'Choosing txt_id2={txt_id2}...')
 		txt=array_lst[txt_id2]#-1]
+
 	return txt
+
+def load_buffer(data_dir,**kwargs):
+	if data_dir[-4:]=='.npy':
+		txt = np.load(data_dir)
+		return txt
+	elif data_dir[-4:]=='.npz':
+		txt = np.load(data_dir,**kwargs)
+		txt = txt[txt.files[0]]  #only take the first buffer because there's typically one
+		return txt
+	else:
+		print(f"Warning: file format not supported {data_dir}.")
+		raise Exception(f"Warning: file format not supported {data_dir}.")
+
 
 if __name__=='__main__':
 	os.get_cwd()

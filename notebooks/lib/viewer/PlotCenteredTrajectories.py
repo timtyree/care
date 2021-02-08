@@ -1,7 +1,7 @@
 # Tim Tyree
 # 12.18.2020
 
-def plot_centered_trajectories(df_traj,pid_longest_lst,width=200,height=200,saving = True,DS = 5/200,fontsize=24,col = "t",dpi=300,
+def plot_centered_trajectories(df_traj,pid_longest_lst,width,height,saving = True,DS = 5/200,fontsize=24,col = "t",dpi=300,
     savefig_folder):
     #plot the xy trajectory for longliving tips
     # savefig_folder = os.path.join(nb_dir,'Figures/msd')

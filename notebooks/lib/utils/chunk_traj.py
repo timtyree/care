@@ -1,11 +1,11 @@
 #compute_traj.py
 from ..my_initialization import *
 from . import *
-def chunk_traj(df,pid_lst,width=200,height=200,jump_thresh=10., distance_L2_pbc=None, LT_thresh=1, DS=5./200., DT=1.):
+def chunk_traj(df,pid_lst,width,height, DS, DT, jump_thresh=10., distance_L2_pbc=None, LT_thresh=1, **kwargs):
     # d_lst = []
     chunk_index=1
     if distance_L2_pbc is None:
-        distance_L2_pbc = get_distance_L2_pbc(width=200,height=200)
+        distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
     for pid in  pid_lst:
         d_raw = df[df.particle==pid].copy()
         #drop any rows before t=100ms

@@ -10,7 +10,7 @@ def chunk_array(txt_in,width_out,height_out,typeout='float64'):
     txt_out_lst=[]
     x=0;y=0;
     x_lst=list(range(0,width_in-width_out,width_out))
-    y_lst=list(range(0,width_in-width_out,width_out))
+    y_lst=list(range(0,height_in-height_out,height_out))
     for x in x_lst:
         for y in y_lst:
             arr=txt_in[x:x+width_out,y:y+height_out]

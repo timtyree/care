@@ -296,14 +296,14 @@ if __name__ == '__main__':
             os.mkdir('lookup_tables')
         save_fn=f"lookup_tables/luo_rudy_dt_{dt}.npz"
         #save compressed arrays with self documenting keywords
-        np.savez_compressed(save_fn,*retval,
-            kwds=[
-                'arr10_v_xinfh_xttab',
-                'arr11_v_e1_em_ef',
-                'arr12_v_ed_ej_eh',
-                'arr13_v_xtaud_xtauf',
-                'arr39_v_xinf1_xtau1_xinfm_xtaum_xinfh_xtauh_xinfj_xtauj_xinfd_xtaud_xinff_xtauf_xttab_x1_e1_em_eh_ej_ed_ef'
-                ])
+        # np.savez_compressed(save_fn,*retval,
+        #     kwds=[
+        #         'arr10_v_xinfh_xttab',
+        #         'arr11_v_e1_em_ef',
+        #         'arr12_v_ed_ej_eh',
+        #         'arr13_v_xtaud_xtauf',
+        #         'arr39_v_xinf1_xtau1_xinfm_xtaum_xinfh_xtauh_xinfj_xtauj_xinfd_xtaud_xinff_xtauf_xttab_x1_e1_em_eh_ej_ed_ef'
+        #         ])
         if save_deserialized:
             #save deserialized results for timestep dt
             arr10,arr11,arr12,arr13,arr39=retval
@@ -315,7 +315,7 @@ if __name__ == '__main__':
             # np.savetxt(fname=save_fn.replace('.npz','_arr12.csv'),
             #                     X=arr12.T,fmt=fmt,delimiter=',')
             # np.savetxt(fname=save_fn.replace('.npz','_arr13.csv'),
-                                X=arr13.T,fmt=fmt,delimiter=',')
+                                # X=arr13.T,fmt=fmt,delimiter=',')
             np.savetxt(fname=save_fn.replace('.npz','_arr39.csv'),
                                 X=arr39.T,fmt=fmt,delimiter=',')
             # print(arr10.shape)

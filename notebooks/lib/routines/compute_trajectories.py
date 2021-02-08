@@ -1,10 +1,10 @@
 # compute_trajectories.py
 
-import trackpy, sklearn, pandas as pd, numpy as np
+import trackpy, pandas as pd, numpy as np
 from .. import *
 from ..utils.dist_func import *
 
-def compute_trajectories(input_file_name, mem = 0, sr  = 400, width = 200, height = 200):
+def compute_trajectories(input_file_name, mem, sr, width, height, **kwargs):
     df = pd.read_csv(input_file_name)
     df.drop_duplicates(subset=['t','x','y'],keep='first',inplace=True,ignore_index=True)
     # df.drop_duplicates(inplace=True, ignore_index=True)
@@ -37,7 +37,7 @@ def compute_trajectories(input_file_name, mem = 0, sr  = 400, width = 200, heigh
         f=df.head(-1),t_column='frame',**link_kwargs)
     return traj
 
-def routine_compute_trajectories(input_file_name, save_folder=None, input_folder=None,mem = 0, sr  = 400, width = 200, height = 200):
+def routine_compute_trajectories(input_file_name, mem, sr, width, height, save_folder=None, input_folder=None, **kwargs):
     if input_folder is not None:
         os.chdir(input_folder)
     traj = compute_trajectories(input_file_name, mem = mem, sr  = sr, width = width, height = height)

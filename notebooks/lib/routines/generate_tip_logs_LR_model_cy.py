@@ -10,13 +10,16 @@ import numpy as np, pandas as pd, matplotlib.pyplot as plt
 
 from ..my_initialization import *
 from ..controller.controller_LR import *#get_one_step_explicit_synchronous_splitting as get_one_step
-from ..model.LR_model_optimized import *
+from ..model.LR_model_optimized_w_Istim import *
 from ..utils.utils_traj import *
 from ..utils.stack_txt_LR import stack_txt, unstack_txt
 from ..routines.bdrates import *
 from ..measure.utils_measure_tips_cpu import *
 from ..viewer import *
 import trackpy
+from ..utils import get_txt
+# from ..utils.get_txt import load_buffer
+from ..model.LR_model_optimized_w_Istim import *
 
 #automate the boring stuff
 # from IPython import utils
@@ -24,11 +27,12 @@ import time, os, sys, re
 # beep = lambda x: os.system("echo -n '\\a';sleep 0.2;" * x)
 if not 'here_dir' in globals():
 	here_dir = os.getcwd()
-
-
 # @njit
 # def comp_transient_gating_variable(var, tau, varinfty):
 # 	return (varinfty - var)/tau
+
+
+
 
 
 def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
@@ -77,11 +81,12 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	# from ..model.LR_model_optimized_w_Istim import get_one_step_map
 	# dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs)
 	dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
+	txt_Istim_none=np.zeros(shape=(width,height), dtype=np.float64, order='C')
 
 	if printing:
 	    print(f"integrating to time t={tmin_early_stopping:.3f} ms without recording with dt={dt:.3f} ms.")
 	while (t<tmin_early_stopping):
-	    txt=one_step_map(txt)
+	    one_step_map(txt,txt_Istim_none)
 	    t+=dt
 	#precompute anything that needs precomputing
 	compute_all_spiral_tips= get_compute_all_spiral_tips(mode='simp',width=width,height=height)
@@ -128,7 +133,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 					printProgressBar(step_count, num_steps, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 		#forward Euler integration in time
-		txt=one_step_map(txt)
+		one_step_map(txt,txt_Istim_none)
 		#advance time by one step
 		t   += dt
 		step_count += 1

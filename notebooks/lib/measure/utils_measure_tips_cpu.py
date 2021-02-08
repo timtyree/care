@@ -17,7 +17,7 @@ from .. import *
 # from lib.intersection import *
 # from lib.minimal_model import *
 
-def get_compute_all_spiral_tips(mode='full',width=200,height=200):
+def get_compute_all_spiral_tips(width,height,mode='full',**kwargs):
     '''Example Usage:
     	compute_all_spiral_tips= get_compute_all_spiral_tips(mode='simp',width=width,height=height):
     '''

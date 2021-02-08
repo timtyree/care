@@ -201,8 +201,8 @@ from lib.dist_func import *
 import trackpy
 
 #TODO: test cases
-def track_tips (df_tips, dist_mode='pbc', 
-	h = 0.007, search_range=1, mem = 2, width=200, height=200):
+def track_tips (df_tips,
+	h, search_range, mem, width, height,dist_mode='pbc',  **kwargs):
 	'''using periodic boundary conditions, take output of process_tip_log() and return a dataframe of tip trajectories'''
 	distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
 	df['frame'] = df['t']/h
@@ -220,8 +220,8 @@ def track_tips (df_tips, dist_mode='pbc',
 	return df_trajectories
 
 #TODO: test cases
-def track_tips_in_folder(nb_dir, log_dir=None, out_dir=None, 
-	h = 0.007, mem = 2, search_range  = 1, width=200, height=200):
+def track_tips_in_folder(nb_dir, 
+	h, mem, search_range, width, height, log_dir=None, out_dir=None,  **kwargs):
 	'''nb_dir is the notebook directory containing the folder, Data, and 
 	nb_dir is unused if log_dir and out_dir are both not None.
 	string log_dir = folder containing the tip logs

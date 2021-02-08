@@ -4,7 +4,7 @@
 #6.6.2020
 #for spiral tip track processing
 import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
-from tkinter import filedialog, Tk
+# from tkinter import filedialog, Tk
 from glob import glob
 
 def get_all_trial_folders_not_archived(ic_suite_fn):
@@ -107,18 +107,18 @@ def get_unique_dir(path, width=3):
 	os.makedirs(new_path)
 	return new_path
 
-def search_for_file (currdir = os.getcwd()):
-	'''use a widget dialog to selecting a file.  Increasing the default fontsize seems too involved for right now.'''
-	root = Tk()
-	# root.config(font=("Courier", 44))
-	tempdir = filedialog.askopenfilename(parent=root,
-										 initialdir=currdir,
-										 title="Please select a file")#,
-										 # filetypes = (("all files","*.*")))
-	root.destroy()
-	if len(tempdir) > 0:
-		print ("File: %s" % tempdir)
-	return tempdir
+# def search_for_file (currdir = os.getcwd()):
+# 	'''use a widget dialog to selecting a file.  Increasing the default fontsize seems too involved for right now.'''
+# 	root = Tk()
+# 	# root.config(font=("Courier", 44))
+# 	tempdir = filedialog.askopenfilename(parent=root,
+# 										 initialdir=currdir,
+# 										 title="Please select a file")#,
+# 										 # filetypes = (("all files","*.*")))
+# 	root.destroy()
+# 	if len(tempdir) > 0:
+# 		print ("File: %s" % tempdir)
+# 	return tempdir
 
 def load_buffer(data_dir,**kwargs):
 	if data_dir[-4:]=='.npy':

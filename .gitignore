@@ -168,3 +168,5 @@ notebooks/Data/ds_5_param_set_8/trajectories/tip_log_ds_5_sigma_0.5_threshold_0.
 notebooks/Data/ds_5_param_set_8/Log/tip_log_ds_5_sigma_0.5_threshold_0.9_004.csv
 notebooks/Data/test_data/fast_kernel_V_0.5/ic_200x200.001.13_log_filtered_alpha_0.5.csv
 notebooks/Data/test_data/fast_kernel_V_0.5/ic_200x200.001.13_log_filtered_alpha_0.6.csv
+notebooks/archive/lib.zip
+notebooks/ic/ic1800x1800.txt

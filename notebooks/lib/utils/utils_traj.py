@@ -6,8 +6,8 @@ from .. import *
 from .dist_func import *
 
 
-def find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None,distance_L2_pbc=None):
-    '''
+def find_jumps(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_L2_pbc=None, **kwargs):
+    '''Example Usage:
     jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None)
     spd_lst is a list of speeds in units of DS/DT.'''
     #compute the speed of this longest trajectory using pbc
@@ -35,7 +35,7 @@ def find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thres
     jump_index_array = np.argwhere(boo).flatten()
     return jump_index_array, spd_lst
 
-def find_jumps_non_pbc(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None,distance_L2_pbc=None):
+def find_jumps_non_pbc(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_L2_pbc=None, **kwargs):
     '''
     jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None)
     spd_lst is a list of speeds in units of DS/DT.'''
@@ -65,7 +65,7 @@ def find_jumps_non_pbc(x_values,y_values,width=200,height=200, DS=5/200,DT=1, ju
     return jump_index_array, spd_lst
 
 
-def return_longest_n_and_truncate(input_file_name,n_tips = 1,DS = 5/200,DT = 1., round_t_to_n_digits=0):
+def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_digits, **kwargs):
     #select the longest n trajectories
     df = pd.read_csv(input_file_name)
     df.reset_index(inplace=True)
@@ -79,7 +79,7 @@ def return_longest_n_and_truncate(input_file_name,n_tips = 1,DS = 5/200,DT = 1.,
         d = df[(df.particle==pid)].copy()
         x_values, y_values = d[['x','y']].values.T
         index_values = d.index.values.T
-        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=20.)#.25)
+        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=width,height=height, DS=DS,DT=DT, jump_thresh=20.)#.25)
         if len(jump_index_array)>0:
             ji = jump_index_array[0]
             d.drop(index=index_values[ji:], inplace=True)

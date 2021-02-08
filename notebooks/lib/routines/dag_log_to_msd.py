@@ -66,7 +66,7 @@ def gen_diffcoeff_table(input_folder,trial_folder_name_lst=None, tau_min=0.15,ta
 	save_folder_table = input_folder#os.path.join(nb_dir,f'/Data/initial-conditions-suite-2')
 	file_out=save_folder_table+'/avg-diffcoeff-table.csv'
 	produce_one_csv(fn_lst_out, file_out)
-	print(f'\n output csv saved in:\t {os.path.dirname(file_out)}')
+	# print(f'\n output csv saved in:\t {os.path.dirname(file_out)}')
 	return fn_lst_out
 
 # # #TODO: use the daskbag motif to accelerate the pipeline before generate_msd_figures_routine_for_list

@@ -9,7 +9,7 @@ if not 'nb_dir' in globals():
 	nb_dir = os.getcwd()
 	
 #load the libraries
-from lib import *
+from .. import *
 
 # class y_axis_struct():
 # 	def __init__(self):
