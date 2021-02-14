@@ -30,7 +30,8 @@ import time, os, sys, re
 
 def return_tips_from_txt(txt, h, tmax, V_threshold,dsdpixel,
 	tmin_early_stopping, save_every_n_frames, mode, **kwargs):
-	'''generates a log of tip locations on 2D grid with periodic boundary conditions.
+	'''returns df
+	generates a log of tip locations on 2D grid with periodic boundary conditions.
 	default key word arguments are returned by lib.routines.kwargs.get_kwargs(initial_condition_dir).'''
 	nb_dir=os.getcwd()
 	level1 = V_threshold
