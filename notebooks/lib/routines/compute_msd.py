@@ -161,10 +161,12 @@ def unwrap_trajectories(input_file_name, output_file_name, width, height, DS, **
 
 # def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,DT = 1., round_t_to_n_digits=0):
 def get_longest_trajectories(input_file_name, width, height, n_tips = 1,DS = 5/200,DT = 2., round_t_to_n_digits=0, jump_thresh=20., **kwargs):
+    #select the longest trajectories that moves
+    df = pd.read_csv(input_file_name)
+    df.reset_index(inplace=True)
+    if df.x.values.shape[0]==0:
+        return None
     if n_tips==1:
-        #select the longest trajectories that moves
-        df = pd.read_csv(input_file_name)
-        df.reset_index(inplace=True)
         try:
             s = df.groupby('particle').t.count()
         except KeyError as e:#("KeyError") as e:
@@ -195,6 +197,8 @@ def get_longest_trajectories(input_file_name, width, height, n_tips = 1,DS = 5/2
             print( f"\t trial that failed: {input_file_name.split('/')[-1]}")
             return None
         s = s.sort_values(ascending=False)
+        if s.index.values.shape[0]==0:
+            return None
         pid_longest_lst = list(s.index.values[:n_tips])
     #     df_traj = pd.concat([df[df.particle==pid] for pid in pid_longest_lst])
 
@@ -222,8 +226,8 @@ def get_longest_trajectories(input_file_name, width, height, n_tips = 1,DS = 5/2
     #     assert ( (np.array(sorted(set(df_traj['particle'].values)))==np.array(sorted(pid_longest_lst))).all())
     return df_traj
 
-def compute_emsd_for_longest_trajectories(input_file_name,n_tips,DS,DT, round_t_to_n_digits=0, **kwargs):
-    df_traj=get_longest_trajectories(input_file_name,n_tips,DS,DT,round_t_to_n_digits)
+def compute_emsd_for_longest_trajectories(input_file_name,n_tips,DS,DT, L, round_t_to_n_digits=0, **kwargs):
+    df_traj=get_longest_trajectories(input_file_name,n_tips=n_tips,DS=DS,DT=DT,width=L,height=L,round_t_to_n_digits=round_t_to_n_digits)
     try:
         #compute ensemble mean squared displacement
         emsd = trackpy.motion.emsd(df_traj, mpp=1., fps=1.,max_lagtime=40000)
@@ -271,7 +275,8 @@ def compute_average_std_msd(df,DT):
     std_values = np.array(std_lst)
     return t_values, msd_values, std_values
 
-def PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,0.05],ylim=[0,4],D = 75,saving = True,fontsize =22,figsize=(9,6)):
+def PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,0.05],ylim=[0,4],D = 75,saving = True,fontsize =22,figsize=(9,6),
+    use_ylim=False,use_xlim=False,**kwargs):
     '''plot msd for each trial listed in df.src. also plot average msd.'''
     #compute average msd by trial for a subset of trials
     fig, ax = plt.subplots(figsize=figsize)
@@ -288,8 +293,10 @@ def PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim
 
     # DS = 5/200 #cm per pixel
     # DT = 1. #ms per frame
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    if use_xlim:
+        ax.set_xlim(xlim)
+    if use_ylim:
+        ax.set_ylim(ylim)
     ax.set_xlabel('lag (s)', fontsize=fontsize)
     ax.set_ylabel(r'MSD (cm$^2$)', fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
@@ -322,7 +329,7 @@ def generate_msd_figures_routine(input_file_name,n_tips, **kwargs):#V_thresh=Non
     file_name_list = [f for f in file_name_list if is_csv(f,trgt)]
     return generate_msd_figures_routine_for_list(file_name_list,n_tips,**kwargs)
 
-def generate_msd_figures_routine_for_list(file_name_list, n_tips,output_file_name=None,save_folder=None,**kwargs):
+def generate_msd_figures_routine_for_list(file_name_list, n_tips,DT, DS,L, output_file_name=None,save_folder=None,**kwargs):
     '''file_name_list is a list of _unwrap.csv files.
     returns a string indicating the output_file_name beginning in emsd_...'''#, V_thresh=None
     # file=file_name_list[0]
@@ -337,7 +344,7 @@ def generate_msd_figures_routine_for_list(file_name_list, n_tips,output_file_nam
 
     #compute ensemble mean squared displacement for the longest n_tips for each trial in file_name_list
     os.chdir(folder_name)
-    dict_out_lst=[compute_emsd_for_longest_trajectories(input_file_name, n_tips=n_tips) for input_file_name in file_name_list]
+    dict_out_lst=[compute_emsd_for_longest_trajectories(input_file_name, n_tips=n_tips,DS=DS,DT=DT,L=L) for input_file_name in file_name_list]
     if len(dict_out_lst)==0:
         print(f"""no sufficiently long lasting trajectory was found.  returning None, None for
         input_file_name, {input_file_name}.""")

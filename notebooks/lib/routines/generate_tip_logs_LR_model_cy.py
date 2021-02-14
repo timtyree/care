@@ -18,7 +18,7 @@ from ..measure.utils_measure_tips_cpu import *
 from ..viewer import *
 import trackpy
 from ..utils import get_txt
-# from ..utils.get_txt import load_buffer
+from ..utils.get_txt import load_buffer
 from ..model.LR_model_optimized_w_Istim import *
 
 #automate the boring stuff
@@ -79,8 +79,8 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	dt=h#smaller step for first 100 steps (bc of pbc)
 	#explicitly get the updated one_step method
 	# from ..model.LR_model_optimized_w_Istim import get_one_step_map
-	# dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs)
-	dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
+	dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs)
+	# dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
 	txt_Istim_none=np.zeros(shape=(width,height), dtype=np.float64, order='C')
 
 	if printing:

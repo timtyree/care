@@ -1,6 +1,7 @@
 #controller_cuda.py
 #TODO: move example usage from tip_log_from_ic.py to here
 import numpy as np
+from ..model.minimal_model_cuda import *
 
 def step_forward_2n_times(time_step_kernel,drv,n,txt_in,
                          u_new, u_old, v_new, v_old, w_new, w_old,
@@ -47,3 +48,12 @@ def step_forward_2n_times(time_step_kernel,drv,n,txt_in,
     drv.memcpy_dtoh(gpu_result_w, w_old)
     txt_out_gpu = np.stack((gpu_result_u,gpu_result_v,gpu_result_w),axis=2)
     return txt_out_gpu
+
+def get_one_step_map(time_step_kernel,drv,
+                             u_new, u_old, v_new, v_old, w_new, w_old,
+                             threads, grid,context):
+    def one_step_map(txt,nsteps):
+        return step_forward_2n_times(time_step_kernel,drv,nsteps,txt,
+                             u_new, u_old, v_new, v_old, w_new, w_old,
+                             threads, grid,context)
+    return one_step_map

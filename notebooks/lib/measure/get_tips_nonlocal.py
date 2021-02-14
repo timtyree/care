@@ -1,4 +1,4 @@
-#use the nonlocal topological method to detect tips.  
+#use the nonlocal topological method to detect tips.
 # also records topologcially preserved values.
 #Tim Tyree
 #9.13.2021
@@ -15,6 +15,7 @@ from scipy.interpolate import interp2d
 # from ._utils_find_contours import *
 # from ._utils_find_tips import *
 # from ._find_tips import *
+from numba import prange
 
 
 @njit#(cache=True)#, nogil = True)
@@ -457,4 +458,3 @@ def get_grad_direction(texture):
 #         states_interpolated_linear.append(state_interpolated_linear)
 #         states_interpolated_cubic.append(state_interpolated_cubic)
 #     return states_nearest, states_interpolated_linear, states_interpolated_cubic
-
