@@ -14,15 +14,16 @@ from ..utils.dist_func import *
 from ..utils.utils_traj import *
 
 
-def return_unwrapped_trajectory(df, width, height, sr, mem, dsdpixel, use_cache=True, **kwargs):
+def return_unwrapped_trajectory(df, width, height, sr, mem, dsdpixel, **kwargs):
     '''df is a pandas.DataFrame containing the tip log results.'''
+    DS=dsdpixel
     # generate_track_tips_pbc
     df.drop_duplicates(subset=['t','x','y'],keep='first',inplace=True)
     #,ignore_index=True)
     df = compute_track_tips_pbc(df, mem, sr, width, height)#,**kwargs)
     # unwrap_trajectories
     pid_lst = sorted(set(df.particle.values))
-    df = pd.concat([unwrap_traj_and_center(df[df.particle==pid], width, height, DS) for pid in pid_lst])
+    df = pd.concat([unwrap_traj_and_center(df[df.particle==pid].copy(), width, height, DS) for pid in pid_lst])
     return df
 
 
@@ -30,7 +31,7 @@ def return_longest_trajectories(df, width, height, dsdpixel, n_tips = 1, DT = 2.
                                 round_t_to_n_digits=0, jump_thresh=20., **kwargs):
     '''df is a pandas.DataFrame of a tip log'''
     mem=0;sr=width*2;DS=dsdpixel
-    df=return_unwrapped_trajectory(df, width, height, sr, mem, dsdpixel, use_cache=True, **kwargs)
+    df=return_unwrapped_trajectory(df, width, height, sr, mem, dsdpixel, **kwargs)
     if n_tips==1:
         df.reset_index(inplace=True)
         try:
@@ -41,6 +42,7 @@ def return_longest_trajectories(df, width, height, dsdpixel, n_tips = 1, DT = 2.
             return None
         s = s.sort_values(ascending=True)
         pid_longest_lst = list(s.index.values)#[:n_tips])
+        #filter trajectories that do not move explicitely
         pid=pid_longest_lst.pop()
         std_diffx=df[(df.particle==pid)].x.diff().dropna().std()
         boo=False
@@ -64,7 +66,7 @@ def return_longest_trajectories(df, width, height, dsdpixel, n_tips = 1, DT = 2.
             return None
         s = s.sort_values(ascending=False)
         pid_longest_lst = list(s.index.values[:n_tips])
-    #     df_traj = pd.concat([df[df.particle==pid] for pid in pid_longest_lst])
+    df_traj = pd.concat([df[df.particle==pid] for pid in pid_longest_lst])
 
     #truncate trajectories to their first apparent jump (pbc jumps should have been removed already)
     df_lst = []
@@ -78,6 +80,19 @@ def return_longest_trajectories(df, width, height, dsdpixel, n_tips = 1, DT = 2.
             d.drop(index=index_values[ji:], inplace=True)
         df_lst.append(d)
     df_traj = pd.concat(df_lst)
+    # #truncate trajectories to their first apparent jump (pbc jumps should have been removed already)
+    # df_lst = []
+    # for pid in  pid_longest_lst:#[2:]:
+    #     d = df[(df.particle==pid)].copy()
+    #     # #truncate all info after the first jump
+    #     # x_values, y_values = d[['x','y']].values.T
+    #     # index_values = d.index.values.T
+    #     # jump_index_array, spd_lst = find_jumps(x_values,y_values,width,height, DS=DS,DT=DT, jump_thresh=jump_thresh, **kwargs)#.25)
+    #     # if len(jump_index_array)>0:
+    #     #     ji = jump_index_array[0]
+    #     #     d.drop(index=index_values[ji:], inplace=True)
+        # df_lst.append(d)
+    # df_traj = pd.concat(df_lst)
 
     #round trajectory times to remove machine noise from floating point arithmatic
     df_traj['t'] = df_traj.t.round(round_t_to_n_digits)

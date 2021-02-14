@@ -11,8 +11,9 @@ notebooks/Data/
 doc/diffusion/
 # Log files
 # notebooks/Data/**/Log/*
-
+notebooks/lib-archived/
 notebooks/lib/model/lookup_tables/
+notebooks/lib/measure/archive/
 
 # notebooks/Data/archive/
 # notebooks/Data/test_data/
@@ -170,3 +171,5 @@ notebooks/Data/test_data/fast_kernel_V_0.5/ic_200x200.001.13_log_filtered_alpha_
 notebooks/Data/test_data/fast_kernel_V_0.5/ic_200x200.001.13_log_filtered_alpha_0.6.csv
 notebooks/archive/lib.zip
 notebooks/ic/ic1800x1800.txt
+notebooks/lib-archived.zip
+notebooks/lib/measure/ignore.txt

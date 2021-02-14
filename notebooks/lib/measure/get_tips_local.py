@@ -1,5 +1,5 @@
 from ..my_initialization import *
-# from numba import prange
+
 # @njit
 def compute_all_spiral_tips(img,dimgdt,level1,level2,width=200,height=200):
     #compute all spiral tips present

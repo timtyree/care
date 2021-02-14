@@ -26,6 +26,34 @@ def run_downloader(gid,txt_ic_fn='ic/ic1800x1800.txt'):
 	retval=download_file_from_google_drive(gid, destination)
 	return None
 
+
+def get_gid_fk(txt_id):
+	import random
+	def decision(probability):
+	    return random.random() < probability
+	#two gid's per texture lowers the load on google drive servers
+	if txt_id==0:#at time, 1210
+		if decision(0.5):
+			gid='13iVNQaav6MhkNc27ecQP3wcxosLn3QcX'
+		else:
+			gid='1o1tZGU75jo4Y8kJCXO57oxi28kdgn2Tv'
+	if txt_id==1:#at time, 2020
+		if decision(0.5):
+			gid='1QUC45Hwsi6y72yxlLwxPlV-6A9-9yiY5'
+		else:
+			gid='1lqmnqRFAvzSYTFCsafFz4ldbvJgUwgGS'
+	if txt_id==2:#at time, 2830
+		if decision(0.5):
+			gid='1YZAIT0lC4wZFrOOMQeRmvTeOGon3on74'
+		else:
+			gid='1MVP43Bylh45bVVxJ0GwWPR1sai1YiE4M'
+	if txt_id==3:#at time, 3640
+		if decision(0.5):
+			gid='1e0ovZGf9QdKOgV13aunAnsFIs5_kWjU0'
+		else:
+			gid='13hT7FYoLOv-0hSayyH-bqZ2S7VPZ1eO0'
+	return gid
+
 def get_gid(txt_id):
 	import random
 	def decision(probability):
@@ -33,32 +61,61 @@ def get_gid(txt_id):
 	#two gid's per texture lowers the load on google drive servers
 	if txt_id==0:#at time, 1210
 		if decision(0.5):
-			gid='15Dw_ZVj1AodyqSQpBdrvggxSBkL5-YIp'
+			if decision(0.5):
+				gid='1h7MahThMtqLtx4QO0GUFNFKUxyBdCT87'
+			else:
+				gid='15Dw_ZVj1AodyqSQpBdrvggxSBkL5-YIp'
 		else:
-			gid='18XXdQXfjMbDKCREmOOG7Pat7eCeGaJm9'
+			if decision(0.5):
+				gid='19ms4GVcyG43ttMu-pTqEjJk7H3eVVR4m'
+			else:
+				gid='18XXdQXfjMbDKCREmOOG7Pat7eCeGaJm9'
 	if txt_id==1:#at time, 2020
 		if decision(0.5):
-			gid='1zyAZab_5U4jD6Xn6OK_kKKSSTh65dHkX'
+			if decision(0.5):
+				gid='1WE0CECQXEp4eqNTPW4g4U9cqxhcbHsIW'
+			else:
+				gid='1zyAZab_5U4jD6Xn6OK_kKKSSTh65dHkX'
 		else:
-			gid='1e5ojFGN2mHN8YJlDvTBHxkVfJPZTZXvq'
+			if decision(0.5):
+				gid='1AhiZkyr9oZWbYDQHL3hNmJdH-Ac7DWf7'
+			else:
+				gid='1e5ojFGN2mHN8YJlDvTBHxkVfJPZTZXvq'
 	if txt_id==2:#at time, 2830
 		if decision(0.5):
-			gid='1cBQ-knunPqiDlshhptUzZlvFV6luR_Aj'
+			if decision(0.5):
+				gid='1OQvGDsSnzi4ka2dINNfFsGUGldTQ1NvY/'
+			else:
+				gid='1cBQ-knunPqiDlshhptUzZlvFV6luR_Aj'
 		else:
-			gid='1-mRKafJypVeopGZxiEZohrMT4o8kcIyp'
+			if decision(0.5):
+				gid='1Mu8e59rik0OCPVnksoQWydaIvEV4ttGm'
+			else:
+				gid='1-mRKafJypVeopGZxiEZohrMT4o8kcIyp'
 	if txt_id==3:#at time, 3640
 		if decision(0.5):
-			gid='1EOMR7izLM0bS4GVXr9daSHo9FtsW56vo'
+			if decision(0.5):
+				gid='1byRBGIbPRzcjAxE-cr6qW_nHqco4Xrxy'
+			else:
+				gid='1EOMR7izLM0bS4GVXr9daSHo9FtsW56vo'
 		else:
-			gid='1Hu-w9vChqRAR4EZSuLqZbG7qh5gFgBbL'
+			if decision(0.5):
+				gid='1sqAR-EovDn_Bx8vH_5pxWAXrAPz_eADh'
+			else:
+				gid='1Hu-w9vChqRAR4EZSuLqZbG7qh5gFgBbL'
 	return gid
 
-def download_txt(txt_id,worker_dir,rm_father_ic=True):
+def download_txt(txt_id,worker_dir,rm_father_ic=True,mode='FK',**kwargs):
 	'''returns the first gdrive download file found in the directory, worker_dir.'''
 	os.chdir(worker_dir)
 	if not os.path.exists('ic'):
 		os.mkdir('ic')
-	gid=get_gid(txt_id)
+	if mode=='FK':
+		print('downloading FK model...')
+		gid=get_gid_fk(txt_id)
+	else:
+		print('downloading LR model...')
+		gid=get_gid(txt_id)
 	run_downloader(gid=gid)
 	# cmd=f'gdown https://drive.google.com/uc?id={gid} -O ic/ic1800x1800.npz'
 	# os.system(cmd)#at time, 1210
@@ -81,7 +138,7 @@ def download_txt(txt_id,worker_dir,rm_father_ic=True):
 	return txt
 
 def get_txt_lst(txt_id1,width,height,worker_dir,**kwargs):
-	txt_in=download_txt(txt_id1,worker_dir)
+	txt_in=download_txt(txt_id1,worker_dir,**kwargs)
 	array_lst = chunk_array(txt_in, width, height, typeout='float64')
 	return array_lst
 
