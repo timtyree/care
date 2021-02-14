@@ -276,7 +276,7 @@ def compute_average_std_msd(df,DT):
     return t_values, msd_values, std_values
 
 def PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,0.05],ylim=[0,4],D = 75,saving = True,fontsize =22,figsize=(9,6),
-    use_ylim=False,use_xlim=False,**kwargs):
+    use_ylim=False,use_xlim=True,**kwargs):
     '''plot msd for each trial listed in df.src. also plot average msd.'''
     #compute average msd by trial for a subset of trials
     fig, ax = plt.subplots(figsize=figsize)
