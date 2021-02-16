@@ -2,6 +2,13 @@
 from ..my_initialization import *
 from scipy import stats
 
+def parse_src_params(file):
+    tmp=os.path.basename(file)[2:].split('x')[1].split('.')
+    L=eval(tmp[0])
+    txt_id1=eval(tmp[1])
+    txt_id2=eval(tmp[2].split('_')[0])
+    return L,txt_id1,txt_id2
+
 def compute_diffusion_coeffs(input_file_name,tau_min=0.15,tau_max=0.5,**kwargs):
     '''consider input_file_name = emsd_longest_by_trial_tips_ntips_1_Tmin_0.15_Tmax_0.5.csv
     Example Usage:

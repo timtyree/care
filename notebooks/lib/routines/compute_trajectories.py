@@ -8,7 +8,7 @@ def compute_trajectories(input_file_name, mem, sr, width, height, **kwargs):
     df = pd.read_csv(input_file_name)
     df.drop_duplicates(subset=['t','x','y'],keep='first',inplace=True,ignore_index=True)
     # df.drop_duplicates(inplace=True, ignore_index=True)
-    print("(slowly) assigning each time a unique frame number. ~120sec runtime...")
+    print(f"tracking spiral tips for {os.path.basename(input_file_name)}...")
     t_list =  sorted(set(df.t.values))
     frameno_list = list(range(len(t_list)))
 

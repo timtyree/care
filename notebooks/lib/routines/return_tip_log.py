@@ -136,7 +136,7 @@ if __name__=='__main__':
 	df=return_tips_from_txt(
 	    txt=txt,
 	    h=0.1,
-	    tmax=150,
+	    tmax=30,
 	    V_threshold=-50,
 	    dsdpixel=0.025,
 	    tmin_early_stopping=100,

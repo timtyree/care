@@ -17,7 +17,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	V_threshold, theta_threshold,dsdpixel,
 	tmin_early_stopping, save_every_n_frames, round_output_decimals,
 	timing, printing, logging, asserting, beeping, saving,
-	data_dir_log, completed_ic_dir, print_log_dir, param_fn, **kwargs):
+	data_dir_log, completed_ic_dir, print_log_dir, param_fn,diffCoef=None, **kwargs):
 	'''generates a log of tip locations on 2D grid with periodic boundary conditions.
 	default key word arguments are returned by lib.routines.kwargs.get_kwargs(initial_condition_dir).'''
 	level1 = V_threshold
@@ -60,6 +60,9 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 
 	param_dir = os.path.join(here_dir,'lib/model')
 	param_dict = json.load(open(os.path.join(param_dir,param_fn)))
+	if diffCoef is not None:
+		param_dict['diffCoef']=diffCoef
+
 	get_time_step=fetch_get_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
 	time_step=fetch_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
 	compute_all_spiral_tips= get_compute_all_spiral_tips(mode='simp',width=width,height=height)
