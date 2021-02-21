@@ -10,7 +10,7 @@ def get_kwargs(ic):
 	timing    = False
 	recording = True
 	V_threshold = 0.5  #unitless 0 to 1
-	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds 
+	h = 0.025#0.01 #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
 	dsdpixel = 0.025  # cm # the distance between two adjacent pixels to 5/200= 0.025 cm
 	jump_threshold = 2 #min pixel distance between consec. vertices on a contour to be considered a jump over periodic boundaries
 	size_threshold = 6 #min num of vertices for a contour to be considered.  Smaller values yield much slower measurements, but certain guarantees against missing spiral tips for rare edge cases.
@@ -35,7 +35,7 @@ def get_kwargs(ic):
 	sr   = 3  #pixels  #search range for tracking spiral tips in pixels
 	save_every_n_frames = 40 # 1 measurement per 1 ms for h=0.025 ms appears reasonable to resolve nearby births
 	tmin_early_stopping = 100 # milliseconds earliest time to stop recording in the absense of spiral tips
-	round_output_decimals = 5
+	round_output_decimals = 10#5
 
 	kwargs = {
 		'beeping':beeping,
@@ -51,7 +51,7 @@ def get_kwargs(ic):
 		'atol':atol,
 		# 'color_values':color_values,
 		'h':h , #0.1 for when D=0.0005cm^2/ms, ##0.007) for when D=0.001cm^2/ms, #milliseconds
-		'dsdpixel':dsdpixel, 
+		'dsdpixel':dsdpixel,
 		# 'nsteps':nsteps,
 		'save_every_n_frames':save_every_n_frames,
 		# 'max_buffers_to_save':max_buffers_to_save,

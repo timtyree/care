@@ -25,7 +25,7 @@ def get_all_longer_than(df,DT,T_min=1000):
 
 def find_jumps(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_L2_pbc=None, **kwargs):
     '''Example Usage:
-    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None)
+    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS,DT, jump_thresh=None)
     spd_lst is a list of speeds in units of DS/DT.'''
     #compute the speed of this longest trajectory using pbc
     if jump_thresh is None:
@@ -54,7 +54,7 @@ def find_jumps(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_
 
 def find_jumps_non_pbc(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_L2_pbc=None, **kwargs):
     '''
-    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None)
+    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT, jump_thresh=None)
     spd_lst is a list of speeds in units of DS/DT.'''
     #compute the speed of this longest trajectory using pbc
     if jump_thresh is None:
