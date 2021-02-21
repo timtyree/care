@@ -32,7 +32,7 @@ def get_kwargs(ic, ds=5, results_folder=None, param_fn = 'param_set_8.json'):
 	sr   = 400  #pixels  #search range for tracking spiral tips in pixels
 	save_every_n_frames = 40 # 1 measurement per 1 ms for h=0.025 ms appears reasonable to resolve nearby births
 	tmin_early_stopping = 100 # milliseconds earliest time to stop recording in the absense of spiral tips
-	round_output_decimals = 5
+	round_output_decimals = 10#5
 	tmax_sec = 10 #maximum time to be integrated in seconds
 	tmax = tmax_sec*10**3
 

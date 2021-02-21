@@ -8,7 +8,7 @@ from ._utils_find_tips import *
 from ._find_tips import *
 from ._find_tips_pbc_cy import *
 from ._find_tips_kernel_cy import *
-
+from .measure_diffusion_coefficient import *
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *
 
@@ -20,7 +20,7 @@ from ._find_tips_kernel_cy import *
 # from ._find_tips_kernel import *
 # from ._find_tips_pbc_cy import *
 
-# __all__ = ['find_contours']  #uncomment and fill in the list of functions to import.  While commented, everything will just be imported by default. 
+# __all__ = ['find_contours']  #uncomment and fill in the list of functions to import.  While commented, everything will just be imported by default.
 
 # from ._marching_cubes_lewiner import marching_cubes_lewiner, marching_cubes
 # from ._marching_cubes_classic import (marching_cubes_classic,

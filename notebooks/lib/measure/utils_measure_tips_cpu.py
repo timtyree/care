@@ -120,7 +120,7 @@ def fetch_txt_to_tip_dict(width,height,DX=0.025,DY=0.025, **param_dict):
         return dict_out
     return txt_to_tip_dict
 
-def txt_to_tip_dict_with_EP_state(width,height,DX=0.025,DY=0.025, **param_dict):
+def fetch_txt_to_tip_dict_with_EP_state(width,height,DX=0.025,DY=0.025, **param_dict):
     get_time_step=fetch_get_time_step(width,height,DX=0.025,DY=0.025, **param_dict)
     def txt_to_tip_dict_with_EP_state(txt, nanstate, zero_txt, x_coord_mesh, y_coord_mesh,
                         pad, edge_tolerance, atol):

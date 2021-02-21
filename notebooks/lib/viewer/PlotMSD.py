@@ -19,7 +19,7 @@ def compute_emsd_for_longest_trajectories(input_file_name,n_tips = 1,DS = 5/200,
         d = df[(df.particle==pid)].copy()
         x_values, y_values = d[['x','y']].values.T
         index_values = d.index.values.T
-        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=10.)#.25)
+        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=DT, jump_thresh=10.)#.25)
         if len(jump_index_array)>0:
             ji = jump_index_array[0]
             d.drop(index=index_values[ji:], inplace=True)

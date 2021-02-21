@@ -5,10 +5,27 @@ from ..my_initialization import *
 from .. import *
 from .dist_func import *
 
+def get_all_longer_than(df,DT,T_min=1000):
+    '''df is a pandas.DataFrame instance with columns, x, y, t, frame, and particle.
+    returns a pandas.DataFrame instance with only the trajectories that last at least T_min, in same time units as DT.
+    also removes all trajectories that do not move.'''
+    durations=DT*df.groupby('particle').x.count()
+    boo=T_min<durations
+    #identify any particles that live less time than T_min
+    pid_drop_lst=durations[~boo].index.values
+    boo_drop=False
+    for pid in pid_drop_lst:
+        boo_drop|=df.particle==pid
+    #identify any particles that do not move
+    stdx=df.groupby('particle').x.std()
+    boo_drop|=stdx==0
+    #drop those marked particles
+    df.drop(index=boo_drop[boo_drop].index,inplace=True)
+    return df
 
 def find_jumps(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_L2_pbc=None, **kwargs):
     '''Example Usage:
-    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None)
+    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS,DT, jump_thresh=None)
     spd_lst is a list of speeds in units of DS/DT.'''
     #compute the speed of this longest trajectory using pbc
     if jump_thresh is None:
@@ -37,7 +54,7 @@ def find_jumps(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_
 
 def find_jumps_non_pbc(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_L2_pbc=None, **kwargs):
     '''
-    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT=1, jump_thresh=None)
+    jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS=5/200,DT, jump_thresh=None)
     spd_lst is a list of speeds in units of DS/DT.'''
     #compute the speed of this longest trajectory using pbc
     if jump_thresh is None:
@@ -65,7 +82,7 @@ def find_jumps_non_pbc(x_values,y_values,width,height, DS,DT, jump_thresh=None,d
     return jump_index_array, spd_lst
 
 
-def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_digits, **kwargs):
+def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_digits, width,height,**kwargs):
     #select the longest n trajectories
     df = pd.read_csv(input_file_name)
     df.reset_index(inplace=True)
@@ -79,7 +96,7 @@ def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_d
         d = df[(df.particle==pid)].copy()
         x_values, y_values = d[['x','y']].values.T
         index_values = d.index.values.T
-        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=width,height=height, DS=DS,DT=DT, jump_thresh=20.)#.25)
+        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=width,height=height, DS=DS,DT=DT, jump_thresh=20.,**kwargs)#.25)
         if len(jump_index_array)>0:
             ji = jump_index_array[0]
             d.drop(index=index_values[ji:], inplace=True)
@@ -165,9 +182,9 @@ def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None):
     xy_self = np.array((x,y)).T
     #others that died in the same frame
     if cid_others is None:
-        cid_others = df[(df.frame==int(frm))&(df.cid!=cid)]['cid'].values.T 
+        cid_others = df[(df.frame==int(frm))&(df.cid!=cid)]['cid'].values.T
     cid_others_nxt = df[(df.frame==int(frm)+1)&(df.cid!=cid)]['cid'].values.T
-    cid_others_prv = df[(df.frame==int(frm)-1)&(df.cid!=cid)]['cid'].values.T  
+    cid_others_prv = df[(df.frame==int(frm)-1)&(df.cid!=cid)]['cid'].values.T
     # cid_born_lst=sorted(set(list(cid_others_nxt)).difference(set(list(cid_others))))
     cid_born_lst=sorted(set(list(cid_others)).difference(set(list(cid_others_prv))))
     try:
@@ -182,7 +199,7 @@ def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None):
     for cid_other in cid_others:
         boo |=(df.cid==cid_other)
     boo &= (df.frame==int(frm_birth)) #select only the cid_others in the death frame
-    x_others,y_others = df[boo][['x','y']].values.T  
+    x_others,y_others = df[boo][['x','y']].values.T
     xy_others = np.vstack((x_others,y_others)).T
     cid_birthmate, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
     return cid_birthmate, nearest_dist, float(t)
@@ -200,8 +217,8 @@ def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None):
     xy_self = np.array((x,y)).T
     #others that died in the same frame
     if cid_others is None:#&(df.keep)
-        cid_others = df[(df.frame==int(frm))&(df.cid!=cid)&(df.keep)]['cid'].values.T  
-    cid_others_nxt = df[(df.frame==int(frm)+1)&(df.cid!=cid)]['cid'].values.T  
+        cid_others = df[(df.frame==int(frm))&(df.cid!=cid)&(df.keep)]['cid'].values.T
+    cid_others_nxt = df[(df.frame==int(frm)+1)&(df.cid!=cid)]['cid'].values.T
     cid_died_lst=sorted(set(list(cid_others)).difference(set(list(cid_others_nxt))))
     assert(len(cid_died_lst)>0)
     #at the time of birth/death, the suspects were...
@@ -210,7 +227,7 @@ def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None):
     for cid_other in cid_others:
         boo |=(df.cid==cid_other)
     boo &= (df.frame==int(frm_death)) #select only the cid_others in the death frame
-    x_others,y_others = df[boo][['x','y']].values.T  
+    x_others,y_others = df[boo][['x','y']].values.T
     xy_others = np.vstack((x_others,y_others)).T
     cid_deathmate, nearest_dist = get_neighboring_tip(xy_self,xy_others,cid_others,distance_L2_pbc)
     return cid_deathmate, nearest_dist, float(t)
