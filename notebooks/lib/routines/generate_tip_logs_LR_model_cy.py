@@ -20,7 +20,7 @@ import trackpy
 from ..utils import get_txt
 # from ..utils.get_txt import load_buffer
 from ..model.LR_model_optimized_w_Istim import *
-
+from ..utils.operari import load_buffer
 #automate the boring stuff
 # from IPython import utils
 import time, os, sys, re
@@ -39,7 +39,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	V_threshold,dsdpixel,
 	tmin_early_stopping, save_every_n_frames, round_output_decimals, printing, logging, asserting, saving,
 	data_dir_log, completed_ic_dir, print_log_dir,
-	Ca_i_initial = 2*10**-4, Vmax = 45., Vmin = -75.,
+	Ca_i_initial = 2.*10**-4, Vmax = 45., Vmin = -75.,
 	**kwargs):
 	'''generates a log of tip locations on 2D grid with periodic boundary conditions.
 	default key word arguments are returned by lib.routines.kwargs.get_kwargs(initial_condition_dir).'''
@@ -68,6 +68,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	num_steps = int(np.around((tmax)/dt))
 	#initialize simulation
 	txt=load_buffer(initial_condition_dir)#, Ca_i_initial = Ca_i_initial, Vmax = Vmax, Vmin = Vmin)
+	txt=txt.astype(np.float64)
 	width, height, channel_no = txt.shape
 	# kwargs.update({'width':width,'height':height})
 	#allocate memory
@@ -82,7 +83,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs)
 	# dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
 	# dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs)
-	dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
+	# dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
 	txt_Istim_none=np.zeros(shape=(width,height), dtype=np.float64, order='C')
 
 	if printing:

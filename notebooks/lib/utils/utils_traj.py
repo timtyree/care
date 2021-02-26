@@ -23,7 +23,7 @@ def get_all_longer_than(df,DT,T_min=1000):
     df.drop(index=boo_drop[boo_drop].index,inplace=True)
     return df
 
-def find_jumps(x_values,y_values,width,height, DS,DT, jump_thresh=None,distance_L2_pbc=None, **kwargs):
+def find_jumps(x_values,y_values, width, height, DS, DT, jump_thresh=None, distance_L2_pbc=None, **kwargs):
     '''Example Usage:
     jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS,DT, jump_thresh=None)
     spd_lst is a list of speeds in units of DS/DT.'''

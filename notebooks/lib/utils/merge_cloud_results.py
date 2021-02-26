@@ -2,14 +2,16 @@ import re,os,pandas as pd, numpy as np
 
 def parse_inputs(line):
     result_keys = re.findall(r'\S+=', line)
-    result_values = re.findall(r'=\d+', line)
-    if len(result_values)==0:
-        pass
-        #     return None
+    result_values = re.findall(r'=\d*\.?\d*', line)
     input_dict={}
+    if len(result_values)==0:
+        return input_dict
+    if result_keys[0]=='mode':
+        return input_dict
     for k,v in zip(result_keys,result_values):
         key=k.split('=')[0].split(',')[-1]
-        value=eval(v.split('=')[-1])
+        value=v.split('=')[-1]
+        # value=eval(v.split('=')[-1])
         input_dict[key]=value
     return input_dict
 
@@ -23,10 +25,11 @@ def parse_input_params(input_fn):
         for line in f:
             line_no+=1
             input_dict=parse_inputs(line)
-            if len(list(input_dict))>0:
+            if len(list(input_dict))>1:
                 found_output=True
                 return line_no, input_dict
     return -1,{}
+
 def parse_input_fn(input_fn):
     printing=False
     line_no, input_dict=parse_input_params(input_fn)
@@ -35,7 +38,7 @@ def parse_input_fn(input_fn):
         print(f'the inputs found on line {line_no} were {input_dict}.')
     try:
         #         print(line_no)
-        df=pd.read_csv(input_fn,header=line_no+1,delim_whitespace=True).astype({'n':int})
+        df=pd.read_csv(input_fn,header=line_no+1,delim_whitespace=True)#.astype({'n':int})
     except Exception:
         #only 1 line found in file, input_fn, skip
         return None
