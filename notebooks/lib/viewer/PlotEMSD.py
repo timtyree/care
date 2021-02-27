@@ -25,9 +25,10 @@ def plot_slope_of_emsd(ax,lag_values,slope_values,label='_Hidden', color='gray',
 #     lag_values,slope_values=compute_slope_vs_lag(emsd,T_min,omit_time,window_width=50,stepsize=10
     ax.plot(lag_values,slope_values, label=label, color=color, alpha=alpha,**kwargs)
     if plot_reference_lines:
-        ax.plot(lag_values,2+0.*slope_values,label='ballistic')
-        ax.plot(lag_values,1+0.*slope_values,label='diffusive')
-def format_slope_of_emsd(ax,fontsize=20,use_loglog=True):
+        ax.plot(lag_values,2+0.*slope_values,label='Ballistic')
+        ax.plot(lag_values,1+0.*slope_values,label='Brownian')
+
+def format_slope_of_emsd(ax,fontsize=20,use_loglog=True,plot_reference_lines=True,loc='best',ncol_legend=2,**kwargs):
     #format plot
     if use_loglog:
         ax.set_xscale('log')
@@ -37,7 +38,8 @@ def format_slope_of_emsd(ax,fontsize=20,use_loglog=True):
 #     ax.set_title(f'FK model, Area:25cm$^2$, $D_{{V_{{mem}}}}$:0.5cm$^2$/s, N:{trials_considered}\nmin_duration:{T_min/10**3:.1f}s\n',fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.tick_params(axis='both', which='minor', labelsize=0)
-    ax.legend(loc='best',fontsize=fontsize)
+    if plot_reference_lines:
+        ax.legend(loc=loc,fontsize=fontsize,ncol=ncol_legend)
 #     ax.set_ylim([0,2.05])
 
 

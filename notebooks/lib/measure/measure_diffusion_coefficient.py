@@ -57,10 +57,15 @@ def compute_Dhat(emsd,tau_min=300,window_width=50):
 
 def compute_v_rms(emsd,num_points=8):
     '''returns root mean square velocity from the slope of the first num_points points listed in emsd.
-    emsd is the ensemble mean squared displacement in units of squared pixels'''
+    emsd is the ensemble mean squared displacement in units of squared pixels
+    v_rms,Delta_v_rms,0.,window_width,Rsquared,window_width=compute_v_rms(emsd,num_points=8)
+    '''
     NV=num_points
-    lag_values=emsd.index.values[:NV]/10**3
-    rmsd_values=np.sqrt(emsd.values)[:NV]
+    lag_values=emsd.index.values
+    rmsd_values=np.sqrt(emsd.values.flatten())
+    boo=~np.isnan(rmsd_values)
+    lag_values=lag_values[boo][:NV]/10**3
+    rmsd_values=rmsd_values[boo][:NV]
     dict_output=compute_95CI_ols(x=lag_values,y=rmsd_values)
     v_rms=dict_output['m']
     Delta_v_rms=dict_output['Delta_m']

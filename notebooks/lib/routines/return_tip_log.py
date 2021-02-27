@@ -29,7 +29,7 @@ from ..model.LR_model_optimized_w_Istim import *
 import time, os, sys, re
 
 def return_tips_from_txt(txt, h, tmax, V_threshold,dsdpixel,
-	tmin_early_stopping, save_every_n_frames, mode, **kwargs):
+	tmin_early_stopping, save_every_n_frames, mode, diffCoef=0.0005,**kwargs):
 	'''returns df
 	generates a log of tip locations on 2D grid with periodic boundary conditions.
 	default key word arguments are returned by lib.routines.kwargs.get_kwargs(initial_condition_dir).'''
@@ -47,10 +47,12 @@ def return_tips_from_txt(txt, h, tmax, V_threshold,dsdpixel,
 	#precompute anything that needs precomputing
 	compute_all_spiral_tips= get_compute_all_spiral_tips(mode='simp',width=width,height=height)
 	if mode=='FK':
-		param_fn = 'param_set_8_og.json'
-		# param_fn = 'param_set_8.json'
+		# param_fn = 'param_set_8_og.json'
+		param_fn = 'param_set_8.json'
+		print(f"param_fn is {param_fn}.")
 		param_dir = os.path.join(nb_dir,'lib/model')
 		param_dict = json.load(open(os.path.join(param_dir,param_fn)))
+		param_dict['diffCoef']=diffCoef
 		#get time step with external stimulus for FK model
 		get_time_step=fetch_get_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
 		time_step=fetch_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
