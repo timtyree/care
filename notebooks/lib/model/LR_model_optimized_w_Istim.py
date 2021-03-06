@@ -10,14 +10,14 @@ import numpy as np, pandas as pd
 import os
 from math import log
 
-def get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs):
+def get_one_step_map(nb_dir,dt,dsdpixel,width,height,diffCoef=0.001,**kwargs):
 	'''Example Usage:
 	dt, one_step_map= get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs):
 '''
 	#make null stimulus
 	ds=dsdpixel*width
 	# txt_Istim_none=np.zeros(shape=(width,height,1), dtype=np.float64, order='C')
-	dt, kernelA, kernelB=get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds)
+	dt, kernelA, kernelB=get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds,diffCoef)
 
 	#get one step map
 	# txt_Istim=txt_Istim_none.copy()
@@ -59,14 +59,14 @@ def get_comp_dVcdt(width,height,diffCoef=0.001,ds=5.,Cm=1., **kwargs):
 		return dVcdt_val
 	return comp_dVcdt
 
-def get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds,diffCoef=0.001,Cm=1.):
+def get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds,diffCoef=0.001,Cm=1.,K_o=3.8):
 	'''returns dt, arr39, one_step_explicit_synchronous_splitting_w_Istim
 	precomputes lookup table, arr39 and returns a jit compiling one_step method
 	Example Usage:
 	dt, kernelA, kernelB=get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds)
 	'''
 	#precompute lookup table
-	arr39=get_arr39(dt,nb_dir)
+	arr39=get_arr39(dt,nb_dir,K_o)
 	v_values=arr39[:,0]
 	v0=np.min(v_values)
 	dv=np.around(np.mean(np.diff(v_values)),1)
@@ -262,33 +262,42 @@ def get_forward_integrate_kernel(nb_dir,dt,width,height,ds,diffCoef=0.001,Cm=1.)
 	dt, kernelA, kernelB = get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds,diffCoef=diffCoef,Cm=Cm)
 	# @cuda.jit('void(float64[:,:,:], float64[:,:], int32)')
 	@njit('void(float64[:,:,:], float64[:,:], int32)')
-	def forward_integrate_kernel(txt,txt_Istim, num_steps):
+	def forward_integrate_kernel(txt, txt_Istim, num_steps):
 		for n in range(num_steps):
 			kernelA(txt,txt_Istim)
 			kernelB(txt,txt_Istim)
 
 	return forward_integrate_kernel
 
-def get_arr39(dt,nb_dir):
+def get_arr39(dt,nb_dir,K_o):
 	cwd=os.getcwd()
 	#generate lookup tables for timestep
 	os.chdir(os.path.join(nb_dir,'lib/model'))
-	cmd=f"python3 gener_table.py {dt}"
-	os.system(cmd)
-	#load lookup table for constant timestep, dt.
-	os.chdir(os.path.join(nb_dir,'lib/model','lookup_tables'))
-	# table_fn=f"luo_rudy_dt_{dt}.npz"
-	# table_data=np.load(table_fn)
-	# #convert table_data to a numpy array
-	# kwds=table_data.get('kwds')
-	# cols=kwds[-1].split('_')[1:]
-	# keys=list(table_data.keys())
-	# arr39=table_data[keys[-1]].T
-	table_fn=f"luo_rudy_dt_{dt}_arr39.csv"
-	arr39=pd.read_csv(table_fn,header=None).values
-	#return to original working directory
-	os.chdir(cwd)
-	return arr39
+	from .gener_table import program_br
+	retval = program_br(dt=dt,K_o=K_o)
+	arr10,arr11,arr12,arr13,arr39=retval
+	return arr39.T
+
+# def get_arr39(dt,nb_dir):
+# 	cwd=os.getcwd()
+# 	#generate lookup tables for timestep
+# 	os.chdir(os.path.join(nb_dir,'lib/model'))
+# 	cmd=f"python3 gener_table.py {dt}"
+# 	os.system(cmd)
+# 	#load lookup table for constant timestep, dt.
+# 	os.chdir(os.path.join(nb_dir,'lib/model','lookup_tables'))
+# 	# table_fn=f"luo_rudy_dt_{dt}.npz"
+# 	# table_data=np.load(table_fn)
+# 	# #convert table_data to a numpy array
+# 	# kwds=table_data.get('kwds')
+# 	# cols=kwds[-1].split('_')[1:]
+# 	# keys=list(table_data.keys())
+# 	# arr39=table_data[keys[-1]].T
+# 	table_fn=f"luo_rudy_dt_{dt}_arr39.csv"
+# 	arr39=pd.read_csv(table_fn,header=None).values
+# 	#return to original working directory
+# 	os.chdir(cwd)
+# 	return arr39
 
 # def get_arr39(dt,nb_dir):
 # 	cwd=os.getcwd()

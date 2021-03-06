@@ -36,7 +36,7 @@ if not 'here_dir' in globals():
 
 
 def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
-	V_threshold,dsdpixel,
+	V_threshold,dsdpixel,diffCoef,
 	tmin_early_stopping, save_every_n_frames, round_output_decimals, printing, logging, asserting, saving,
 	data_dir_log, completed_ic_dir, print_log_dir,
 	Ca_i_initial = 2.*10**-4, Vmax = 45., Vmin = -75.,
@@ -80,7 +80,7 @@ def generate_tip_logs_from_ic(initial_condition_dir, h, tmax,
 	dt=h#smaller step for first 100 steps (bc of pbc)
 	#explicitly get the updated one_step method
 	# from ..model.LR_model_optimized_w_Istim import get_one_step_map
-	dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs)
+	dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,diffCoef,**kwargs)
 	# dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
 	# dt, one_step_map = get_one_step_map(nb_dir,dt,dsdpixel,width,height,**kwargs)
 	# dt, one_step_map = get_one_step_map(nb_dir,dt,**kwargs)
