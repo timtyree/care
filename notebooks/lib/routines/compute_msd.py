@@ -403,3 +403,116 @@ def generate_msd_figures_routine_for_list(file_name_list, n_tips,DT, DS,L, outpu
     return output_file_name
 
 # beep(4)
+
+def compute_emsd_dataframe_for_trial_list(file_name_list, T_min, DT, DS=0.025,L=200,num_individuals_thresh=30, omit_time=150,**kwargs):
+    '''file_name_list is a list of _unwrap.csv files.
+    returns a string indicating the output_file_name beginning in emsd_...
+    t_values, msd_values, std_values = compute_emsd_errorbars_btwn_trials(file_name_list, T_min, DT, DS=0.025,L=200,num_individuals_thresh=30)
+    '''
+    # file=file_name_list[0]
+    # folder_name = os.path.dirname(file)
+
+    input_file_name=os.path.abspath(file_name_list[0])
+    folder_name = os.path.dirname(input_file_name)
+    os.chdir(folder_name)
+    print(f"Num. file names in list = {len(file_name_list)}.")
+    # df=pd.read_csv(input_file_name)
+    # #compute DT explicitely
+    # # DT = np.mean(df.t.diff().dropna().values[:1]) #ms per frame
+    # DT=compute_time_between_frames(df)
+    #compute ensemble mean squared displacement for the longest n_tips for each trial in file_name_list
+    os.chdir(folder_name)
+    dict_out_lst=[]
+    for input_file_name in file_name_list:
+        traj=get_all_longer_than(pd.read_csv(input_file_name),DT,T_min=T_min)
+
+        #compute number of num_individuals
+        pid_lst=sorted(set(traj.particle.values))
+        num_individuals=len(pid_lst)
+        #if enough individuals are present in the given traj
+        if num_individuals>=num_individuals_thresh:
+            #compute ensemble mean squared displacement
+            emsd=compute_emsd(traj=traj, DT=DT, omit_time=omit_time, printing=False,DS=DS)
+            # emsd = trackpy.motion.emsd(df_traj, mpp=1., fps=1.,max_lagtime=40000)
+            #cast ensemble mean squared displacement into units of cm^2 and seconds
+            d=pd.DataFrame({'msd':emsd.values,
+                    'lagt':emsd.index.values/10**3,
+                    'src':os.path.basename(input_file_name),
+                    "num_individuals":num_individuals
+                })
+            dict_out_lst.append(d)
+
+    if len(dict_out_lst)==0:
+        print(f"""no trial had enough individuals lasting longer than T_min. consider different parameters.  returning None for
+        input_file_name, {input_file_name}.""")
+        return None
+    df = pd.concat(dict_out_lst)
+    df.reset_index(inplace=True,drop=True)
+    return df
+def compute_emsd_errorbars_btwn_trials(file_name_list, T_min, DT=None, DS=0.025,L=200,num_individuals_thresh=30, omit_time=150,**kwargs):
+    '''file_name_list is a list of _unwrap.csv files.
+    returns a string indicating the output_file_name beginning in emsd_...
+    t_values, msd_values, std_values = compute_emsd_errorbars_btwn_trials(file_name_list, T_min, DT, DS=0.025,L=200,num_individuals_thresh=30)
+    '''
+    if DT is None:
+        input_file_name=os.path.abspath(file_name_list[0])
+        folder_name = os.path.dirname(input_file_name)
+        os.chdir(folder_name)
+        print(f"Num. file names in list = {len(file_name_list)}.")
+        df=pd.read_csv(input_file_name)
+        #compute DT explicitely
+        # DT = np.mean(df.t.diff().dropna().values[:1]) #ms per frame
+        DT=compute_time_between_frames(df)
+    df=compute_emsd_dataframe_for_trial_list(file_name_list=file_name_list, T_min=T_min, DT=DT, DS=DS,L=L,num_individuals_thresh=num_individuals_thresh, omit_time=omit_time,**kwargs)
+    t_values, msd_values, std_values = compute_average_std_msd(df,DT)
+    return t_values, msd_values, std_values
+    # #save results
+    # dirname = os.path.dirname(input_file_name).split('/')[-1]
+    # folder_name=os.path.dirname(input_file_name)
+    # if save_folder is None:
+    #     save_folder = folder_name.replace(dirname,'msd')
+    # if not os.path.exists(save_folder):
+    #     os.mkdir(save_folder)
+    # if output_file_name is None:
+    #     output_file_name = f"emsd_longest_by_trial_tips_ntips_{n_tips}.csv"
+    # os.chdir(save_folder)
+    # df.to_csv(output_file_name, index=False)
+
+    #compute average msd by trial for a subset of trials
+    # src_lst = sorted(set(df.src.values))
+    # # src_lst = src_lst#[:10]
+    # ff = df.copy()#pd.concat([df[df.src==src] for src in src_lst])
+    # dt = DT/10**3 #seconds per frame
+    # t_values = np.array(sorted(set(ff.lagt.values)))
+    # t_values = np.arange(np.min(t_values),np.max(t_values),dt)#no floating point error
+
+    # t_values, msd_values, std_values = compute_average_std_msd(df,DT)
+    #     t_values, msd_values = compute_average_msd(df, DT=1.)
+
+    # sl=input_file_name.split('/')
+    # trial_folder_name=sl[-3]
+
+
+    # savefig_folder = os.path.join(nb_dir,f'Figures/msd/'+trial_folder_name)#V_{V_thresh}')
+    # if V_thresh is not None:
+    #     savefig_folder = os.path.join(nb_dir,f'Figures/msd/'+trial_folder_name)#V_{V_thresh}')
+    # if save_folder is None:
+    #     savefig_folder = 'fig'
+    #     savefig_folder=os.path.abspath(savefig_folder)
+    # savefig_folder=os.path.join(save_folder,'/fig')
+    # os.chdir(save_folder)
+    # savefig_folder='fig'
+    # if not os.path.exists(savefig_folder):
+    #     os.mkdir(savefig_folder)
+    # os.chdir(savefig_folder)
+    # savefig_folder=os.getcwd()
+    # # generate plots of msd's
+    # savefig_fn = os.path.basename(output_file_name).replace('.csv','_long_time_std.png')
+    # retval = PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,4],ylim=[0,10],saving = True,fontsize =22,figsize=(9,6),D=3.5)
+    #
+    # savefig_fn = os.path.basename(output_file_name).replace('.csv','_short_time_std.png')
+    # retval = PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,0.2],ylim=[0,1],saving = True,fontsize =22,figsize=(9,6),D=3.5)
+    #
+    # savefig_fn = os.path.basename(output_file_name).replace('.csv','_very_short_time_std.png')
+    # retval = PlotMSD(df, t_values, msd_values, std_values, savefig_folder,savefig_fn,xlim = [0,0.05],ylim=[0,0.2],saving = True,fontsize =22,figsize=(9,6),D=3.5)
+    # return output_file_name

@@ -25,8 +25,8 @@ def plot_slope_of_emsd(ax,lag_values,slope_values,label='_Hidden', color='gray',
 #     lag_values,slope_values=compute_slope_vs_lag(emsd,T_min,omit_time,window_width=50,stepsize=10
     ax.plot(lag_values,slope_values, label=label, color=color, alpha=alpha,**kwargs)
     if plot_reference_lines:
-        ax.plot(lag_values,2+0.*slope_values,label='Ballistic')
-        ax.plot(lag_values,1+0.*slope_values,label='Brownian')
+        ax.plot(lag_values,2+0.*slope_values,label='Ballistic',color='black',ls='dotted')
+        ax.plot(lag_values,1+0.*slope_values,label='Brownian',color='black',ls='solid')
 
 def format_slope_of_emsd(ax,fontsize=20,use_loglog=True,plot_reference_lines=True,loc='best',ncol_legend=2,**kwargs):
     #format plot

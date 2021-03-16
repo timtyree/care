@@ -30,8 +30,8 @@ def PlotFlowerTrajectories(df,col="t",width=200,height=200,fontsize=24,DS = 5/20
         y_values *= DS
         plt.scatter(x_values,y_values, s=20,#s=0.1
                     c=c_values, vmin = np.min(c_values), vmax = np.max(c_values), cmap=cmap,alpha=alpha)#, **kwargs)
-        plt.scatter([x_values[0]],[y_values[0]], s=40,color='green')
-        plt.scatter([x_values[-1]],[y_values[-1]], s=40,color='red')
+        plt.scatter([x_values[0]],[y_values[0]], s=600,color='green',marker='*')
+        plt.scatter([x_values[-1]],[y_values[-1]], s=600,color='red',marker='*')
     # plt.axis(axis)
     # plt.title(f'''more time = more blue''', fontsize=fontsize)
     #plt.title(f'''more {col} = more blue''', fontsize=fontsize)

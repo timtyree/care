@@ -6,7 +6,7 @@ from numpy import sqrt, exp, log
 import numpy as np
 
 def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,
-    K_o=3.8#5.4#7#5.4
+    K_o=50#3.8#5.4#7#5.4
     ,dtype=np.float64, order='F'):
     # implicit real*8(a-h,o-z)
     # common/par/backcon,xk0,rtoverf
