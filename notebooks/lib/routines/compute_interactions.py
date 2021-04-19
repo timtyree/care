@@ -1,9 +1,14 @@
 # compute_interactions.py
 from ..my_initialization import *
-def compute_df_interactions(input_file_name,DS=5./200.):
+from ..utils.utils_traj import *
+def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200):
     '''input_file_name is a .csv of spiral tip trajecotries'''
+    distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
     #list of length sorted trajectories
     df = pd.read_csv(input_file_name)
+    using_particle=True
+    if using_particle:
+        df['cid']=df['particle']
     df = df[df.t>100].copy()
     df.reset_index(inplace=True)
     s = df.groupby('particle').t.count()
@@ -18,8 +23,8 @@ def compute_df_interactions(input_file_name,DS=5./200.):
         #identify the death partner
         # nearest_pid, reaction_distance_death, t_of_death = identify_death_partner(df=f,pid=pid)
         #identify the birth partner of that given tip
-        pid_partner, reaction_distance_birth, t_of_life = identify_birth_partner(df=df,pid=pid)
-        pid_partner_death, reaction_distance_death, t_of_death = identify_death_partner(df=df,pid=pid)
+        pid_partner, reaction_distance_birth, t_of_life = identify_birth_partner(df=df,cid=pid,distance_L2_pbc=distance_L2_pbc)
+        pid_partner_death, reaction_distance_death, t_of_death = identify_death_partner(df=df,cid=pid,distance_L2_pbc=distance_L2_pbc)
         d_other = df[df.particle==pid_partner]
 
         # compute lifetimes of ^those spiral tips. compute average_lifetime.

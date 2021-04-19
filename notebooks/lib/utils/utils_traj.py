@@ -170,7 +170,7 @@ def get_tips_in_range(xy_self,xy_others, pid_others, distance_L2_pbc,dist_thresh
                 pid_lst.append (  int(pid_other) )
     return pid_lst
 
-def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None):
+def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None,verbose=False):
     """identify birth mate using set difference.
     Example Usage:
     cid_birthmate, nearest_dist_birth, t_birth = identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None)
@@ -190,9 +190,13 @@ def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None):
     try:
         assert(len(cid_born_lst)>0)
     except Exception as e:
-        print((cid_others,cid_others_prv))
-        print(e)
-        assert(len(cid_born_lst)>0)
+        if verbose:
+            print('birth exception')
+            print(sorted(cid_others_prv))
+            print(sorted(cid_others))
+        # print(e)
+        return -9999,np.nan, float(t)
+        # assert(len(cid_born_lst)>0)
     #at the time of birth/death, the suspects were...
     cid_others=np.array(cid_born_lst)
     boo = (df.frame!=df.frame)#tautologically False
@@ -205,7 +209,7 @@ def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None):
     return cid_birthmate, nearest_dist, float(t)
 
 
-def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None):
+def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None,verbose=False):
     """identify death mate using set difference.
     Example Usage:
     cid_deathmate, nearest_dist_death, t_death = identify_death_partner(df,cid,distance_L2_pbc)
@@ -214,13 +218,22 @@ def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None):
     d = df[df.cid == cid]
     x,y,frm,t = d.tail(1)[['x','y','frame','t']].values.T
     frm_death=frm
+    df['keep']=True
     xy_self = np.array((x,y)).T
     #others that died in the same frame
     if cid_others is None:#&(df.keep)
         cid_others = df[(df.frame==int(frm))&(df.cid!=cid)&(df.keep)]['cid'].values.T
     cid_others_nxt = df[(df.frame==int(frm)+1)&(df.cid!=cid)]['cid'].values.T
     cid_died_lst=sorted(set(list(cid_others)).difference(set(list(cid_others_nxt))))
-    assert(len(cid_died_lst)>0)
+    try:
+        assert(len(cid_died_lst)>0)
+    except Exception as e:
+        if verbose:
+            print('death exception')
+            print(sorted(cid_others))
+            print(sorted(cid_others_nxt))
+        # print(e)
+        return -9999,np.nan, float(t)
     #at the time of birth/death, the suspects were...
     cid_others=np.array(cid_died_lst)
     boo = (df.frame!=df.frame)#tautologically False
