@@ -1,5 +1,5 @@
 from .. import *
-
+import matplotlib.pyplot as plt
 def ShowDomain(img,dimgdt,x_values,y_values,c_values,V_threshold,t,inch=6,fontsize=16,vmin_img=0.,vmax_img=0.2,vmin_tips=0.,vmax_tips=1.,
                  area=25,frameno=1,save_fn=None,save_folder=None,save=False,annotating=False,axis=[0,200,0,200], **kwargs):
     #plot the system
@@ -124,5 +124,3 @@ def PlotMyDomain(img,dimgdt,Delta_t,x_values,y_values,c_values,V_threshold,t,inc
 #         print ( save_fn )
 #         return frameno
     return fig
-
-
