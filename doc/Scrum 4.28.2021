@@ -1,0 +1,3 @@
+TODO: dev map from contours to distance along activation front to next tip, $\sigma_\max > 0$.
+HINT: winding_number_tuple_values maps between spiral tip index to/from contour index
+TODO: track pairs of tips that are connected versus time, knot_tuple field, winding_number
