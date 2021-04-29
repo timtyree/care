@@ -1,5 +1,6 @@
 import numpy as np
-
+# Programmer: Tim Tyree
+# Date: see git log
 def chunk_array(txt_in,width_out,height_out,typeout='float64'):
     '''returns txt_out_lst
     suppose file_name is a bare string with the extension  ".npz"
@@ -22,4 +23,4 @@ if __name__=="__main__":
     txt_in=np.zeros(shape,dtype=np.float64)
 
     txt_out_lst= chunk_array(txt_in,width_out,height_out,typeout='float64')
-    len(txt_out_lst)
+    assert (len(txt_out_lst)>0)

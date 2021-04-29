@@ -1,4 +1,4 @@
-#use the nonlocal topological method to detect tips.  
+#use the nonlocal topological method to detect tips.
 # also records topologcially preserved values.
 #Tim Tyree
 #9.13.2021
@@ -10,12 +10,11 @@ import numpy as np, os
 from . import *
 # from .intersection import *
 from scipy.interpolate import interp2d
-
+from .intersection import *
 # from . import find_contours
 # from ._utils_find_contours import *
 # from ._utils_find_tips import *
 # from ._find_tips import *
-
 
 @njit#(cache=True)#, nogil = True)
 def get_tips(contours_a,contours_b):
@@ -31,8 +30,8 @@ def get_tips(contours_a,contours_b):
     if you get a nonsingular matrix error, make sure that you`re not comparing a contour to itself.'''
     n_list = List(); x_list = List(); y_list = List();
     ncr = len(contours_a); nci = len(contours_b)
-    for n1 in prange(ncr):
-        for n2 in prange(nci):
+    for n1 in range(ncr):
+        for n2 in range(nci):
 #     for n1, c1 in enumerate(contours_a):
 #         for n2, c2 in enumerate(contours_b):
             c1 = contours_a[n1]
@@ -457,4 +456,3 @@ def get_grad_direction(texture):
 #         states_interpolated_linear.append(state_interpolated_linear)
 #         states_interpolated_cubic.append(state_interpolated_cubic)
 #     return states_nearest, states_interpolated_linear, states_interpolated_cubic
-

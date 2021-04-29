@@ -4,7 +4,7 @@
 #cython: wraparound=False
 import numpy as np
 # Lewiner marching squares with periodic boundary conditions (pbc)
-# forked Laurener marching squares without periodic boundary conditions - from https://github.com/scikit-image/scikit-image/blob/master/skimage/measure/_find_contours_cy.pyx 
+# forked Laurener marching squares without periodic boundary conditions - from https://github.com/scikit-image/scikit-image/blob/master/skimage/measure/_find_contours_cy.pyx
 # Warning: clipping instabilities may be returned when the double floating point arithmetic used here can't distinguish between vertices that should/shouldn't be mapped according to periodic boundary conditions.  I encourage you to fix this by implementing a _pbc_1d using decimal expansions/real arithmetic.  This would involve some functional programming.
 cimport numpy as cnp
 cnp.import_array()
@@ -14,7 +14,7 @@ cdef extern from "numpy/npy_math.h":
 
 cdef inline double _get_fraction(double from_value, double to_value,
                                  double level):
-    if (to_value == from_value): 
+    if (to_value == from_value):
         return 0
     return ((level - from_value) / (to_value - from_value))
 
@@ -53,21 +53,21 @@ cdef inline double _get_fraction(double from_value, double to_value,
 #         return segments
 #         # continue
 #     # compute the coordinates of the vertices without wrapping
-#     top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height) 
-#     bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height) 
+#     top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height)
+#     bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height)
 #     left   = _pbc_1d(r0 + _get_fraction(ul, ll, level),rmax, width), _pbc_1d(c0,cmax, height)
 #     right  = _pbc_1d(r0 + _get_fraction(ur, lr, level),rmax, width), _pbc_1d(c1,cmax, height)
 
 #     # # compute the coordinates of the vertices
 #     # # always returning the bottom/right option at the boundaries.
-#     # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height) 
-#     # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height) 
+#     # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height)
+#     # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height)
 #     # left   = _pbc_1d(r0 + _get_fraction(ul, ll, level),rmax, width), _pbc_1d(c0,cmax, height)
 #     # right  = _pbc_1d(r0 + _get_fraction(ur, lr, level),rmax, width), _pbc_1d(c1,cmax, height)
 
 #     #wrapped boundary conditions
-#     # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height) 
-#     # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height) 
+#     # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height)
+#     # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height)
 #     # left   = _pbc_1d(r0 + _get_fraction(ul, ll, level),rmax, width), _pbc_1d(c0,cmax, height)
 #     # right  = _pbc_1d(r0 + _get_fraction(ur, lr, level),rmax, width), _pbc_1d(c1,cmax, height)
 
@@ -89,7 +89,7 @@ cdef inline double _get_fraction(double from_value, double to_value,
 #     elif (square_case == 6):
 #         # compute bilinear interpolation here as sign(face label·F(A)·(F(A)·F(C)−F(B)·F(D))) (Lewiner marching squares)
 #         val = (ul - level) * (lr - level) - (ll - level) * (ur - level)
-#         # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!) 
+#         # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!)
 #         vertex_connect_high = 0 > val
 #         if vertex_connect_high: #this ambiguity should be resolved with bilinear interpolation!!
 #             segments.append((left, top))
@@ -106,7 +106,7 @@ cdef inline double _get_fraction(double from_value, double to_value,
 #     elif (square_case == 9):
 #         # compute bilinear interpolation here as sign(face label·F(A)·(F(A)·F(C)−F(B)·F(D))) (Lewiner marching squares)
 #         val = (ul - level) * (lr - level) - (ll - level) * (ur - level)
-#         # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!) 
+#         # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!)
 #         vertex_connect_high = 0 < val
 #         if vertex_connect_high: #this ambiguity should be resolved with bilinear interpolation!!
 #             segments.append((top, right))
@@ -134,11 +134,14 @@ cdef inline double _get_fraction(double from_value, double to_value,
 def _get_intersections_pbc(double[:, :] array1, double[:, :] array2,
                           double level1, double level2,
                           cnp.uint8_t[:, :] mask):
-    """Find iso-valued contours in a 2D array for a given level value.
+    """(deprecated/Cython doesn't support dynamic memory at this time...)
+
+
+    Find iso-valued contours in a 2D array for a given level value.
 
     Iterate across the given array in a marching-squares fashion,
     looking for segments that cross 'level' for both arrays. If such a segment is
-    found for both arrays, the function looks for an intersection of those two arrays.  
+    found for both arrays, the function looks for an intersection of those two arrays.
     If an intersection is found, the point of intersection is returned along with the interpolated value at that intersection point.
     If more than one intersection is found (2 or 4), then those intersections points are returned as a tuple.
     If no intersection points are found, [An empty tuple is returned.]
@@ -146,22 +149,22 @@ def _get_intersections_pbc(double[:, :] array1, double[:, :] array2,
     Positions where the boolean array ``mask`` is ``False`` are considered
     as not containing data.
     assumes that array1 and array2 have the same shape.
-    
+
 
     Uses the "marching squares" method to compute a the iso-valued contours of
     the input 2D array for a particular level value. Array values are linearly
-    interpolated to provide better precision for the output contours.  
+    interpolated to provide better precision for the output contours.
     Edge cases are made unambiguous using bilinear interpolation according to [1].
 
      0--   1+-   2-+   3++   4--   5+-   6-+   7++
       --    --    --    --    +-    +-    +-    +-
-    
+
      8--   9+-  10-+  11++  12--  13+-  14-+  15++
       -+    -+    -+    -+    ++    ++    ++    ++
-    
+
     The position of the line segment that cuts through (or
     doesn't, in case 0 and 15) each square is clear, except in
-    cases 6 and 9.  
+    cases 6 and 9.
 
     There may be multiple intersections if either segments are case 6 or 9.
 
@@ -174,7 +177,7 @@ def _get_intersections_pbc(double[:, :] array1, double[:, :] array2,
 
     .. addendum::
 
-    The aforementioned ambiguity is resolved according to the natural reduction 
+    The aforementioned ambiguity is resolved according to the natural reduction
     of the method presented in [1] to two spatial dimensions.
 
     References
@@ -295,7 +298,7 @@ def _get_intersections_pbc(double[:, :] array1, double[:, :] array2,
 # def inline double[:] compute_segments_in_window(ul,ll,ur,ul,level):#,segments):
 # # def compute_segments_in_window(double ul,double ll,double ur,double ul,double level, double rmax, double cmax, uint8_t width, uint8_t height):
 # def compute_segments_in_window(double ul,double ll,double ur,
-#     double ul,double level, double rmax, double cmax, uint8_t width, 
+#     double ul,double level, double rmax, double cmax, uint8_t width,
 #     uint8_t height,uint8_t height,uint8_t height):
 
     # (double[:, :] array1, double[:, :] array2,
@@ -332,7 +335,7 @@ def lookup_segments(double ul,double ll,double ur,double lr,
     #     return segments
         # continue
     # compute the coordinates of the vertices without wrapping
-    
+
     top    = r0, c0 + _get_fraction(ul, ur, level)
     bottom = r1, c0 + _get_fraction(ll, lr, level)
     left   = r0 + _get_fraction(ul, ll, level), c0
@@ -340,14 +343,14 @@ def lookup_segments(double ul,double ll,double ur,double lr,
 
     # # compute the coordinates of the vertices
     # # always returning the bottom/right option at the boundaries.
-    # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height) 
-    # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height) 
+    # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height)
+    # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height)
     # left   = _pbc_1d(r0 + _get_fraction(ul, ll, level),rmax, width), _pbc_1d(c0,cmax, height)
     # right  = _pbc_1d(r0 + _get_fraction(ur, lr, level),rmax, width), _pbc_1d(c1,cmax, height)
 
     #wrapped boundary conditions
-    # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height) 
-    # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height) 
+    # top    = _pbc_1d(r0,rmax, width), _pbc_1d(c0 + _get_fraction(ul, ur, level) ,cmax, height)
+    # bottom = _pbc_1d(r1,rmax, width), _pbc_1d(c0 + _get_fraction(ll, lr, level) ,cmax, height)
     # left   = _pbc_1d(r0 + _get_fraction(ul, ll, level),rmax, width), _pbc_1d(c0,cmax, height)
     # right  = _pbc_1d(r0 + _get_fraction(ur, lr, level),rmax, width), _pbc_1d(c1,cmax, height)
 
@@ -369,7 +372,7 @@ def lookup_segments(double ul,double ll,double ur,double lr,
     elif (square_case == 6):
         # compute bilinear interpolation here as sign(face label·F(A)·(F(A)·F(C)−F(B)·F(D))) (Lewiner marching squares)
         val = (ul - level) * (lr - level) - (ll - level) * (ur - level)
-        # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!) 
+        # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!)
         vertex_connect_high = 0 > val
         if vertex_connect_high: #this ambiguity should be resolved with bilinear interpolation!!
             segments.append((left, top))
@@ -386,7 +389,7 @@ def lookup_segments(double ul,double ll,double ur,double lr,
     elif (square_case == 9):
         # compute bilinear interpolation here as sign(face label·F(A)·(F(A)·F(C)−F(B)·F(D))) (Lewiner marching squares)
         val = (ul - level) * (lr - level) - (ll - level) * (ur - level)
-        # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!) 
+        # TODO: check that 0 < val is used instead of 0 > val for each case (use a simple test case!)
         vertex_connect_high = 0 < val
         if vertex_connect_high: #this ambiguity should be resolved with bilinear interpolation!!
             segments.append((top, right))

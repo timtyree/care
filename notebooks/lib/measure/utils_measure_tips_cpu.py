@@ -27,8 +27,8 @@ def get_compute_all_spiral_tips(width,height,mode='full',**kwargs):
             #compute all spiral tips present
             retval = find_intersections(img,dimgdt,level1,level2)#,theta_threshold=theta_threshold)
             lst_values_x,lst_values_y,lst_values_theta, lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy = retval
-            return format_spiral_tips(t,img,dimgdt,level1,level2,lst_values_x,lst_values_y,
-                lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy,width,height)
+            return format_spiral_tips(t,img,dimgdt,level1,level2,lst_values_x,lst_values_y,lst_values_theta,
+                    lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy,width,height)
     else:
         #simple version
         # @njit
