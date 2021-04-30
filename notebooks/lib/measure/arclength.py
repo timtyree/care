@@ -42,24 +42,24 @@ def get_arclength_module(width=200.,height=200.):
 	        node_id2_lst.append(node_id2)
 	    return node_id1_lst, node_id2_lst
 
-
+	# TODO: dev function that interpolates local EP state along the contour
+	# def compute_arc_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values):
+	# 	pass
 	def compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values):
 	    '''computes the arclength of the contour from j to j_nxt
+	    Supposes node_id, node_id_nxt went through fix_node_id
 	    Example Usage:
 	    arclength_values=compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values)
 	    '''
 	    is_last=node_id_nxt<=node_id
 	    arclen=0;arclen_lst=[0]
 	    N_nodes=contour.shape[0]
-	    
 	    #compute the initial frac
 	    node_start=node_id
 	    segment=get_segment_pbc(node_start,N_nodes,contour)
-	    
 	    l=distance_L2_pbc(segment[1],segment[0])
-	    assert(l>0)
 	    frac=project_point_2D(point=xy_values[j], segment=segment)
-	    assert((frac>=0)&(frac<1))
+	    # assert((frac>=0)&(frac<1))
 	    arclen+=(1.-frac)*l;arclen_lst.append(arclen)
 	    
 	    #extract the middle part.
@@ -69,25 +69,22 @@ def get_arclength_module(width=200.,height=200.):
 	        Q=contour[node_id+1:]
 	        W=contour[:node_id_nxt]
 	        segment_array=np.concatenate([Q,W])
-	        assert(segment_array.shape[1]==2)
 	        
 	    #aggregate/append the middle part    
 	    n_segments=segment_array.shape[0]
 	    for k in range(n_segments):
 	        node_start=node_id+1+k
 	        segment=get_segment_pbc(node_start,N_nodes,contour)
-	        assert(segment.shape==(2,2))
+	        # assert(segment.shape==(2,2))
 	        l=distance_L2_pbc(segment[1],segment[0])
-	        assert(l>0)
 	        arclen+=l;arclen_lst.append(arclen)
 
 	    #compute the final frac
 	    node_start=node_id_nxt
 	    segment=get_segment_pbc(node_start,N_nodes,contour)
 	    l=distance_L2_pbc(segment[1],segment[0])
-	    assert(l>0)
 	    frac=project_point_2D(point=xy_values[j_nxt], segment=segment)
-	    assert((frac>=0)&(frac<1))
+	    # assert((frac>=0)&(frac<1))
 	    arclen+=frac*l;arclen_lst.append(arclen)
 	    
 	    #return the activation front arclength parameter, sigma
@@ -97,22 +94,35 @@ def get_arclength_module(width=200.,height=200.):
 	    arclength_values=compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values)
 	    return arclength_values[-1]
 
-	def compute_arclength_values_upto_next(j,node_id,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst):
+	def compute_arclength_values_upto_next(j,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst):
 	    '''
-	    Example Usage:  
-	    arclen_values,j_nxt=compute_arclength_values_upto_next(j,node_id,xy_values,s_values,contour,remaining_id_lst,sorted_id_values)
+	    Example Usage:
+	    sorted_id_values=np.argsort(node_id_list);remaining_id_lst=list(sorted_id_values)
+	    arclen_values,j_nxt=compute_arclength_values_upto_next(j,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst)
 	    '''
 	    s=s_values[j]
 	    point_target=xy_values[j]
-	    node_id_, node_id_nxt, j_nxt=find_next_tip(point_target, node_id, s, remaining_id_lst, sorted_id_values, s_values, node_id_lst)
-	    assert(node_id==node_id_)
+	    j_nxt=find_next_tip(remaining_id_lst, s, s_values)
+	    if j_nxt<-1:#if no more tips were found on this contour,
+	    	# enforce the periodic closed contour condition by summing up to the first pt considered.
+	    	j_nxt=sorted_id_values[0]
+	    # print(f"summing {j}-->{j_nxt} with remaining pts, {(remaining_id_lst)}")
+	    node_id=node_id_lst[j]
+	    node_id_nxt=node_id_lst[j_nxt]
 	    arclen_values=compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values)
+	   	#don't trigger an extra arclength_values around the whole loop
+	    # if len(remaining_id_lst)==1:
+	    # 	remaining_id_lst.pop()
 	    return arclen_values,j_nxt
 
 	def compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours):
-	    '''
+	    '''Computes the arclengths between points indicated by xy_values along contours
+		Supposes that contours is a list of closed contours in 2D.
+		Supposes node_id_lst is adjusted by fix_node_id
 	    Example Usage:
 	    j_lst,s_lst,archlen_values_lst=compute_arclength_values_for_tips(node_id_lst,s_values,contours)
+	    
+	    TODO(later): move computation of node_id_lst to be within the function that generates spiral tip locations using the method that produces s1_values and s2_values.
 	    '''
 	    sorted_id_values=np.argsort(node_id_lst)
 	    remaining_id_lst=list(sorted_id_values)[::-1]
@@ -126,8 +136,7 @@ def get_arclength_module(width=200.,height=200.):
 	            j=j_nxt
 	        else:
 	            #pop the earliest remaining tip, possibly from another contour
-	            i=remaining_id_lst.pop()
-	            j=sorted_id_values[i]
+	            j=remaining_id_lst.pop()
 
 	        #extract values needed for this contour
 	        #     point_target=xy_values[j]
@@ -136,7 +145,7 @@ def get_arclength_module(width=200.,height=200.):
 	        contour=contours[s][:-1]
 
 	        #compute arclength upto sister tip
-	        arclen_values,j_nxt=compute_arclength_values_upto_next(j,node_id,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst)
+	        arclen_values,j_nxt=compute_arclength_values_upto_next(j,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst)
 	        #TODO(...a little later): interpolate voltage to node points
 
 	        #record outputs

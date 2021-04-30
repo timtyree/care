@@ -60,25 +60,24 @@ def get_locate_nearest_point_index(width=200,height=200):
         return nearest_index
     return locate_nearest_point_index
 
-def find_next_tip(point_target, node_id, s, remaining_id_lst, sorted_id_values, s_values, node_id_lst):
-    """find the next tip on the same contour
+def find_next_tip(remaining_id_lst, s, s_values):
+    """find the next tip on the same contour, encoded in s_values.  
+    Supposes remaining_id_lst is a sorted list of spiral tip indices, 
     Example Usage:
     node_id, node_id_nxt,j_nxt=find_next_tip(point_target, node_id, s, remaining_id_lst, sorted_id_values, s_values)
     """
     j_nxt=-9999;k=1
-    remaining_id_lst_tmp=list(remaining_id_lst)
-    kmax=len(remaining_id_lst_tmp)
+    kmax=len(remaining_id_lst)
     while (j_nxt<0)&(k<=kmax):
-        jj=sorted_id_values[remaining_id_lst_tmp[-k]] #positive integer valued
+        jj=remaining_id_lst[-k] #positive integer valued
         s_nxt=s_values[jj]
         if s_nxt==s:
             #the tips are on the same contour
             j_nxt=jj
         else:
             k+=1
-    if k>kmax:
-        #a circular path is made
-        j_nxt=0
-    node_id_nxt=node_id_lst[j_nxt]
-    return node_id, node_id_nxt, j_nxt
+    # if k>kmax:
+    #     #a circular path is made with the first tip available
+    #     j_nxt=0
+    return j_nxt
 

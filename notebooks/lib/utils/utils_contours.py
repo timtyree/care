@@ -68,10 +68,10 @@ def get_segment_pbc(node_start,N_nodes,contour):
     nb=(node_start+2) % N_nodes
     if nb>na:
         segment=contour[na : nb]
-        assert(segment.shape==(2,2))
+        # assert(segment.shape==(2,2))
     else: # edge case segment
         Q=contour[-1]
         W=contour[0]
         segment=np.stack([Q,W])
-        assert(segment.shape==(2,2))
+        # assert(segment.shape==(2,2))
     return segment
