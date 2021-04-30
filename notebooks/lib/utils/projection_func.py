@@ -5,7 +5,7 @@ from numba import njit
 # Date: 4.29.2021
 
 @njit
-def _diff_pbc_1d(diff,width):
+def __diff_pbc_1d(diff,width):
     dmin=np.abs(diff)
     dtmp=diff+width
     if np.abs(dtmp)<dmin:
@@ -17,19 +17,19 @@ def _diff_pbc_1d(diff,width):
         else:
             return diff
 
-def get_subtract_pbc(width=200,height=200):
+def get_subtract_pbc(width=200.,height=200.):
     '''subtract to get to local coords'''
     @njit
     def subtract_pbc(point1,point2):
         '''tries all pbc combinations and returns the vector difference corresponding to the smallest magnitude.'''
         diff=point1-point2
-        xdiff=_diff_pbc_1d(diff[0],width)
-        ydiff=_diff_pbc_1d(diff[1],height)
+        xdiff=__diff_pbc_1d(diff[0],width)
+        ydiff=__diff_pbc_1d(diff[1],height)
         return np.array((xdiff,ydiff))
     return subtract_pbc
 
 
-def get_project_point_2D(width=200,height=200):
+def get_project_point_2D(width=200.,height=200.):
     '''returns project_point_2D
     Obeys periodic boundary conditions on a width-x-height square domain.
 
@@ -40,7 +40,7 @@ def get_project_point_2D(width=200,height=200):
     project_point_2D=get_project_point_2D(width=200,height=200)
     frac=project_point_2D(point,segment)
     '''
-    subtract_pbc=get_subtract_pbc(width=200,height=200)
+    subtract_pbc=get_subtract_pbc(width=width,height=height)
     @njit
     def project_point_2D(point,segment):
         '''Obeys periodic boundary conditions on a width-x-height square domain.
@@ -55,14 +55,14 @@ def get_project_point_2D(width=200,height=200):
         w=subtract_pbc(point,segment[0])
         u=subtract_pbc(segment[1],segment[0])
         c=np.dot(w,u)
-        l=np.linalg.norm(u)
+        l=np.sum(u**2)
         frac=c/l
         return frac
     return project_point_2D
 
 if __name__=='__main__':
     #test cases for subtract_pbc
-    subtract_pbc=get_subtract_pbc(width=200,height=200)
+    subtract_pbc=get_subtract_pbc(width=200.,height=200.)
     assert( (np.array([0.,0.])==subtract_pbc(np.array([0.,2.]),np.array([0.,2.]))).all())
     assert( (np.array([0.,0.])==subtract_pbc(np.array([0.,2.]),np.array([0.,202.]))).all())
     assert( (np.array([0.,0.])==subtract_pbc(np.array([0.,2.]),np.array([0.,2-200.]))).all())
@@ -70,7 +70,7 @@ if __name__=='__main__':
     assert (np.isclose((subtract_pbc(np.array([200.234,2.]),np.array([0.,2-200.]))-np.array([0.234, 0.   ])),0.).all())
 
     #test cases for project_point_2D
-    project_point_2D=get_project_point_2D(width=200,height=200)
+    project_point_2D=get_project_point_2D(width=200.,height=200.)
     point=np.array(    (129,180.))
     segment=np.array([[129-200, 180.        ],
                        [129, 381.        ]])

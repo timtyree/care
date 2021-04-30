@@ -10,7 +10,7 @@ from ._find_tips_pbc_cy import *
 from ._find_tips_kernel_cy import *
 from .measure_diffusion_coefficient import *
 from .measures_from_emsd import *
-
+from .arclength import *
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *
 
