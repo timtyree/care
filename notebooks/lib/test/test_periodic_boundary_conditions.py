@@ -1,5 +1,11 @@
 #!/bin/bash/env python3
-from lib import *
+import os, sys
+# sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
+from .. import *
+from ..model.minimal_model import pbc
+
+def testme():
+    pass
 
 # test cases of periodic boundary conditions on a random matrix
 test = np.random.rand(111,111,3)

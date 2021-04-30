@@ -1,5 +1,11 @@
 import numpy as np
-from . import find_contours as fc
+from .. import *
+from ..measure._utils_find_contours import _split_contour_into_contiguous, _is_contour_contiguous
+from ..measure import find_contours as fc
+
+
+def testme():
+    pass
 
 #test that split_contour_into_contiguous returns only contours that are contiguous
 x, y = np.ogrid[-np.pi:np.pi:100j, -np.pi:np.pi:100j]

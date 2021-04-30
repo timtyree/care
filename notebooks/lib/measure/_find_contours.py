@@ -98,7 +98,7 @@ def find_contours(array, level,
 
     .. addendum::
 
-    The aforementioned ambiguity is resolved according to the natural reduction 
+    The aforementioned ambiguity is resolved according to the natural reduction
     of the method presented in [2] to two spatial dimensions.
 
     References
