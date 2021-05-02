@@ -7,6 +7,7 @@ from numba import njit
 
 from skimage import measure
 from ..model.minimal_model import fetch_get_time_step
+from ..measure._find_tips_kernel_cy import find_intersections
 # #load the libraries
 from .. import *
 # from lib import *

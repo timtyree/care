@@ -10,6 +10,7 @@ from .chunk_traj import *
 from .load_buffer_LR import *
 from .stack_txt_LR import *
 from .operari import *
+from .ParticleClasses import *
 
 #for worker
 from .get_txt import *

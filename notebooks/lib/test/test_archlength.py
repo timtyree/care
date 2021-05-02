@@ -50,7 +50,7 @@ def mytest_compute_arclength_values(node_id_lst,xy_values, s_values, contours):
 def mytest_archlength_support(xy_values, node_id_lst,s_values,contours):
     print(f"\tcomputing all archlengths...")
     #compute all archlengths, with fixed direction
-    j_lst,s_lst,archlen_values_lst=compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours)
+    j_lst,s_lst,archlen_values_lst, j_nxt_lst=compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours)
     print(f"\tall archlengths computed!")
 
     #test that the number of contour nodes equals the number of values recorded minus twice the number of spiral tips
@@ -133,7 +133,7 @@ subtract_pbc=get_subtract_pbc(width=width,height=height)
 comp_perimeter=get_comp_perimeter(width=width,height=height)
 fix_node_id=get_fix_node_id(width=width,height=height)
 retval=get_arclength_module(width=width,height=height)
-locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
+locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
 #extract values for arclength measurement
 contours1=[np.vstack([c[:,1],c[:,0]]).T for c in contours_a]
 contours2=[np.vstack([c[:,1],c[:,0]]).T for c in contours_b]
