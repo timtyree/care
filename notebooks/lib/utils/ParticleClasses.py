@@ -28,7 +28,8 @@ class ParticlePBC(object):
         self.lesser_arclen_lst=[]
         self.greater_pid_lst=[]
         self.greater_arclen_lst=[]
-        self.distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
+        self.width=width;self.height=height
+        self.distance_L2_pbc=get_distance_L2_pbc(width=self.width,height=self.height)
 
     def dist_to(self,point):
         last_point=np.array((self.x_lst[-1],self.y_lst[-1]))
@@ -45,8 +46,34 @@ class ParticlePBC(object):
         self.greater_arclen_lst.append(greater_arclen)
         return self
 
+    def __repr__(self):
+        x=self.x_lst[-1]
+        y=self.y_lst[-1]
+        t=self.t_lst[-1]
+        print(f"(x,y,t)=({x:.03f},{y:.03f},{t:.03f})")
+
+    def scale_coordinates(self,scale):
+        self.x_lst=[scale*x for x in self.x_lst]
+        self.y_lst=[scale*x for x in self.y_lst]
+        self.lesser_arclen_lst=[scale*x for x in self.lesser_arclen_lst]
+        self.greater_arclen_lst=[scale*x for x in self.greater_arclen_lst]
+        return self
+
+    def zoom_to_double(self):
+        '''
+        Example Usage: Zoom to 2**5
+        self.zoom_to_double().zoom_to_double().zoom_to_double().zoom_to_double().zoom_to_double()
+        '''
+        self.width=2*self.width;self.height=2*self.height
+        self.distance_L2_pbc=get_distance_L2_pbc(width=self.width,height=self.height)
+        def dist_to(self,point):
+            last_point=np.array((self.x_lst[-1],self.y_lst[-1]))
+            dist=self.distance_L2_pbc(point,last_point)
+            return dist
+        return self.scale_coordinates(scale=2.)
+
 class ParticlePBCDict(dict):
-    def __init__(self, dict_tips, width=200.,height=200., **kwargs):
+    def __init__(self, dict_tips, width,height, **kwargs):
         '''initiate a ParticlePBC for each tip found, incrementing pid_nxt
         supposes dict_tips is a dictionary of lists of values.'''
         x_lst=dict_tips['x']
@@ -212,3 +239,26 @@ class ParticlePBCDict(dict):
                     greater_arclen=dict_topo['greater_arclen'][pid_born]
                 )#,**kwargs,)
         return self
+
+    def zoom_to_double(self):
+        '''
+        Example Usage: Zoom to 2**5
+        self.zoom_to_double().zoom_to_double().zoom_to_double().zoom_to_double().zoom_to_double()
+        '''
+        pid_lst=list(self.keys())
+        for pid in pid_lst:
+            self[pid].zoom_to_double()
+        return self
+
+    def get_current_locations(self):
+        '''
+        Example Usage:
+        x_values,y_values=pdict.get_current_locations()
+        '''
+        xl=[];yl=[];
+        pl=self.get_alive_particles()
+        for pid in pl:
+            xl.append(self[pid].x_lst[-1])
+            yl.append(self[pid].y_lst[-1])
+        x_values=np.array(xl);y_values=np.array(yl);
+        return x_values,y_values

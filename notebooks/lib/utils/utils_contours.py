@@ -55,11 +55,23 @@ def get_fix_node_id(width=200.,height=200.):
                         segment=contour[node_id_out:node_id_out+2]
                         frac=project_point_2D(point, segment)
                         if not (frac>=0)&(frac<1):
-                            # print('prev prev is not valid')
-                            # print('no valid start found... returning input node_id...')
-                            # node_id_out=node_id
-                            raise (f'no valid start found for input, contour,point,node_id={(contour,point,node_id)}')
-                            node_id_out=node_id
+                            # print('prev prev prev is not valid')
+                            node_id_out=node_id-3
+                            segment=contour[node_id_out:node_id_out+2]
+                            frac=project_point_2D(point, segment)
+                            if not (frac>=0)&(frac<1):
+                                # print('next next next is not valid')
+                                node_id_out=node_id+3
+                                segment=contour[node_id_out:node_id_out+2]
+                                frac=project_point_2D(point, segment)
+                                if not (frac>=0)&(frac<1):
+                                    # print('prev prev is not valid')
+                                    # print('no valid start found... returning input node_id...')
+                                    # node_id_out=node_id
+                                    print('.', end='\r')
+                                    # print("Warning: no valid start found for input")
+                                    # raise Exception(f'no valid start found for input, contour,point,node_id={(contour,point,node_id)}')
+                                    node_id_out=node_id
         return node_id_out
     return fix_node_id
 

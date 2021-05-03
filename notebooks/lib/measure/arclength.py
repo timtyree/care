@@ -142,7 +142,7 @@ def get_arclength_module(width=200.,height=200.):
 				j_nxt=jj
 			else:
 				raise('Warning: edge case for returning to start of loop didn`t work in compute_arclength_values_upto_next')
-						
+
 		# print(f"summing {j}-->{j_nxt} with remaining pts, {(remaining_id_lst)}")
 		node_id=node_id_lst[j]
 		node_id_nxt=node_id_lst[j_nxt]
@@ -194,7 +194,7 @@ def get_arclength_module(width=200.,height=200.):
 
 	return locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips
 
-def get_comp_dict_topo_simple(width=200.,height=200.):
+def get_comp_dict_topo_simple(width=200.,height=200.,**kwargs):
 	'''
 	Example Usage:
 	comp_dict_topo_simple=get_comp_dict_topo_simple(width=200.,height=200.)
@@ -284,7 +284,7 @@ def get_comp_dict_topo_simple(width=200.,height=200.):
 		dict_topo['lesser_arclen_values']  = lesser_arclen_values_lst
 		return True
 
-	def comp_dict_topo_simple(img,dimgdt,t,width=200,height=200,level1=-40,level2=0.,jump_threshold = 2,size_threshold = 6):
+	def comp_dict_topo_simple(img,dimgdt,t,width=200,height=200,level1=-40,level2=0.,jump_threshold = 2,size_threshold = 6,**kwargs):
 		'''
 		Example Usage:
 		dict_topo=comp_dict_topo_simple(img,dimgdt,t,width=200,height=200,level1=-40,level2=0.,jump_threshold = 2,size_threshold = 6)
