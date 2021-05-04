@@ -7,10 +7,10 @@ Give, two x,y curves this gives intersection points,
 forked on May 24.2020
 forked from: https://github.com/sukhbinder/intersection.git
 Based on: http://uk.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
-njistu by Tim Tyree. just in time compilation via numba.njit --> first run with new data takes ~5 seconds.  later runs are very fast.
+njistu by Tim Tyree. just in time compilation via numba.njit --> first run with new data takes ~5 seconds.  later runs are very fast (<50ms).
 """
 
-@njit(fastmath=True, parallel=True)
+@njit#(fastmath=True, parallel=True)
 def _min_within(x,n):
     '''compare every two entries and return the min of the two.
     n = int(x.shape[0] - 1)'''
@@ -18,7 +18,7 @@ def _min_within(x,n):
     for j in prange(n):
         out[j] = min((x[j], x[j+1]))
     return out
-@njit(fastmath=True, parallel=True)
+@njit#(fastmath=True, parallel=True)
 def _max_within(x,n):
     '''compare every two entries and return the max of the two.
     n = int(x.shape[0] - 1)'''
@@ -27,16 +27,16 @@ def _max_within(x,n):
         out[j] = max((x[j], x[j+1]))
     return out
 
-@njit(fastmath=True, parallel=True)
+@njit#(fastmath=True, parallel=True)
 def _rect_inter_inner(x1, x2):
     n1 = x1.shape[0]-1
     n2 = x2.shape[0]-1
-    
+
     minx1 = _min_within(x1,n1)
     maxx1 = _max_within(x1,n1)
     minx2 = _min_within(x2,n2)
     maxx2 = _max_within(x2,n2)
-    
+
     S1 = np.zeros((n2,n1))
     S3 = S1.copy()
     for j in prange(n2):
@@ -49,7 +49,7 @@ def _rect_inter_inner(x1, x2):
         S4[j] = minx2
     return S1.T, S2, S3.T, S4
 
-@njit(fastmath=True, parallel=True)
+@njit#(fastmath=True, parallel=True)
 def _rectangle_intersection_(x1, y1, x2, y2):
     S1, S2, S3, S4 = _rect_inter_inner(x1, x2)
     S5, S6, S7, S8 = _rect_inter_inner(y1, y2)
@@ -62,7 +62,7 @@ def _rectangle_intersection_(x1, y1, x2, y2):
     ii, jj = np.nonzero(C1 & C2 & C3 & C4)
     return ii, jj
 
-@njit(fastmath=True, parallel=True)
+@njit#(fastmath=True, parallel=True)
 def _intersection_after_r_i_(x1, y1, x2, y2,ii,jj):
     """
 INTERSECTIONS Intersections of curves.
@@ -125,9 +125,9 @@ x,y=intersection(x1,y1,x2,y2)
 
     xy0 = T[2:, in_range]
     xy0 = xy0.T
-    return xy0[:, 0], xy0[:, 1] 
+    return xy0[:, 0], xy0[:, 1]
 
-@njit(fastmath=True)
+@njit()#fastmath=True) #fastmath might lower precision...
 def intersection(x1, y1, x2, y2):
     """
 INTERSECTIONS Intersections of curves.

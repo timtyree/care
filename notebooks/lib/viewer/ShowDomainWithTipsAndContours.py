@@ -25,22 +25,33 @@ def ShowDomain(img,dimgdt,x_values,y_values,c_values,V_threshold,t,inch=6,fontsi
     # ax.scatter(x=x_values, y=y_values, s=270, c='yellow', marker='*', zorder=3, alpha=1.)
     # ax.scatter(x=x_values, y=y_values, s=45, c='blue', marker='*', zorder=3, alpha=1.)
     if annotating:
-        x=.5#0.
-        y=.95
-        horizontalalignment='left'#'left'
-        ax.text(x,y,f"t = {t:.3f} ms",
-                horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
-        x=.5#0.
-        y=.9
-        horizontalalignment='left'#'left'
-        ax.text(x,y,f"num. = {n_tips}",
-                horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
+        time_step_string=f"\tt = {t:.3f} ms"
+        message_string=f"\tnum. = {n_tips}"
+        # x=.5#0.
+        # y=.95
+        # horizontalalignment='left'#'left'
+        # ax.text(x,y,time_step_string,
+        #         horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
+        # x=.5#0.
+        # y=.9
+        # horizontalalignment='left'#'left'
+        # ax.text(x,y,message_string,
+        #         horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
         # x=.5
         # y=.01
         # horizontalalignment='center'
         # ax.text(x,y,f"Area = {area} cm^2, V. Threshold = {V_threshold}",
         #         horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
-    # ax.set_title(f"Area = {area} cm^2, V. Threshold = {V_threshold}, Num. Tips = {n_tips}\n", color='white', loc='left',pad=0)
+        # ax.set_title(f"Area = {area} cm^2, V. Threshold = {V_threshold}, Num. Tips = {n_tips}\n", color='white', loc='left',pad=0)
+
+
+        ax.text(.0,.95,time_step_string,
+                horizontalalignment='left',color='white',fontsize=fontsize,
+                transform=ax.transAxes)
+        ax.text(.0,.9,message_string,
+                horizontalalignment='left',color='white',fontsize=fontsize,
+                transform=ax.transAxes)
+
     ax.axis(axis)
     #     ax.axis('image')
     ax.set_xticks([])

@@ -16,7 +16,7 @@ def format_spiral_tips(lst_values_x,lst_values_y,lst_values_theta, lst_values_gr
     # EP states given by bilinear interpolation with periodic boundary conditions
     v_lst    = interpolate_img(x_values,y_values,width,height,img=img)
     dvdt_lst = interpolate_img(x_values,y_values,width,height,img=dimgdt)
-
+ 
     n_tips = x_values.size
     dict_out = {
         't': float(t),

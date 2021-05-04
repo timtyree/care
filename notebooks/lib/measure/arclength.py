@@ -194,7 +194,11 @@ def get_arclength_module(width=200.,height=200.):
 
 	return locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips
 
-def get_comp_dict_topo_simple(width=200.,height=200.,**kwargs):
+
+########################################################################
+# simple method of nonlocal observation
+########################################################################
+def get_update_dict_topo_with_arclen_observations(width=200.,height=200.,**kwargs):
 	'''
 	Example Usage:
 	comp_dict_topo_simple=get_comp_dict_topo_simple(width=200.,height=200.)
@@ -283,11 +287,29 @@ def get_comp_dict_topo_simple(width=200.,height=200.,**kwargs):
 		dict_topo['greater_arclen_values'] = greater_arclen_values_lst
 		dict_topo['lesser_arclen_values']  = lesser_arclen_values_lst
 		return True
+	return update_dict_topo_with_arclen_observations
 
-	def comp_dict_topo_simple(img,dimgdt,t,width=200,height=200,level1=-40,level2=0.,jump_threshold = 2,size_threshold = 6,**kwargs):
+def get_comp_dict_topo_simple(width=200.,height=200.,level1=-40,level2=0.,jump_threshold = 20,size_threshold = 0,**kwargs):
+	'''
+	Example Usage:
+	comp_dict_topo_simple=get_comp_dict_topo_simple(width=200.,height=200.)
+	'''
+	#jit compile arclength module to llvm machine code
+	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
+	distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
+	project_point_2D=get_project_point_2D(width=width,height=height)
+	subtract_pbc=get_subtract_pbc(width=width,height=height)
+	comp_perimeter=get_comp_perimeter(width=width,height=height)
+	fix_node_id=get_fix_node_id(width=width,height=height)
+	retval=get_arclength_module(width=width,height=height)
+	locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
+
+	update_dict_topo_with_arclen_observations=get_update_dict_topo_with_arclen_observations(width=height,height=height,**kwargs)
+
+	def comp_dict_topo_simple(img,dimgdt,t,**kwargs):
 		'''
 		Example Usage:
-		dict_topo=comp_dict_topo_simple(img,dimgdt,t,width=200,height=200,level1=-40,level2=0.,jump_threshold = 2,size_threshold = 6)
+		dict_topo=comp_dict_topo_simple(img,dimgdt,t)
 
 		TODO(later):njit this whole function... or just translate to c++
 		'''

@@ -1,4 +1,4 @@
-# Module for interpolating numpy arrays of shape (width,height) to 
+# Module for interpolating numpy arrays of shape (width,height) to
 # subpixel values with periodic boundary conditions
 #Timothy Tyree
 #1.13.2021
@@ -48,3 +48,16 @@ def bilinear_interpolate_channel(x,y,width,height,img):
     a22 = img[r1,c1]-a11-a12-a21
     states_bilinear = a11 + a21*frac_c + a12*frac_r + a22*frac_c*frac_r
     return states_bilinear
+
+@njit
+def interpolate_txt_to_contour(contour,width,height,txt):
+    '''Measure texture values at the contour positions.
+    Example Usage:
+    contour_values=interpolate_txt_to_contour(contour,width,height,txt)
+    '''
+    contour_states = []
+    for j in range(contour.shape[0]):
+        x,y=contour[j]
+        states_bilinear = bilinear_interpolate_channel(x,y,width,height,txt)
+        contour_states.append(states_bilinear)
+    return contour_states

@@ -36,7 +36,7 @@ def find_tips_with_pbc_knots(contours1, contours2, s1in_lst, s2in_lst):
                 for c2 in contour2_lst:
                     x1, y1 = (c1[:, 0], c1[:, 1])
                     x2, y2 = (c2[:, 0], c2[:, 1])
-                    #intersection is not the cause of the slowdown
+                    #intersection is not the cause of the slowdown... it's probably all ^that pythonic voodoo...
                     yl, xl = intersection(x1, y1, x2, y2)
                     for x,y in zip(xl,yl):
                         s1_list.append(n1)
@@ -81,7 +81,7 @@ def preprocess_contours_and_enumerate(contours1,contours2,width, height,jump_thr
             s2_lst.append(s)
     return contour1_lst_lst, contour2_lst_lst, s1_lst, s2_lst
 
-def contours_to_simple_tips_pbc(contours1,contours2,width, height,jump_threshold = 2,size_threshold = 6):
+def contours_to_simple_tips_pbc(contours1,contours2,width, height,jump_threshold = 10,size_threshold = 4):
     '''Note: topological values may be incorrect...
 
     Find the intersection points of two families of contour lines.
