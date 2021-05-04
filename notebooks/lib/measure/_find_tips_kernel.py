@@ -47,8 +47,8 @@ def find_tips_for_linear_segment_pairs(segments1, segments2, r0,c0, theta_thresh
             dv=v[1]-v[0]
             theta = compute_theta(du,dv)
 
-            if np.abs(theta)<theta_threshold:
-                continue
+            # if np.abs(theta)<theta_threshold:
+            #     continue
 
 
             #compute line for segment u

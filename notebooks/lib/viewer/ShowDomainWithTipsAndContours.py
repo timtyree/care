@@ -1,7 +1,7 @@
 from .. import *
 import matplotlib.pyplot as plt
 def ShowDomain(img,dimgdt,x_values,y_values,c_values,V_threshold,t,inch=6,fontsize=16,vmin_img=0.,vmax_img=0.2,vmin_tips=0.,vmax_tips=1.,
-                 area=25,frameno=1,save_fn=None,save_folder=None,save=False,annotating=False,axis=[0,200,0,200], **kwargs):
+                 area=25,frameno=1,save_fn=None,save_folder=None,save=False,annotating=False,axis=[0,200,0,200],cmap='Blues', **kwargs):
     #plot the system
     # figsize=(15,15); max_marker_size=800; lw=2;color_values = None
     #appears to work     contours1 = find_contours(img,    level = 0.5)
@@ -21,25 +21,25 @@ def ShowDomain(img,dimgdt,x_values,y_values,c_values,V_threshold,t,inch=6,fontsi
 
     #plot spiral tips. color inner spiral tip by slow variable
     ax.scatter(x=x_values, y=y_values, s=270, c=1+0.*c_values, marker='*', zorder=3, alpha=1., vmin=vmin_tips,vmax=vmax_tips)
-    ax.scatter(x=x_values, y=y_values, s=135, c=c_values, marker='*', zorder=3, alpha=1., vmin=vmin_tips,vmax=vmax_tips, cmap='Blues')
+    ax.scatter(x=x_values, y=y_values, s=135, c=c_values, marker='*', zorder=3, alpha=1., vmin=vmin_tips,vmax=vmax_tips, cmap=cmap)
     # ax.scatter(x=x_values, y=y_values, s=270, c='yellow', marker='*', zorder=3, alpha=1.)
     # ax.scatter(x=x_values, y=y_values, s=45, c='blue', marker='*', zorder=3, alpha=1.)
     if annotating:
         x=.5#0.
         y=.95
-        horizontalalignment='center'#'left'
-        ax.text(x,y,f"Current Time = {t:.3f} ms",
+        horizontalalignment='left'#'left'
+        ax.text(x,y,f"t = {t:.3f} ms",
                 horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
         x=.5#0.
         y=.9
-        horizontalalignment='center'#'left'
-        ax.text(x,y,f"Num. of Tips  = {n_tips}",
+        horizontalalignment='left'#'left'
+        ax.text(x,y,f"num. = {n_tips}",
                 horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
-        x=.5
-        y=.01
-        horizontalalignment='center'
-        ax.text(x,y,f"Area = {area} cm^2, V. Threshold = {V_threshold}",
-                horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
+        # x=.5
+        # y=.01
+        # horizontalalignment='center'
+        # ax.text(x,y,f"Area = {area} cm^2, V. Threshold = {V_threshold}",
+        #         horizontalalignment=horizontalalignment,color='white',fontsize=fontsize,transform=ax.transAxes)
     # ax.set_title(f"Area = {area} cm^2, V. Threshold = {V_threshold}, Num. Tips = {n_tips}\n", color='white', loc='left',pad=0)
     ax.axis(axis)
     #     ax.axis('image')
@@ -56,7 +56,7 @@ def ShowDomain(img,dimgdt,x_values,y_values,c_values,V_threshold,t,inch=6,fontsi
         if save_folder is not None:
             os.chdir(save_folder)
         plt.savefig(save_fn,dpi=720/inch, bbox_inches='tight',pad_inches=0);
-#         plt.close();
+        plt.close();
 #         print ( save_fn )
 #         return frameno
     return fig

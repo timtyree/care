@@ -256,8 +256,8 @@ def get_comp_dict_topo_simple(width=200.,height=200.,**kwargs):
 		for pid in range(ntips):
 			lesser_pid={j_lst[lesser_i_lst[pid]],j_nxt_lst[lesser_i_lst[pid]]}.difference({pid})
 			greater_pid={j_lst[greater_i_lst[pid]],j_nxt_lst[greater_i_lst[pid]]}.difference({pid})
-			lesser_pid_lst.append(lesser_pid)
-			greater_pid_lst.append(greater_pid)
+			lesser_pid_lst.append(list(lesser_pid)[0])
+			greater_pid_lst.append(list(greater_pid)[0])
 
 		#map any archlen results to particle values
 		greater_arclen_lst=[];lesser_arclen_lst=[]

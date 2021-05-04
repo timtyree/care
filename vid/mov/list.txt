@@ -1,0 +1,2 @@
+file 'tmp/clip-1.MTS'
+file 'tmp/clip-2.MTS'

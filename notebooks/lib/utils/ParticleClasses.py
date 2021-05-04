@@ -50,7 +50,7 @@ class ParticlePBC(object):
         x=self.x_lst[-1]
         y=self.y_lst[-1]
         t=self.t_lst[-1]
-        print(f"(x,y,t)=({x:.03f},{y:.03f},{t:.03f})")
+        return f"(x,y,t)=({x:.03f},{y:.03f},{t:.03f})"
 
     def scale_coordinates(self,scale):
         self.x_lst=[scale*x for x in self.x_lst]
@@ -84,15 +84,17 @@ class ParticlePBCDict(dict):
         lesser_arclen_lst=dict_tips['lesser_arclen']
         greater_pid_lst=dict_tips['greater_pid']
         greater_arclen_lst=dict_tips['greater_arclen']
-
+        pid_nxt=-1
         ntips=len(dict_tips['x'])
         for j in range(ntips):
             pid_nxt=j
+            lesser_pid=lesser_pid_lst[j]
+            greater_pid=greater_pid_lst[j]
             particle = ParticlePBC(pid_nxt,width,height)
             particle.update(x=x_lst[j],y=y_lst[j],t=t,
-                            lesser_pid=lesser_pid_lst[j],
+                            lesser_pid=lesser_pid,
                             lesser_arclen=lesser_arclen_lst[j],
-                            greater_pid=greater_pid_lst[j],
+                            greater_pid=greater_pid,
                             greater_arclen=greater_arclen_lst[j])
             self[pid_nxt]=particle
         self.pid_nxt=pid_nxt+1
@@ -261,4 +263,5 @@ class ParticlePBCDict(dict):
             xl.append(self[pid].x_lst[-1])
             yl.append(self[pid].y_lst[-1])
         x_values=np.array(xl);y_values=np.array(yl);
-        return x_values,y_values
+        pid_values=np.array(pl)
+        return x_values,y_values,pid_values

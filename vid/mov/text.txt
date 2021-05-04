@@ -1,0 +1,4 @@
+
+TEXT=$'this is a termination event
+from the Luo-Rudy model
+'

@@ -173,3 +173,6 @@ notebooks/archive/lib.zip
 notebooks/ic/ic1800x1800.txt
 notebooks/lib-archived.zip
 notebooks/lib/measure/ignore.txt
+*.MTS
+*.mp4
+*.mov
