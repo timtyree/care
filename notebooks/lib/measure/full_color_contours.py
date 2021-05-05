@@ -203,7 +203,7 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 		return True
 	return update_with_full_color_observations
 
-def get_comp_dict_topo_full_color(width,height,level1=-40,level2=0.,jump_threshold = 40,size_threshold = 0,**kwargs):
+def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_threshold = 40,size_threshold = 0,**kwargs):
 	'''
 	Example Usage:
 	'''
