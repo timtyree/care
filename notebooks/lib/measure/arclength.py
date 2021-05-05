@@ -3,7 +3,7 @@ from ..utils import *
 from numba import njit
 from ._find_contours import find_contours
 from ._find_tips import contours_to_simple_tips_pbc
-# archlength.py supports the measurement of strings on 2D curves with periodic boundary conditions.
+# arclength.py supports the measurement of strings on 2D curves with periodic boundary conditions.
 # Programmer: Tim Tyree
 # Date: 4.29.2021
 
@@ -191,9 +191,9 @@ def get_compute_arclength_positions(width,height):
 		arclen+=frac*l;arclen_lst.append(arclen);xy_lst.append(point_end)
 
 		#return output
-		archlen_values=np.array(arclen_lst)
+		arclen_values=np.array(arclen_lst)
 		contour_xy_values=np.array(xy_lst)
-		return archlen_values, contour_xy_values
+		return arclen_values, contour_xy_values
 	return compute_arclength_positions
 
 def get_compute_arclength(width,height):
@@ -290,13 +290,13 @@ def get_compute_arclength_values_for_tips(width,height):
 		Supposes that contours is a list of closed contours in 2D.
 		Supposes node_id_lst is adjusted by fix_node_id
 		Example Usage:
-		j_lst,s_lst,archlen_values_lst, j_nxt_lst=compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours)
+		j_lst,s_lst,arclen_values_lst, j_nxt_lst=compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours)
 
 		TODO(later): move computation of node_id_lst to be within the function that generates spiral tip locations using the method that produces s1_values and s2_values.
 		'''
 		sorted_id_values=np.argsort(node_id_lst)
 		remaining_id_lst=list(sorted_id_values)[::-1]
-		j_lst=[];s_lst=[];archlen_values_lst=[];j_nxt_lst=[]
+		j_lst=[];s_lst=[];arclen_values_lst=[];j_nxt_lst=[]
 		j_nxt=-9999
 		while len(remaining_id_lst)>0:
 			#if j_nxt is in remaining_id_lst
@@ -321,9 +321,9 @@ def get_compute_arclength_values_for_tips(width,height):
 			#record outputs
 			j_lst.append(j)
 			s_lst.append(s)
-			archlen_values_lst.append(arclen_values)
+			arclen_values_lst.append(arclen_values)
 			j_nxt_lst.append(j_nxt)
-		return j_lst,s_lst,archlen_values_lst, j_nxt_lst
+		return j_lst,s_lst,arclen_values_lst, j_nxt_lst
 	return compute_arclength_values_for_tips
 
 def get_arclength_module(width=200.,height=200.):
@@ -382,8 +382,8 @@ def get_update_dict_topo_with_arclen_observations(width=200.,height=200.,**kwarg
 		# s_values=s1_values
 		# contours=contours1
 		# node_id_lst=node_id1_lst
-		# j_lst,s_lst,archlen_values_lst, j_nxt_lst=compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours)
-		# j1_lst,s1_lst,j1_nxt_lst=j_lst,s_lst,j_nxt_lst;archlen1_values_lst=list(archlen_values_lst)
+		# j_lst,s_lst,arclen_values_lst, j_nxt_lst=compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours)
+		# j1_lst,s1_lst,j1_nxt_lst=j_lst,s_lst,j_nxt_lst;arclen1_values_lst=list(arclen_values_lst)
 		# compute arclengths for the second contour family....
 		# s_values=s2_values
 		# contours=contours2
@@ -397,12 +397,12 @@ def get_update_dict_topo_with_arclen_observations(width=200.,height=200.,**kwarg
 
 		# sort the greater from lesser spiral arms
 		# identify the greater_arclen by sorting either potential front
-		archlen_max_lst=[]
-		archlen_size_lst=[]
+		arclen_max_lst=[]
+		arclen_size_lst=[]
 		for a in arclen_values_lst:
-			archlen_max_lst.append(a[-1])
-			archlen_size_lst.append(a.shape[0])
-		greater_i_lst,lesser_i_lst=compare_spiralarm_size(j_lst, j_nxt_lst, archlen_size_lst)
+			arclen_max_lst.append(a[-1])
+			arclen_size_lst.append(a.shape[0])
+		greater_i_lst,lesser_i_lst=compare_spiralarm_size(j_lst, j_nxt_lst, arclen_size_lst)
 
 		#compute greater/lesser sister pid's using set difference ops
 		# print(j_lst, j_nxt_lst)           #two-to-one maps observation basis to particle basis
@@ -415,13 +415,13 @@ def get_update_dict_topo_with_arclen_observations(width=200.,height=200.,**kwarg
 			lesser_pid_lst.append(list(lesser_pid)[0])
 			greater_pid_lst.append(list(greater_pid)[0])
 
-		#map any archlen results to particle values
+		#map any arclen results to particle values
 		greater_arclen_lst=[];lesser_arclen_lst=[]
 		greater_arclen_values_lst=[];lesser_arclen_values_lst=[]
 		for greater_i,lesser_i in zip(greater_i_lst,lesser_i_lst):
 			#arclengths
-			greater_arclen_lst.append(archlen_max_lst[greater_i])
-			lesser_arclen_lst.append(archlen_max_lst[lesser_i])
+			greater_arclen_lst.append(arclen_max_lst[greater_i])
+			lesser_arclen_lst.append(arclen_max_lst[lesser_i])
 
 			#sigma
 			greater_arclen_values_lst.append(arclen_values_lst[greater_i])
@@ -479,7 +479,7 @@ def get_comp_dict_topo_simple(width=200.,height=200.,level1=-40,level2=0.,jump_t
 		xy_values=np.array(list(zip(dict_topo['x'],dict_topo['y'])))
 		s1_values=np.array(dict_topo['s1'])
 		s2_values=np.array(dict_topo['s2'])
-		#update dict_topo with archlength information
+		#update dict_topo with arclength information
 		update_dict_topo_with_arclen_observations(dict_topo,xy_values,s1_values,s2_values,contours1,contours2)
 		return dict_topo
 

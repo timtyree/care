@@ -1,6 +1,6 @@
 import numpy as np
+from ..utils.utils_traj import find_jumps, unwrap_for_each_jump
 
-# TODO: unwrap array
 def unwrap_contour(x_values,y_values,width,height):
     x_values = x_values.astype('float64')
     y_values = y_values.astype('float64')
@@ -12,8 +12,6 @@ def unwrap_contour(x_values,y_values,width,height):
     xv -= xv[0]
     yv -= yv[0]
     return xv,yv
-
-
 
 # TODO(for modeling the curvature dynamics...)
 # TODO: get location values of an activation front identified via voltage>V_threshold values or dVcdt_avg>0

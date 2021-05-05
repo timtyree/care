@@ -1,9 +1,13 @@
 import numpy as np
 from ..utils import *
+from ..utils.utils_traj import find_jumps
 from numba import njit
 from ._find_contours import find_contours
 from ._find_tips import contours_to_simple_tips_pbc
-# archlength.py supports full color measurements of strings on 2D curves with periodic boundary conditions.
+from .arclength import *
+from .. import *
+from .interpolate import *
+# arclength.py supports full color measurements of strings on 2D curves with periodic boundary conditions.
 # Programmer: Tim Tyree
 # Date: 5.4.2021
 
@@ -24,8 +28,7 @@ def get_compute_arclength_values_full_color(width,height):
 	# TODO: dev function that interpolates local EP state along the contour
 	# def compute_arc_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values):
 	# 	pass
-
-
+	compute_arclength_positions=get_compute_arclength_positions(width,height)
 	def compute_arclength_values_full_color(txt, xy_values, contour, node_id, node_id_nxt, j, j_nxt):
 		'''computes the arclength of the contour from j to j_nxt
 		Supposes node_id, node_id_nxt went through fix_node_id
@@ -33,20 +36,20 @@ def get_compute_arclength_values_full_color(width,height):
 		arclength_values=compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values)
 		'''
 
-		archlen_values, contour_xy_values=compute_arclength_positions(xy_values, contour, node_id, node_id_nxt, j, j_nxt)
+		arclen_values, contour_xy_values=compute_arclength_positions(xy_values, contour, node_id, node_id_nxt, j, j_nxt)
 		width,height=txt.shape[:2]
 
-		contour_color_values=interpolate_txt_to_contour(contour_xy_values,width,height,txt)
+		contour_color_values=np.array(interpolate_txt_to_contour(contour_xy_values,width,height,txt))
 		assert(contour_xy_values.shape[1]==2)
 		x_values=contour_xy_values[:,0]
 		y_values=contour_xy_values[:,1]
 		x_values,y_values=unwrap_contour(x_values,y_values,width,height)
 
-		contour_xy_values_unwrapped=np.stack((x_values,y_values))
+		contour_xy_values_unwrapped=np.stack((x_values,y_values)).T
 		assert(contour_xy_values_unwrapped.shape[1]==2)
 		dict_curvature=compute_curvature(contour_xy_values_unwrapped)
 
-		return archlen_values,  contour_color_values, dict_curvature
+		return arclen_values, contour_color_values, dict_curvature, contour_xy_values
 
 	return compute_arclength_values_full_color
 
@@ -54,13 +57,13 @@ def get_format_dict_contour(width,height,model='LR'):
 	# compute_arclength_values_full_color=get_compute_arclength_values_full_color(width,height)
 	if model != 'LR':
 		raise('model not yet implemented!')
-	def format_dict_contour(archlen_values,  contour_color_values, dict_curvature=None):
+	def format_dict_contour(arclen_values,  contour_color_values, dict_curvature=None):
 		'''contour information given in full color'''
 		# TODO: format contour as DataFrame using the activation front arclength parameter, sigma
 		assert contour_color_values.shape[1]==18 #redundant with model kwarg
 		c_values=contour_color_values.T
 		dict_contour={
-			'sigma':archlen_values,
+			'sigma':arclen_values,
 			'V':c_values[0].copy(),
 			'dVdt':c_values[-2].copy(),
 			'Ca':c_values[1].copy(),
@@ -86,61 +89,64 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 
 	retval=get_arclength_module(width=width,height=height)
 	locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
-
+	compute_colored_arclength_values_for_tips=get_compute_colored_arclength_values_for_tips(width,height)
 	compute_arclength_values_full_color=get_compute_arclength_values_full_color(width,height)
 	format_dict_contour=get_format_dict_contour(width,height)
-    def update_with_full_color_observations(dict_topo,contours1,contours2,txt):
-    	'''
-    	Example Usage:
-    	'''
+	def update_with_full_color_observations(dict_topo,contours1,contours2,txt):
+		'''
+		Example Usage:
+		'''
 		xy_values=np.array(list(zip(dict_topo['x'],dict_topo['y'])))
 		s1_values=np.array(dict_topo['s1'])
 		s2_values=np.array(dict_topo['s2'])
-    	s_values=s2_values
-    	contours=contours2
-    	node_id_lst=locate_node_indices_simple(xy_values,s_values,contours)
-    	# j_lst,s_lst,arclen_values_lst,j_nxt_lst=compute_arclength_values_for_tips(xy_values,node_id_lst,s_values,contours)
+		s_values=s2_values
+		contours=contours2
+		node_id_lst=locate_node_indices_simple(xy_values,s_values,contours)
+		# j_lst,s_lst,arclen_values_lst,j_nxt_lst=compute_arclength_values_for_tips(xy_values,node_id_lst,s_values,contours)
 		retval=compute_colored_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours,txt)
-		j_lst,s_lst,archlen_values_lst, j_nxt_lst,dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst=retval
+		j_lst,s_lst,arclen_values_lst, j_nxt_lst,dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst,xy_values_lst=retval
 		#TODO(later): output full contour_color_values_lst
 		#TODO: associate contour with lesser/greater tip index.  then, give contour an index number
-    	# sort the greater from lesser spiral arms
-    	# identify the greater_arclen by sorting either potential front
-    	archlen_max_lst=[]
-    	archlen_size_lst=[]
-    	for a in arclen_values_lst:
-    		archlen_max_lst.append(a[-1])
-    		archlen_size_lst.append(a.shape[0])
+		# sort the greater from lesser spiral arms
+		# identify the greater_arclen by sorting either potential front
+		arclen_max_lst=[]
+		arclen_size_lst=[]
+		for a in arclen_values_lst:
+			arclen_max_lst.append(a[-1])
+			arclen_size_lst.append(a.shape[0])
 
-		# greater_i_lst,lesser_i_lst=compare_spiralarm_size(j_lst, j_nxt_lst, archlen_size_lst)
+		# greater_i_lst,lesser_i_lst=compare_spiralarm_size(j_lst, j_nxt_lst, arclen_size_lst)
 
 		#sort greater/lesser spiral arms using full color information
 		greater_i_lst,lesser_i_lst=compare_spiralarm_voltage(j_lst, j_nxt_lst, avgVoltage_lst=mean_V_lst)
 
 		#compute greater/lesser sister pid's using set difference ops
-    	# print(j_lst, j_nxt_lst)           #two-to-one maps observation basis to particle basis
-    	# print(greater_i_lst,lesser_i_lst) #one-to-one maps particle basis to observation basis
-    	greater_pid_lst=[];lesser_pid_lst=[]
-    	ntips=len(dict_topo['x'])
-    	for pid in range(ntips):
-    		lesser_pid={j_lst[lesser_i_lst[pid]],j_nxt_lst[lesser_i_lst[pid]]}.difference({pid})
-    		greater_pid={j_lst[greater_i_lst[pid]],j_nxt_lst[greater_i_lst[pid]]}.difference({pid})
-    		lesser_pid_lst.append(list(lesser_pid)[0])
-    		greater_pid_lst.append(list(greater_pid)[0])
-    	#map any archlen results to particle values
-    	greater_arclen_lst=[];lesser_arclen_lst=[]
-    	greater_arclen_values_lst=[];lesser_arclen_values_lst=[]
+		# print(j_lst, j_nxt_lst)           #two-to-one maps observation basis to particle basis
+		# print(greater_i_lst,lesser_i_lst) #one-to-one maps particle basis to observation basis
+		greater_pid_lst=[];lesser_pid_lst=[]
+		ntips=len(dict_topo['x'])
+		for pid in range(ntips):
+			lesser_pid={j_lst[lesser_i_lst[pid]],j_nxt_lst[lesser_i_lst[pid]]}.difference({pid})
+			greater_pid={j_lst[greater_i_lst[pid]],j_nxt_lst[greater_i_lst[pid]]}.difference({pid})
+			lesser_pid_lst.append(list(lesser_pid)[0])
+			greater_pid_lst.append(list(greater_pid)[0])
+		#map any arclen results to particle values
+		greater_arclen_lst=[];lesser_arclen_lst=[]
+		greater_arclen_values_lst=[];lesser_arclen_values_lst=[]
 		greater_mean_V_lst=[];lesser_mean_V_lst=[]
 		greater_V_values_lst=[];lesser_V_values_lst=[]
 		greater_mean_curvature_lst=[];lesser_mean_curvature_lst=[]
-    	for greater_i,lesser_i in zip(greater_i_lst,lesser_i_lst):
-    		#arclengths
-    		greater_arclen_lst.append(archlen_max_lst[greater_i])
-    		lesser_arclen_lst.append(archlen_max_lst[lesser_i])
+		greater_curvature_lst=[];lesser_curvature_lst=[]
+		greater_curvature_values_lst=[];lesser_curvature_values_lst=[]
+		greater_xy_values_lst=[];lesser_xy_values_lst=[];
+		for greater_i,lesser_i in zip(greater_i_lst,lesser_i_lst):
+			#arclengths
+			greater_arclen_lst.append(arclen_max_lst[greater_i])
+			lesser_arclen_lst.append(arclen_max_lst[lesser_i])
 
-    		#sigma
-    		greater_arclen_values_lst.append(arclen_values_lst[greater_i])
-    		lesser_arclen_values_lst.append(arclen_values_lst[lesser_i])
+			#sigma
+			greater_arclen_values_lst.append(arclen_values_lst[greater_i])
+			lesser_arclen_values_lst.append(arclen_values_lst[lesser_i])
 
 			#voltage
 			greater_mean_V_lst.append(mean_V_lst[greater_i])
@@ -154,32 +160,49 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 			greater_mean_curvature_lst.append(mean_curvature_lst[greater_i])
 			lesser_mean_curvature_lst.append(mean_curvature_lst[lesser_i])
 
+			#curvature values
+			greater_curvature_values_lst.append(dict_contour_lst[greater_i]['curvature'])
+			lesser_curvature_values_lst.append(dict_contour_lst[lesser_i]['curvature'])
+
+			#xy values
+			greater_xy_values_lst.append(xy_values_lst[greater_i])
+			lesser_xy_values_lst.append(xy_values_lst[lesser_i])
+
+
+
 			#TODO(later): add the following information to dict_topo
 			# dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst
 			#TODO(later, earlier in code): map between particles (pid) and contours (cid)
-    	# update dict_topo with greater/lesser arclen
-    	dict_topo['pid']                   = list(range(ntips))
-    	dict_topo['greater_pid']           = greater_pid_lst
-    	dict_topo['lesser_pid']            = lesser_pid_lst
-    	dict_topo['greater_arclen']        = greater_arclen_lst
-    	dict_topo['lesser_arclen']         = lesser_arclen_lst
-    	dict_topo['greater_arclen_values'] = greater_arclen_values_lst
-    	dict_topo['lesser_arclen_values']  = lesser_arclen_values_lst
-    	dict_topo['greater_arclen']        = greater_arclen_lst
-    	dict_topo['lesser_arclen']         = lesser_arclen_lst
+		# update dict_topo with greater/lesser arclen
+		dict_topo['pid']                   = list(range(ntips))
+		dict_topo['greater_pid']           = greater_pid_lst
+		dict_topo['lesser_pid']            = lesser_pid_lst
+		dict_topo['greater_arclen']        = greater_arclen_lst
+		dict_topo['lesser_arclen']         = lesser_arclen_lst
+		dict_topo['greater_arclen_values'] = greater_arclen_values_lst
+		dict_topo['lesser_arclen_values']  = lesser_arclen_values_lst
+		dict_topo['greater_arclen']        = greater_arclen_lst
+		dict_topo['lesser_arclen']         = lesser_arclen_lst
 
 		dict_topo['greater_mean_V']        = greater_mean_V_lst
-    	dict_topo['lesser_mean_V']         = lesser_mean_V_lst
-
-		dict_topo['greater_V_values']        = greater_V_values_lst
-    	dict_topo['lesser_V_values']         = lesser_V_values_lst
+		dict_topo['lesser_mean_V']         = lesser_mean_V_lst
 
 		dict_topo['greater_mean_curvature']        = greater_mean_curvature_lst
-    	dict_topo['lesser_mean_curvature']         = lesser_mean_curvature_lst
-    	return True
-    return update_with_full_color_observations
+		dict_topo['lesser_mean_curvature']         = lesser_mean_curvature_lst
 
-def get_comp_dict_topo_full_color(width=200.,height=200.,level1=-40,level2=0.,jump_threshold = 40,size_threshold = 0,**kwargs):
+		dict_topo['greater_xy_values']        = greater_xy_values_lst
+		dict_topo['lesser_xy_values']         = lesser_xy_values_lst
+
+		dict_topo['greater_V_values']        = greater_V_values_lst
+		dict_topo['lesser_V_values']         = lesser_V_values_lst
+
+		dict_topo['greater_curvature_values']        = greater_curvature_values_lst
+		dict_topo['lesser_curvature_values']         = lesser_curvature_values_lst
+
+		return True
+	return update_with_full_color_observations
+
+def get_comp_dict_topo_full_color(width,height,level1=-40,level2=0.,jump_threshold = 40,size_threshold = 0,**kwargs):
 	'''
 	Example Usage:
 	'''
@@ -193,7 +216,8 @@ def get_comp_dict_topo_full_color(width=200.,height=200.,level1=-40,level2=0.,ju
 	retval=get_arclength_module(width=width,height=height)
 	locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
 	# update_dict_topo_with_arclen_observations=get_update_dict_topo_with_arclen_observations(width=height,height=height,**kwargs)
-    update_with_full_color_observations=get_update_dict_topo_with_arclen_observations(width,height,**kwargs)
+	update_with_full_color_observations=get_update_with_full_color_observations(width,height,**kwargs)
+	compute_colored_arclength_values_for_tips=get_compute_colored_arclength_values_for_tips(width,height,**kwargs)
 	def comp_dict_topo_full_color(img,dimgdt,t,txt,**kwargs):
 		'''
 		Example Usage:
@@ -215,29 +239,33 @@ def get_comp_dict_topo_full_color(width=200.,height=200.,level1=-40,level2=0.,ju
 		# xy_values=np.array(list(zip(dict_topo['x'],dict_topo['y'])))
 		# s1_values=np.array(dict_topo['s1'])
 		# s2_values=np.array(dict_topo['s2'])
-		#update dict_topo with archlength information
-		update_dict_contour_with_full_color_observations(dict_topo,contours1,contours2,txt)
+		#update dict_topo with arclength information
+		update_with_full_color_observations(dict_topo,contours1,contours2,txt)
 
 		# contour_values=interpolate_txt_to_contour(contour,width,height,txt)
 		return dict_topo
 	return comp_dict_topo_full_color
 
-def get_compute_colored_arclength_values_for_tips(width,height):
+def get_compute_colored_arclength_values_for_tips(width,height,**kwargs):
 	compute_arclength_values_upto_next=get_compute_arclength_values_upto_next(width,height)
+	compute_arclength_values_full_color=get_compute_arclength_values_full_color(width,height)
+	format_dict_contour=get_format_dict_contour(width,height)
+
 	def compute_colored_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours,txt):
 		'''Computes the arclengths between points indicated by xy_values along contours
 		Supposes that contours is a list of closed contours in 2D.
 		Supposes node_id_lst is adjusted by fix_node_id
 		Example Usage:
 		retval=compute_colored_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours,txt)
-		j_lst,s_lst,archlen_values_lst, j_nxt_lst,dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst=retval
+		j_lst,s_lst,arclen_values_lst, j_nxt_lst,dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst=retval
 
 		TODO(later): move computation of node_id_lst to be within the function that generates spiral tip locations using the method that produces s1_values and s2_values.
 		'''
 		sorted_id_values=np.argsort(node_id_lst)
 		remaining_id_lst=list(sorted_id_values)[::-1]
-		j_lst=[];s_lst=[];archlen_values_lst=[];j_nxt_lst=[]
+		j_lst=[];s_lst=[];arclen_values_lst=[];j_nxt_lst=[]
 		dict_contour_lst=[];mean_V_lst=[];mean_dVdt_lst=[];mean_Ca_lst=[];mean_dCadt_lst=[];mean_curvature_lst=[]
+		xy_values_lst=[]
 		j_nxt=-9999
 		while len(remaining_id_lst)>0:
 			#if j_nxt is in remaining_id_lst
@@ -255,11 +283,30 @@ def get_compute_colored_arclength_values_for_tips(width,height):
 			s=s_values[j]
 			contour=contours[s][:-1]
 
+			#find next tip in the same contour
+			j_nxt=find_next_tip(remaining_id_lst, s, s_values)
+			if j_nxt<-1:#if no more tips were found on this contour,
+				# enforce the periodic closed contour condition by summing up to the first pt considered.
+				# do ^this with j_nxt as the first node_id of the current contour
+
+				# find the smallest j_nxt that has s_values[j_nxt]==s
+				i=0;same_s=False
+				ntips=s_values.shape[0]
+				while (not same_s)&(i<ntips):
+					jj=sorted_id_values[i]
+					s_tmp=s_values[jj]
+					same_s=s_tmp==s
+					i+=1
+				if same_s:
+					j_nxt=jj
+				else:
+					raise('Warning: edge case for returning to start of loop didn`t work in compute_arclength_values_upto_next')
+			node_id_nxt=node_id_lst[j_nxt]
+
 			#compute arclength upto sister tip
 			# arclen_values,j_nxt=compute_arclength_values_upto_next(j,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst)
-			#TODO(...a little later): interpolate voltage to node points
-			archlen_values,  contour_color_values, dict_curvature=compute_arclength_values_full_color(txt, xy_values, contour, node_id, node_id_nxt, j, j_nxt)
-			dict_contour=format_dict_contour(archlen_values,  contour_color_values, dict_curvature)
+			arclen_values,  contour_color_values, dict_curvature, contour_xy_values=compute_arclength_values_full_color(txt, xy_values, contour, node_id, node_id_nxt, j, j_nxt)
+			dict_contour=format_dict_contour(arclen_values,  contour_color_values, dict_curvature)
 
 			mean_V = np.mean(dict_contour['V'])
 			mean_dVdt = np.mean(dict_contour['dVdt'])
@@ -270,7 +317,7 @@ def get_compute_colored_arclength_values_for_tips(width,height):
 			#record outputs
 			j_lst.append(j)
 			s_lst.append(s)
-			archlen_values_lst.append(arclen_values)
+			arclen_values_lst.append(arclen_values)
 
 			j_nxt_lst.append(j_nxt)
 
@@ -281,6 +328,7 @@ def get_compute_colored_arclength_values_for_tips(width,height):
 			mean_Ca_lst.append(mean_Ca)
 			mean_dCadt_lst.append(mean_dCadt)
 			mean_curvature_lst.append(mean_curvature)
+			xy_values_lst.append(contour_xy_values)
 
-		return j_lst,s_lst,archlen_values_lst, j_nxt_lst,dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst
+		return j_lst,s_lst,arclen_values_lst, j_nxt_lst,dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst,xy_values_lst
 	return compute_colored_arclength_values_for_tips
