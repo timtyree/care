@@ -7,6 +7,7 @@ from ._find_tips import contours_to_simple_tips_pbc
 from .arclength import *
 from .. import *
 from .interpolate import *
+from .curvature import *
 # arclength.py supports full color measurements of strings on 2D curves with periodic boundary conditions.
 # Programmer: Tim Tyree
 # Date: 5.4.2021
@@ -99,8 +100,8 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 		xy_values=np.array(list(zip(dict_topo['x'],dict_topo['y'])))
 		s1_values=np.array(dict_topo['s1'])
 		s2_values=np.array(dict_topo['s2'])
-		s_values=s2_values
-		contours=contours2
+		s_values=s1_values
+		contours=contours1
 		node_id_lst=locate_node_indices_simple(xy_values,s_values,contours)
 		# j_lst,s_lst,arclen_values_lst,j_nxt_lst=compute_arclength_values_for_tips(xy_values,node_id_lst,s_values,contours)
 		retval=compute_colored_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours,txt)
@@ -115,10 +116,10 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 			arclen_max_lst.append(a[-1])
 			arclen_size_lst.append(a.shape[0])
 
-		# greater_i_lst,lesser_i_lst=compare_spiralarm_size(j_lst, j_nxt_lst, arclen_size_lst)
+		greater_i_lst,lesser_i_lst=compare_spiralarm_size(j_lst, j_nxt_lst, arclen_size_lst)
 
 		#sort greater/lesser spiral arms using full color information
-		greater_i_lst,lesser_i_lst=compare_spiralarm_voltage(j_lst, j_nxt_lst, avgVoltage_lst=mean_V_lst)
+		# greater_i_lst,lesser_i_lst=compare_spiralarm_voltage(j_lst, j_nxt_lst, avgVoltage_lst=mean_dVdt_lst)
 
 		#compute greater/lesser sister pid's using set difference ops
 		# print(j_lst, j_nxt_lst)           #two-to-one maps observation basis to particle basis

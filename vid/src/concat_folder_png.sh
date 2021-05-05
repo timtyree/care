@@ -34,11 +34,20 @@ source text.txt
 ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
 	-q 0 -vf drawtext="
 	arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,
-	fade=t=in:st=0:d=0.4,
-	fade=t=out:st=0.4:d=0.2,fps=fps=40
+	fade=t=in:st=0:d=1.0,
+	fade=t=out:st=1.9:d=1.0,fps=fps=40
 	" -c:v libx264 -b:v 1000k -s hd720 \
-	-video_track_timescale 5000 -y -c:a aac -ar 0 \
+	-video_track_timescale 2000 -y -c:a aac -ar 0 \
 	-ac 0 -sample_fmt fltp -t 4 tmp/intro.mp4
+	#
+	# ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
+	# 	-q 0 -vf drawtext="
+	# 	arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,
+	# 	fade=t=in:st=0:d=1.0,
+	# 	fade=t=out:st=1:d=0.1,fps=fps=40
+	# 	" -c:v libx264 -b:v 1000k -s hd720 \
+	# 	-video_track_timescale 5000 -y -c:a aac -ar 0 \
+	# 	-ac 0 -sample_fmt fltp -t 4 tmp/intro.mp4
 
 
 # ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc -q 0 -vf drawtext="arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,fade=t=in:st=0:d=0,fade=t=out:st=2:d=1" -c:v libx264 -b:v 1000k -pix_fmt yuv420p -video_track_timescale 5000 -y -c:a aac -ar 0 -ac 0 -filter:v fps=fps=90 -sample_fmt fltp -t 4 intro.mp4

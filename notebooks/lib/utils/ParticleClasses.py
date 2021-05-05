@@ -201,7 +201,7 @@ class ParticlePBCDict(dict):
         self.pid_nxt+=1
         return self
 
-    def sort_particles_indices(self, dict_tips):
+    def sort_particles_indices(self, dict_tips, search_range=10):
         '''
         Example Usage:
         in_to_out=sort_particles_indices(self, dict_tips)
@@ -222,9 +222,10 @@ class ParticlePBCDict(dict):
                 if dist<mindist:
                     pid_out_closest=pid_out
                     mindist=dist
-
-            #and update in_to_out with that pid_out
-            in_to_out.update({pid_in:pid_out_closest})
+            if mindist<search_range:
+                pid_out_lst.remove(pid_out_closest)
+                #and update in_to_out with that pid_out
+                in_to_out.update({pid_in:pid_out_closest})
         return in_to_out
 
     def update_set(self,dict_tips,in_to_out):
@@ -239,9 +240,9 @@ class ParticlePBCDict(dict):
         lesser_arclen_lst =dict_tips['lesser_arclen']
         greater_arclen_values_lst =dict_tips['greater_arclen_values']
         lesser_arclen_values_lst =dict_tips['lesser_arclen_values']
-        pid_in_lst =dict_tips['pid']
+        pid_in_lst =list(in_to_out.keys())#dict_tips['pid']
 
-        # append/update self with dict_tips
+        # append/update self with dict_tips that matched
         for pid_in in pid_in_lst:
             pid_out=in_to_out[pid_in]
 
@@ -275,7 +276,7 @@ class ParticlePBCDict(dict):
                 self.add_particle(
                     x=dict_tips['x'][pid_born],
                     y=dict_tips['y'][pid_born],
-                    t=t,
+                    t=dict_tips['t'],
                     lesser_pid=dict_tips['lesser_pid'][pid_born],
                     lesser_arclen=dict_tips['lesser_arclen'][pid_born],
                     greater_pid=dict_tips['greater_pid'][pid_born],

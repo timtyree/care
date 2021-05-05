@@ -1,4 +1,3 @@
 
-TEXT=$'this is a termination event
-from the Luo-Rudy model
-'
+TEXT=$'this is from 
+the Luo-Rudy model'

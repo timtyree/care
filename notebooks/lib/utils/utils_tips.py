@@ -5,7 +5,7 @@ from numba import njit
 from ..measure._find_contours import find_contours
 from ..measure._find_tips import contours_to_simple_tips_pbc
 # Programmer: Tim Tyree
-# Date: 4.29.2021 
+# Date: 4.29.2021
 
 def get_tip_locations(inVc,dVcdt,level1=-40.,level2=0.,compute_all_spiral_tips=None):
 	'''quick and dirty method to get_tip_locations... slow if compute_all_spiral_tips is None.'''
@@ -31,7 +31,7 @@ def get_find_nearest_tip(width=200,height=200):
 		nearest_tip_index=-9999
 		for n,X,Y in enumerate(zip(x_values,y_values)):
 			dist=distance_L2_pbc((X,Y),(x,y))
-			if dist<min_dist:
+			if dist<min_dist: 
 				nearest_tip_index=n
 				min_dist=dist
 		return nearest_tip_index

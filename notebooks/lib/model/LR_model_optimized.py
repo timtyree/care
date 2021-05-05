@@ -187,7 +187,8 @@ def get_comp_v_row(v_values):
 	v0=np.min(v_values)
 	@njit
 	def comp_v_row(v):
-		return int((v-v0)/dv)
+		out = int(np.around((v-v0)/dv))
+		return out
 	return comp_v_row
 
 def get_lookup_params(v_values,dv=0.1):

@@ -370,8 +370,8 @@ def get_update_dict_topo_with_arclen_observations(width=200.,height=200.,**kwarg
 		Example Usage:
 		update_dict_topo(dict_topo,xy_values,s1_values,s2_values,contours1,contours2)
 		'''
-		s_values=s2_values
-		contours=contours2
+		s_values=s1_values
+		contours=contours1
 		node_id_lst=locate_node_indices_simple(xy_values,s_values,contours)
 		j_lst,s_lst,arclen_values_lst,j_nxt_lst=compute_arclength_values_for_tips(xy_values,node_id_lst,s_values,contours)
 
