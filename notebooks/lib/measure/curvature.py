@@ -1,4 +1,20 @@
 import numpy as np
+
+# TODO: unwrap array
+def unwrap_contour(x_values,y_values,width,height):
+    x_values = x_values.astype('float64')
+    y_values = y_values.astype('float64')
+    jump_index_array, spd_lst = find_jumps(x_values,y_values,width,height,DS=1.,DT=1.)#,**kwargs)
+    # find_jumps(x_values,y_values,DS=DS,DT=DT)
+    xv,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array, width=width,height=height)
+
+    #subtract off the initial position for plotting's sake
+    xv -= xv[0]
+    yv -= yv[0]
+    return xv,yv
+
+
+
 # TODO(for modeling the curvature dynamics...)
 # TODO: get location values of an activation front identified via voltage>V_threshold values or dVcdt_avg>0
 def compute_curvature(array):

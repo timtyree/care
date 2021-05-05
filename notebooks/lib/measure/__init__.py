@@ -12,6 +12,7 @@ from .measure_diffusion_coefficient import *
 from .measures_from_emsd import *
 from .arclength import *
 from .curvature import *
+from .full_color_contours import *
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *
 

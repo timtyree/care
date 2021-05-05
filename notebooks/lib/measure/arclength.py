@@ -7,18 +7,14 @@ from ._find_tips import contours_to_simple_tips_pbc
 # Programmer: Tim Tyree
 # Date: 4.29.2021
 
-def get_arclength_module(width=200.,height=200.):
-	'''jit compiles module to llvm machine code.
-	Example Usage:
-	retval=get_arclength_module(width=200.,height=200.)
-	locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
-	'''
+def get_locate_node_indices(width,height):
 	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
 	distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
 	project_point_2D=get_project_point_2D(width=width,height=height)
 	subtract_pbc=get_subtract_pbc(width=width,height=height)
 	comp_perimeter=get_comp_perimeter(width=width,height=height)
 	fix_node_id=get_fix_node_id(width=width,height=height)
+
 	def locate_node_indices(xy_values,s1_values,s2_values,contours1,contours2):
 		'''locates the segment in either family of contours in which each spiral tip location lives.
 		s1,2_values encodes the topological number.
@@ -44,6 +40,11 @@ def get_arclength_module(width=200.,height=200.):
 			node_id2_lst.append(node_id2)
 		return node_id1_lst, node_id2_lst
 
+	return locate_node_indices
+
+def get_locate_node_indices_simple(width,height):
+	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
+	fix_node_id=get_fix_node_id(width=width,height=height)
 	def locate_node_indices_simple(xy_values,s_values,contours):
 		'''locates the segment in either family of contours in which each spiral tip location lives.
 		s1,2_values encodes the topological number.
@@ -63,6 +64,19 @@ def get_arclength_module(width=200.,height=200.):
 			#record
 			node_id_lst.append(node_id)
 		return node_id_lst
+
+	return locate_node_indices_simple
+
+def get_compute_arclength_values(width,height):
+	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
+	distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
+	project_point_2D=get_project_point_2D(width=width,height=height)
+	subtract_pbc=get_subtract_pbc(width=width,height=height)
+	comp_perimeter=get_comp_perimeter(width=width,height=height)
+	fix_node_id=get_fix_node_id(width=width,height=height)
+
+	locate_node_indices=get_locate_node_indices(width,height)
+	locate_node_indices_simple=get_locate_node_indices_simple(width,height)
 
 	# TODO: dev function that interpolates local EP state along the contour
 	# def compute_arc_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values):
@@ -100,6 +114,7 @@ def get_arclength_module(width=200.,height=200.):
 			# assert(segment.shape==(2,2))
 			l=distance_L2_pbc(segment[1],segment[0])
 			arclen+=l;arclen_lst.append(arclen)
+			# TODO: compute color using bilinear interpolation
 
 		#compute the final frac
 		node_start=node_id_nxt
@@ -111,11 +126,86 @@ def get_arclength_module(width=200.,height=200.):
 
 		#return the activation front arclength parameter, sigma
 		return np.array(arclen_lst)
+	return compute_arclength_values
 
+def get_compute_arclength_positions(width,height):
+	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
+	distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
+	project_point_2D=get_project_point_2D(width=width,height=height)
+	subtract_pbc=get_subtract_pbc(width=width,height=height)
+	comp_perimeter=get_comp_perimeter(width=width,height=height)
+	fix_node_id=get_fix_node_id(width=width,height=height)
+
+	locate_node_indices=get_locate_node_indices(width,height)
+	locate_node_indices_simple=get_locate_node_indices_simple(width,height)
+
+	# TODO: dev function that interpolates local EP state along the contour
+	# def compute_arc_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values):
+	# 	pass
+	def compute_arclength_positions(xy_values, contour, node_id, node_id_nxt, j, j_nxt):
+		'''computes the arclength of the contour from j to j_nxt
+		Supposes node_id, node_id_nxt went through fix_node_id
+		Example Usage:
+		arclength_values=compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values)
+		'''
+		point_target=xy_values[j]
+		is_last=node_id_nxt<=node_id
+		arclen=0;arclen_lst=[0];xy_lst=[point_target]
+		N_nodes=contour.shape[0]
+		#compute the initial frac
+		node_start=node_id
+		segment=get_segment_pbc(node_start,N_nodes,contour)
+		l=distance_L2_pbc(segment[1],segment[0])
+		frac=project_point_2D(point=point_target, segment=segment)
+		# assert((frac>=0)&(frac<1))
+
+		arclen+=(1.-frac)*l;arclen_lst.append(arclen);xy_lst.append(segment[1])
+
+		#extract the middle part.
+		if not is_last:
+			segment_array=contour[node_id+1:node_id_nxt]
+		else:
+			Q=contour[node_id+1:]
+			W=contour[:node_id_nxt]
+			segment_array=np.concatenate([Q,W])
+
+		#aggregate/append the middle part
+		n_segments=segment_array.shape[0]
+		for k in range(n_segments):
+			node_start=node_id+1+k
+			segment=get_segment_pbc(node_start,N_nodes,contour)
+			# assert(segment.shape==(2,2))
+			l=distance_L2_pbc(segment[1],segment[0])
+			arclen+=l;arclen_lst.append(arclen);xy_lst.append(segment[1])
+			# TODO(later): compute color using bilinear interpolation of segment[1] here to make it a kernel
+			# HINT: pass segment[1] into bilinear_interpolate_channel
+			# TODO(later): compute dict_curvature to make it a kernel
+
+		#compute the final frac
+		point_end=xy_values[j_nxt]
+		node_start=node_id_nxt
+		segment=get_segment_pbc(node_start,N_nodes,contour)
+		l=distance_L2_pbc(segment[1],segment[0])
+		frac=project_point_2D(point=point_end, segment=segment)
+		# assert((frac>=0)&(frac<1))
+		arclen+=frac*l;arclen_lst.append(arclen);xy_lst.append(point_end)
+
+		#return output
+		archlen_values=np.array(arclen_lst)
+		contour_xy_values=np.array(xy_lst)
+		return archlen_values, contour_xy_values
+	return compute_arclength_positions
+
+def get_compute_arclength(width,height):
+	compute_arclength_values=get_compute_arclength_values(width,height)
 	def compute_arclength(node_id, node_id_nxt, j, j_nxt, contour, xy_values):
 		arclength_values=compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values)
 		return arclength_values[-1]
+	return compute_arclength
 
+def get_compute_arclength_values_upto_next(width,height):
+	compute_arclength_values=get_compute_arclength(width,height)
+	# find_next_tip=get_find_next_tip()
 	def compute_arclength_values_upto_next(j,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst):
 		'''
 		Example Usage:
@@ -151,7 +241,50 @@ def get_arclength_module(width=200.,height=200.):
 		# if len(remaining_id_lst)==1:
 		# 	remaining_id_lst.pop()
 		return arclen_values,j_nxt
+	return compute_arclength_values_upto_next
 
+def get_compute_contour_positions_upto_next(width,height):
+	compute_arclength_values=get_compute_arclength(width,height)
+	# find_next_tip=get_find_next_tip()
+	def compute_contour_positions_upto_next(j,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst):
+		'''
+		Example Usage:
+		sorted_id_values=np.argsort(node_id_list);remaining_id_lst=list(sorted_id_values)
+		arclen_values,j_nxt=compute_arclength_values_upto_next(j,xy_values,s_values,contour,remaining_id_lst,sorted_id_values,node_id_lst)
+		'''
+		s=s_values[j]
+		# point_target=xy_values[j]
+		# print(f"(remaining_id_lst, s, s_values)={(remaining_id_lst, s, s_values)}")
+		j_nxt=find_next_tip(remaining_id_lst, s, s_values)
+		if j_nxt<-1:#if no more tips were found on this contour,
+			# enforce the periodic closed contour condition by summing up to the first pt considered.
+			# do ^this with j_nxt as the first node_id of the current contour
+
+			# find the smallest j_nxt that has s_values[j_nxt]==s
+			i=0;same_s=False
+			ntips=s_values.shape[0]
+			while (not same_s)&(i<ntips):
+				jj=sorted_id_values[i]
+				s_tmp=s_values[jj]
+				same_s=s_tmp==s
+				i+=1
+			if same_s:
+				j_nxt=jj
+			else:
+				raise('Warning: edge case for returning to start of loop didn`t work in compute_arclength_values_upto_next')
+
+		# print(f"summing {j}-->{j_nxt} with remaining pts, {(remaining_id_lst)}")
+		node_id=node_id_lst[j]
+		node_id_nxt=node_id_lst[j_nxt]
+		arclen_values=compute_arclength_values(node_id, node_id_nxt, j, j_nxt, contour, xy_values)
+		#don't trigger an extra arclength_values around the whole loop
+		# if len(remaining_id_lst)==1:
+		# 	remaining_id_lst.pop()
+		return xy_values,j_nxt
+	return compute_contour_positions_upto_next
+
+def get_compute_arclength_values_for_tips(width,height):
+	compute_arclength_values_upto_next=get_compute_arclength_values_upto_next(width,height)
 	def compute_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours):
 		'''Computes the arclengths between points indicated by xy_values along contours
 		Supposes that contours is a list of closed contours in 2D.
@@ -191,9 +324,28 @@ def get_arclength_module(width=200.,height=200.):
 			archlen_values_lst.append(arclen_values)
 			j_nxt_lst.append(j_nxt)
 		return j_lst,s_lst,archlen_values_lst, j_nxt_lst
+	return compute_arclength_values_for_tips
 
+def get_arclength_module(width=200.,height=200.):
+	'''jit compiles module to llvm machine code.
+	Example Usage:
+	retval=get_arclength_module(width=200.,height=200.)
+	locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
+	'''
+	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
+	distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
+	project_point_2D=get_project_point_2D(width=width,height=height)
+	subtract_pbc=get_subtract_pbc(width=width,height=height)
+	comp_perimeter=get_comp_perimeter(width=width,height=height)
+	fix_node_id=get_fix_node_id(width=width,height=height)
+
+	locate_node_indices=get_locate_node_indices(width,height)
+	locate_node_indices_simple=get_locate_node_indices_simple(width,height)
+	compute_arclength_values=get_compute_arclength_values(width,height)
+	compute_arclength=get_compute_arclength(width,height)
+	compute_arclength_values_upto_next=get_compute_arclength_values_upto_next(width,height)
+	compute_arclength_values_for_tips=get_compute_arclength_values_for_tips(width,height)
 	return locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips
-
 
 ########################################################################
 # simple method of nonlocal observation

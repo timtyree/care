@@ -5,7 +5,7 @@ from numba import njit
 from ..measure._find_contours import find_contours
 from ..measure._find_tips import contours_to_simple_tips_pbc
 # Programmer: Tim Tyree
-# Date: 4.29.2021
+# Date: 4.29.2021 
 
 def get_tip_locations(inVc,dVcdt,level1=-40.,level2=0.,compute_all_spiral_tips=None):
 	'''quick and dirty method to get_tip_locations... slow if compute_all_spiral_tips is None.'''

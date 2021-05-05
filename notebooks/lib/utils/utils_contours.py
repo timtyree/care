@@ -125,3 +125,43 @@ def compare_spiralarm_size(j_lst, j_nxt_lst, archlen_size_lst):
         greater_i_lst.append(greater_i)
         lesser_i_lst.append(lesser_i)
     return greater_i_lst,lesser_i_lst
+
+
+
+def compare_spiralarm_voltage(j_lst, j_nxt_lst, avgVoltage_lst):
+    '''supposes pid_lst=list(range(ntips))
+    Example Usage:
+    greater_i_lst,lesser_i_lst=compare_spiralarm_size(j_lst, j_nxt_lst, archlen_size_lst)
+    '''
+    ntips=len(j_lst)
+    #iterate over archlen observations
+    pid_lst=list(range(ntips))
+    pid_to_i     ={}
+    pid_to_i_nxt ={}
+    for i in pid_lst:#range(len(j_lst)):
+        pid_to_i.update({pid_lst[j_lst[i]]:i})         # map from i^th observation start to spiral tip index
+        pid_to_i_nxt.update({pid_lst[j_nxt_lst[i]]:i}) # map from i^th observation end to spiral tip index
+    # print(pid_to_i)
+    # print(pid_to_i_nxt)
+
+    #iterate over particles
+    greater_i_lst=[]
+    lesser_i_lst=[]
+    for pid in pid_lst:
+        # try:
+        size_right = avgVoltage_lst[pid_to_i[pid]]
+        size_left  = avgVoltage_lst[pid_to_i_nxt[pid]]
+        # except Exception as e:
+        #     print(pid,archlen_size_lst,pid_to_i,pid_to_i_nxt)
+        #     raise(e)
+        if size_right>size_left:
+            greater_i=pid_to_i[pid]
+            lesser_i =pid_to_i_nxt[pid]
+            #         greater_archlen_values=archlen_values_lst[greater_i]
+            #         lesser_archlen_values=archlen_values_lst[lesser_i]
+        else:
+            lesser_i=pid_to_i[pid]
+            greater_i =pid_to_i_nxt[pid]
+        greater_i_lst.append(greater_i)
+        lesser_i_lst.append(lesser_i)
+    return greater_i_lst,lesser_i_lst
