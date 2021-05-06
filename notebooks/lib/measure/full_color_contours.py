@@ -203,7 +203,7 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 		return True
 	return update_with_full_color_observations
 
-def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_threshold = 40,size_threshold = 0,**kwargs):
+def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_threshold = 40,size_threshold = 0,ds=5.,**kwargs):
 	'''
 	Example Usage:
 	'''
@@ -219,6 +219,7 @@ def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_thresho
 	# update_dict_topo_with_arclen_observations=get_update_dict_topo_with_arclen_observations(width=height,height=height,**kwargs)
 	update_with_full_color_observations=get_update_with_full_color_observations(width,height,**kwargs)
 	compute_colored_arclength_values_for_tips=get_compute_colored_arclength_values_for_tips(width,height,**kwargs)
+	scale=ds/width  #cm per pixel
 	def comp_dict_topo_full_color(img,dimgdt,t,txt,**kwargs):
 		'''
 		Example Usage:
@@ -242,7 +243,26 @@ def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_thresho
 		# s2_values=np.array(dict_topo['s2'])
 		#update dict_topo with arclength information
 		update_with_full_color_observations(dict_topo,contours1,contours2,txt)
+		# ntips=dict_topo[]
+		# # scale all arclen values to centimeters
 
+		# dict_keys(['x', 'y', 's1', 's2', 't', 'pid', 'greater_pid', 'lesser_pid', 
+		# 'greater_arclen', 'lesser_arclen', 'greater_arclen_values', 
+		# 'lesser_arclen_values', 'greater_mean_V', 'lesser_mean_V', 
+		# 'greater_mean_curvature', 'lesser_mean_curvature', 'greater_xy_values',
+		# 'lesser_xy_values', 'greater_V_values', 'lesser_V_values',
+		# 'greater_curvature_values', 'lesser_curvature_values'])
+		dict_topo['lesser_arclen']=[v*scale for v in dict_topo['lesser_arclen']]
+		dict_topo['greater_arclen']=[v*scale for v in dict_topo['greater_arclen']]
+
+		dict_topo['lesser_arclen_values']=[v*scale for v in dict_topo['lesser_arclen_values']]
+		dict_topo['greater_arclen_values']=[v*scale for v in dict_topo['greater_arclen_values']]
+
+		dict_topo['lesser_mean_curvature']=[v/scale for v in dict_topo['lesser_mean_curvature']]
+		dict_topo['greater_mean_curvature']=[v/scale for v in dict_topo['greater_mean_curvature']]
+
+		dict_topo['lesser_curvature_values']=[v/scale for v in dict_topo['lesser_curvature_values']]
+		dict_topo['greater_curvature_values']=[v/scale for v in dict_topo['greater_curvature_values']]
 		# contour_values=interpolate_txt_to_contour(contour,width,height,txt)
 		return dict_topo
 	return comp_dict_topo_full_color

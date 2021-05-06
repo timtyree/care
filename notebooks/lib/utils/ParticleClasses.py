@@ -85,7 +85,10 @@ class ParticlePBC(dict):
                 #create new field list
                 self[key]=[]
             # append the value
-            self[key].append(kwargs[key][pid])
+            try:
+                self[key].append(kwargs[key][pid])
+            except TypeError as e:
+                self[key].append(kwargs[key])
         return self
 
     def to_pandas(self):
@@ -201,7 +204,7 @@ class ParticlePBCDict(dict):
         self.pid_nxt+=1
         return self
 
-    def sort_particles_indices(self, dict_tips, search_range=10):
+    def sort_particles_indices(self, dict_tips, search_range=40.):
         '''
         Example Usage:
         in_to_out=sort_particles_indices(self, dict_tips)

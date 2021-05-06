@@ -12,26 +12,26 @@ def compute_last_sigma_max(pdict,ds=5.):
     pid_lst=pdict.get_alive_particles()
     last_particle=pdict[pid_lst[0]]
     scale=ds/last_particle.width #cm/pixel
-    sigma_max=scale*last_particle.lesser_arclen_lst[-1]
+    sigma_max=scale*last_particle['lesser_arclen'][-1]
     return sigma_max
 
 
-def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1):
+def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1,V_threshold=-50.,pid_pair=(0,1),ds=5.):
     width,height=txt_prev.shape[:2]
     # get_one_step at this dt,ds
     # comp_dict_topo_simple=get_comp_dict_topo_simple(width=width,height=height)
     __, __, one_step = get_one_step_explicit_synchronous_splitting(nb_dir,
                                                                    dt=dt,width=width,height=height,
                                                                    ds=5.,diffCoef=0.001,Cm=1.0)
-    comp_dict_topo_full_color=get_comp_dict_topo_full_color(width=width,height=height,level1=-40,level2=0)
+    comp_dict_topo_full_color=get_comp_dict_topo_full_color(width=width,height=height,level1=V_threshold,level2=0)
 
     #reset at last observed time of spiral tip
-    inVc,outVc,inmhjdfx,outmhjdfx,dVcdt=unstack_txt(txt_prev)
+    inVc,outVc,inmhjdfx,outmhjdfx,dVcdt=unstack_txt(txt_prev.copy())
     t=t_prev
     #compute nonlocal spiral tip observations
     img=inVc[...,0];dimgdt=dVcdt[...,0]
     # dict_topo=comp_dict_topo_simple(img,dimgdt,t)
-    dict_topo=comp_dict_topo_full_color(img,dimgdt,t,txt_prev)
+    dict_topo=comp_dict_topo_full_color(img,dimgdt,t_prev,txt_prev)
     ntips=len(dict_topo['x'])
 
     # track tips between frames using ParticleSet while n_tips>0
@@ -54,12 +54,11 @@ def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1):
         ntips=len(dict_topo['x'])
         if ntips>0:
             #record nonlocal spiral tip observations
-            pdict.merge(dict_topo)
+            pdict.merge_dict(dict_topo)
         else:
             print(f'termination event found at time t={t}, where dt={dt} and L={img.shape[0]}...')
-
-    min_sigma_max=compute_last_sigma_max(pdict,ds=5.)
-    print(f"\t min_sigma_max={min_sigma_max}")
+    min_sigma_max=compute_last_sigma_max(pdict,ds)
+    print(f"\t min_sigma_max={min_sigma_max} cm")
     return txt_prev,t_prev,min_sigma_max
 
 
