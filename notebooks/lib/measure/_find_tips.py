@@ -9,7 +9,7 @@ def find_tips(contours1, contours2):
     '''returns tips with indices of parent contours.
     contours1 and contours2 are a lists of numpy arrays.
     each such numpy array is an Nx2 array representing a contiguous contour (i.e. continuous in local xy coordinates).'''
-    s1_list = []; s2_list = []; x_lst = []; y_lst = []
+    s1_lst = []; s2_lst = []; x_lst = []; y_lst = []
     for n1, contour1_lst in enumerate(contours1):
         for c1 in contour1_lst:
             for n2, contour2_lst in enumerate(contours2):
@@ -18,22 +18,25 @@ def find_tips(contours1, contours2):
                     x2, y2 = (c2[:, 0], c2[:, 1])
                     #intersection is not the cause of the slowdown
                     yl, xl = intersection(x1, y1, x2, y2)
+                    #TODO: make new intersection method that also returns node_id on contour
                     for x,y in zip(xl,yl):
-                        s1_list.append(n1)
-                        s2_list.append(n2)
+                        s1_lst.append(n1)
+                        s2_lst.append(n2)
                         x_lst.append(x)
                         y_lst.append(y)
-    #DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
-    sorted_values=np.array(sorted(zip(x_lst,y_lst,s1_lst,s2_lst))))
-    in_to_sorted_values=np.argsort(sorted_values)
-    x_lst, y_lst, s1_lst, s2_lst=in_to_sorted_values
-    return s1_list, s2_list, x_lst, y_lst
+    #explicitly sort based on x coordinate for stability over time
+    in_to_sorted_values=np.argsort(x_lst)
+    x_lst=tuple(np.array(x_lst)[in_to_sorted_values])
+    y_lst=tuple(np.array(y_lst)[in_to_sorted_values])
+    s1_lst=tuple(np.array(s1_lst)[in_to_sorted_values])
+    s2_lst=tuple(np.array(s2_lst)[in_to_sorted_values])
+    return s1_lst, s2_lst, x_lst, y_lst
 
 def find_tips_with_pbc_knots(contours1, contours2, s1in_lst, s2in_lst):
     '''returns tips with indices of parent contours.
     contours1 and contours2 are a lists of numpy arrays.
     each such numpy array is an Nx2 array representing a contiguous contour (i.e. continuous in local xy coordinates).'''
-    s1_list = []; s2_list = []; x_lst = []; y_lst = []
+    s1_lst = []; s2_lst = []; x_lst = []; y_lst = []
     for n1, contour1_lst in zip(s1in_lst,contours1):
         for c1 in contour1_lst:
             for n2, contour2_lst in zip(s2in_lst,contours2):
@@ -43,15 +46,17 @@ def find_tips_with_pbc_knots(contours1, contours2, s1in_lst, s2in_lst):
                     #intersection is not the cause of the slowdown... it's probably all ^that pythonic voodoo...
                     yl, xl = intersection(x1, y1, x2, y2)
                     for x,y in zip(xl,yl):
-                        s1_list.append(n1)
-                        s2_list.append(n2)
+                        s1_lst.append(n1)
+                        s2_lst.append(n2)
                         x_lst.append(x)
                         y_lst.append(y)
-    #DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
-    sorted_values=np.array(sorted(zip(x_lst,y_lst,s1_lst,s2_lst))))
-    in_to_sorted_values=np.argsort(sorted_values)
-    x_lst, y_lst, s1_lst, s2_lst=in_to_sorted_values
-    return s1_list, s2_list, x_lst, y_lst
+    #explicitly sort based on x coordinate for stability over time
+    in_to_sorted_values=np.argsort(x_lst)
+    x_lst=tuple(np.array(x_lst)[in_to_sorted_values])
+    y_lst=tuple(np.array(y_lst)[in_to_sorted_values])
+    s1_lst=tuple(np.array(s1_lst)[in_to_sorted_values])
+    s2_lst=tuple(np.array(s2_lst)[in_to_sorted_values])
+    return s1_lst, s2_lst, x_lst, y_lst
 
 def preprocess_contours(contours1,contours2,width, height,jump_threshold = 2,size_threshold = 6):
     #segment and augment contours of the first family
@@ -146,10 +151,12 @@ def find_tips_wrapped(contours1, contours2):
                         n_list.append(s)
                         x_lst.append(x)
                         y_lst.append(y)
-    #DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
-    sorted_values=np.array(sorted(zip(x_lst,y_lst,s1_lst,s2_lst))))
-    in_to_sorted_values=np.argsort(sorted_values)
-    x_lst, y_lst, s1_lst, s2_lst=in_to_sorted_values
+    #explicitly sort based on x coordinate for stability over time
+    in_to_sorted_values=np.argsort(x_lst)
+    x_lst=tuple(np.array(x_lst)[in_to_sorted_values])
+    y_lst=tuple(np.array(y_lst)[in_to_sorted_values])
+    s1_lst=tuple(np.array(s1_lst)[in_to_sorted_values])
+    s2_lst=tuple(np.array(s2_lst)[in_to_sorted_values])
     return n_list, x_lst, y_lst
 
 

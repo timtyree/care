@@ -111,8 +111,18 @@ class ParticlePBC(dict):
 
 class ParticlePBCDict(dict):
     def __init__(self, dict_tips, width,height, **kwargs):
-        '''initiate a ParticlePBC for each tip found, incrementing pid_nxt
-        supposes dict_tips is a dictionary of lists of values.'''
+        '''a dict with integer keys valued with ParticlePBC instances.
+        ParticlePBCDict also has fields:
+            - pid_nxt
+            - width
+            - height
+        ParticlePBCDict also has supporting methods.
+
+        To initiate a ParticlePBC for each tip found, ParticlePBCDict increments pid_nxt,
+        supposes dict_tips is a dictionary of lists of values.
+        #TODO(later): dev classmethod, merge_with_other, which merges pdict1 and pdict2 into pdict_out
+        #TODO(later): test-based dev of mapping to/from pandas.DataFrame
+        '''
         x_lst=dict_tips['x']
         y_lst=dict_tips['y']
         t=dict_tips['t']
@@ -350,7 +360,7 @@ class ParticlePBCDict(dict):
     def read_csv(self,input_fn):
         raise Exception(f"Not yet implemented!")
 
-    def record_tips_return_txt(self,txt,duration,one_step,comp_tips,dt,save_every_n_frames=1):
+    def record_tips_return_txt(self,txt,duration,one_step,comp_tips,dt,save_every_n_frames=1,**kwargs):
         '''
         Example Usage:
         txt=pdict.record_tips_return_txt(txt,duration,one_step,comp_tips,dt,save_every_n_frames=1)
