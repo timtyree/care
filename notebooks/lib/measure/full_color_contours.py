@@ -233,6 +233,9 @@ def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_thresho
 		s1_lst, s2_lst, x_lst, y_lst = contours_to_simple_tips_pbc(contours_a,contours_b,width,height,jump_threshold,size_threshold)
 	#     print((s1_lst, s2_lst, x_lst, y_lst))
 		dict_topo={'x':x_lst,'y':y_lst,'s1':s1_lst,'s2':s2_lst, 't':t}
+
+
+
 		#extract values for each arclength measurement
 		contours1=[np.vstack([c[:,1],c[:,0]]).T for c in contours_a]
 		contours2=[np.vstack([c[:,1],c[:,0]]).T for c in contours_b]
@@ -246,9 +249,9 @@ def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_thresho
 		# ntips=dict_topo[]
 		# # scale all arclen values to centimeters
 
-		# dict_keys(['x', 'y', 's1', 's2', 't', 'pid', 'greater_pid', 'lesser_pid', 
-		# 'greater_arclen', 'lesser_arclen', 'greater_arclen_values', 
-		# 'lesser_arclen_values', 'greater_mean_V', 'lesser_mean_V', 
+		# dict_keys(['x', 'y', 's1', 's2', 't', 'pid', 'greater_pid', 'lesser_pid',
+		# 'greater_arclen', 'lesser_arclen', 'greater_arclen_values',
+		# 'lesser_arclen_values', 'greater_mean_V', 'lesser_mean_V',
 		# 'greater_mean_curvature', 'lesser_mean_curvature', 'greater_xy_values',
 		# 'lesser_xy_values', 'greater_V_values', 'lesser_V_values',
 		# 'greater_curvature_values', 'lesser_curvature_values'])
@@ -353,3 +356,39 @@ def get_compute_colored_arclength_values_for_tips(width,height,**kwargs):
 
 		return j_lst,s_lst,arclen_values_lst, j_nxt_lst,dict_contour_lst,mean_V_lst,mean_dVdt_lst,mean_Ca_lst,mean_dCadt_lst,mean_curvature_lst,xy_values_lst
 	return compute_colored_arclength_values_for_tips
+
+
+# measure_subkernel
+def find_tips_with_pbc_knots_full_color(contours1, contours2, s1in_lst, s2in_lst, txt):
+	'''returns tips with indices of parent contours.
+	contours1 and contours2 are a lists of numpy arrays.
+	each such numpy array is an Nx2 array representing a contiguous contour (i.e. continuous in local xy coordinates).
+	Example Usage:
+	retval=find_tips_with_pbc_knots_full_color(contours1, contours2, s1in_lst, s2in_lst, txt)
+	s1_list, s2_list, x_lst, y_lst, txt_lst=retval
+
+	#TODO: call ^this function with contours_to_simple_tips_pbc_full_color
+	'''
+	width,height=txt.shape[:2]
+	s1_list = []; s2_list = []; x_lst = []; y_lst = []; txt_lst=[]
+	for n1, contour1_lst in zip(s1in_lst,contours1):
+		for c1 in contour1_lst:
+			for n2, contour2_lst in zip(s2in_lst,contours2):
+				for c2 in contour2_lst:
+					x1, y1 = (c1[:, 0], c1[:, 1])
+					x2, y2 = (c2[:, 0], c2[:, 1])
+					#intersection is not the cause of the slowdown... it's probably all ^that pythonic voodoo...
+					yl, xl = intersection(x1, y1, x2, y2)
+					for x,y in zip(xl,yl):
+						s1_list.append(n1)
+						s2_list.append(n2)
+						x_lst.append(x)
+						y_lst.append(y)
+						#TODO: locally interpolate txt
+						txt_lst.append(bilinear_interpolate_channel(x, y, width, height, txt))
+	#DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
+	sorted_lst=sorted(zip(x_lst,y_lst,s1_lst,s2_lst, txt_lst))
+	sorted_values=np.array(sorted_lst)
+	in_to_sorted_values=np.argsort(sorted_values)
+	x_lst, y_lst, s1_lst, s2_lst=in_to_sorted_values[sorted_values]
+	return s1_list, s2_list, x_lst, y_lst, txt_lst

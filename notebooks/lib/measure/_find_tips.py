@@ -23,6 +23,10 @@ def find_tips(contours1, contours2):
                         s2_list.append(n2)
                         x_lst.append(x)
                         y_lst.append(y)
+    #DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
+    sorted_values=np.array(sorted(zip(x_lst,y_lst,s1_lst,s2_lst))))
+    in_to_sorted_values=np.argsort(sorted_values)
+    x_lst, y_lst, s1_lst, s2_lst=in_to_sorted_values
     return s1_list, s2_list, x_lst, y_lst
 
 def find_tips_with_pbc_knots(contours1, contours2, s1in_lst, s2in_lst):
@@ -43,8 +47,11 @@ def find_tips_with_pbc_knots(contours1, contours2, s1in_lst, s2in_lst):
                         s2_list.append(n2)
                         x_lst.append(x)
                         y_lst.append(y)
+    #DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
+    sorted_values=np.array(sorted(zip(x_lst,y_lst,s1_lst,s2_lst))))
+    in_to_sorted_values=np.argsort(sorted_values)
+    x_lst, y_lst, s1_lst, s2_lst=in_to_sorted_values
     return s1_list, s2_list, x_lst, y_lst
-
 
 def preprocess_contours(contours1,contours2,width, height,jump_threshold = 2,size_threshold = 6):
     #segment and augment contours of the first family
@@ -99,8 +106,12 @@ def contours_to_simple_tips_pbc(contours1,contours2,width, height,jump_threshold
     '''
     contour1_lst_lst, contour2_lst_lst, s1in_lst, s2in_lst = preprocess_contours_and_enumerate(contours1, contours2, width, height, jump_threshold = jump_threshold, size_threshold = size_threshold)
 
-    #detect tips as above. Print tip number as above
+    #detect tips as above and return tip number as above
+    #DONE: at the end of find_tips_with_pbc_knots, return the net node indices of the contour1_lst_lst, which may be used later with contour1_len_lst
+    contour1_len_values=np.array([len(x) for x in contour1_lst_lst])
     s1_lst, s2_lst, x_lst, y_lst = find_tips_with_pbc_knots(contour1_lst_lst, contour2_lst_lst, s1in_lst, s2in_lst)
+    #TODO: compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
+
     return s1_lst, s2_lst, x_lst, y_lst
 
 # @njit
@@ -135,6 +146,10 @@ def find_tips_wrapped(contours1, contours2):
                         n_list.append(s)
                         x_lst.append(x)
                         y_lst.append(y)
+    #DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
+    sorted_values=np.array(sorted(zip(x_lst,y_lst,s1_lst,s2_lst))))
+    in_to_sorted_values=np.argsort(sorted_values)
+    x_lst, y_lst, s1_lst, s2_lst=in_to_sorted_values
     return n_list, x_lst, y_lst
 
 

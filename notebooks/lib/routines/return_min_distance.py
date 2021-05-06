@@ -17,6 +17,10 @@ def compute_last_sigma_max(pdict,ds=5.):
 
 
 def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1,V_threshold=-50.,pid_pair=(0,1),ds=5.):
+    ''' of this pid_pair.  Supposes pid_pair denotes a birth
+    Example Usage:
+    txt_prev,t_prev,min_sigma_max=find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1,V_threshold=-50.,pid_pair=(0,1),ds=5.)
+    '''
     width,height=txt_prev.shape[:2]
     # get_one_step at this dt,ds
     # comp_dict_topo_simple=get_comp_dict_topo_simple(width=width,height=height)
@@ -55,9 +59,9 @@ def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1,V_thresho
         # dict_topo=comp_dict_topo_simple(img,dimgdt,t)
         dict_topo=comp_dict_topo_full_color(img,dimgdt,t,txt)
 
-        #compute particles that are present
+        #compute whether target particles are present
         in_to_out=pdict.sort_particles_indices(dict_topo)#, search_range=40.)
-        pid_lst_living=in_to_out.values
+        pid_lst_living=list(in_to_out.values())
         tracked_pair_exists=set(pid_pair).issubset(set(pid_lst_living))
         ntips=len(dict_topo['x'])
         # if ntips>0:
@@ -66,10 +70,20 @@ def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1,V_thresho
             pdict.merge_dict(dict_topo)
         else:
             print(f'death event found for pid_pair={pid_pair} at time t={t}, where dt={dt} and L={img.shape[0]}...')
-            
+
     min_sigma_max=compute_last_sigma_max(pdict,ds)
     print(f"\t min_sigma_max={min_sigma_max} cm")
     return txt_prev,t_prev,min_sigma_max
+
+def find_starting_point(pdict,pid_pair):
+    '''find_starting_point returns xy position of the first particle in pid_pair.
+    suppose the pid_pair are birth partners.
+    follow pdict back to the birth of this pid_pair.
+    '''
+    particle=pdict[pid_pair[0]]
+    xy0=np.array((particle['x'][0],particle['y'][0]))
+    return xy0
+
 
 
 ##################################################

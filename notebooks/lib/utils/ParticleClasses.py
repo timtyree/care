@@ -349,3 +349,32 @@ class ParticlePBCDict(dict):
 
     def read_csv(self,input_fn):
         raise Exception(f"Not yet implemented!")
+
+    def record_tips_return_txt(self,txt,duration,one_step,comp_tips,dt,save_every_n_frames=1):
+        '''
+        Example Usage:
+        txt=pdict.record_tips_return_txt(txt,duration,one_step,comp_tips,dt,save_every_n_frames=1)
+        '''
+        inVc,outVc,inmhjdfx,outmhjdfx,dVcdt=unstack_txt(txt)
+        change_time=0.
+        frameno=0
+        while change_time<=duration:
+            frameno+=1
+            change_time+=dt
+            one_step(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)
+            if frameno % save_every_n_frames == 0:
+                dict_tips=comp_tips(txt=txt)
+                self.merge_dict(dict_tips)
+
+        txt=stack_txt(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)
+        return txt
+
+
+    def find_starting_point(self,pid_pair):
+        '''find_starting_point returns xy position of the first particle in pid_pair.
+        suppose the pid_pair are birth partners.
+        follow pdict back to the birth of this pid_pair.
+        '''
+        particle=self[pid_pair[0]]
+        xy0=np.array((particle['x'][0],particle['y'][0]))
+        return xy0
