@@ -34,8 +34,12 @@ def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1,V_thresho
     dict_topo=comp_dict_topo_full_color(img,dimgdt,t_prev,txt_prev)
     ntips=len(dict_topo['x'])
 
+    pid_lst_living=pdict.get_alive_particles()
+    tracked_pair_exists=set(pid_pair).issubset(set(pid_lst_living))
+
     # track tips between frames using ParticleSet while n_tips>0
-    while ntips>0:
+    # while ntips>0:
+    while tracked_pair_exists:
         # copy current texture
         txt=stack_txt(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)
         txt_prev=txt.copy()
@@ -51,12 +55,18 @@ def find_stopping_point(dt,pdict,txt_prev,t_prev,save_every_n_frames=1,V_thresho
         # dict_topo=comp_dict_topo_simple(img,dimgdt,t)
         dict_topo=comp_dict_topo_full_color(img,dimgdt,t,txt)
 
+        #compute particles that are present
+        in_to_out=pdict.sort_particles_indices(dict_topo)#, search_range=40.)
+        pid_lst_living=in_to_out.values
+        tracked_pair_exists=set(pid_pair).issubset(set(pid_lst_living))
         ntips=len(dict_topo['x'])
-        if ntips>0:
+        # if ntips>0:
+        if tracked_pair_exists:
             #record nonlocal spiral tip observations
             pdict.merge_dict(dict_topo)
         else:
-            print(f'termination event found at time t={t}, where dt={dt} and L={img.shape[0]}...')
+            print(f'death event found for pid_pair={pid_pair} at time t={t}, where dt={dt} and L={img.shape[0]}...')
+            
     min_sigma_max=compute_last_sigma_max(pdict,ds)
     print(f"\t min_sigma_max={min_sigma_max} cm")
     return txt_prev,t_prev,min_sigma_max
