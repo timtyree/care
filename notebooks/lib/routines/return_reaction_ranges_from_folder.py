@@ -1,4 +1,5 @@
 import numpy as np,pandas as pd, matplotlib.pyplot as plt, dask.bag as db
+import os,time,sys
 from .compute_interactions import compute_df_interactions
 # TODO: get bins
 # TODO: wrap this in a function that takes a .csv trajectory input_fn, and a set of bins and returns counts in those bins
@@ -39,6 +40,14 @@ def comp_bdrange_bincounts(input_fn,bin_edges,ds,width):
     bin_count_birth,_=np.histogram(birth_ranges,bins=bin_edges)
     return bin_count_death, bin_count_birth,DT
 
+
+def agg(retval1,retval2):
+    val_lst=[]
+    for val1,val2 in zip(retval1,retval2):
+        val_lst.append(val1+val2)
+    retval=tuple(val_lst)
+    return retval
+
 def sum_bin_count(bin_count1,bin_count2):
     '''supposes same binning'''
     return bin_count1+bin_count2
@@ -65,31 +74,127 @@ def PlotRangesBD(bin_ranges,brate_values,drate_values,DT,fontsize=16,figsize=(7,
     ax.legend(fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.tick_params(axis='both', which='minor', labelsize=0)
-    DT_sec=DT/10**3
-    ax.set_title(f"{DT_sec:.4f} seconds between two frames",fontsize=fontsize)
+    # DT_sec=DT/10**3
+    ax.set_title(f"{DT:.2f} milliseconds between two frames",fontsize=fontsize)
     return fig,ax
 
+def get_files_in_folder(folder,trgt):
+    '''gets all files in a given folder that contain a target string, trgt'''
+    os.chdir(folder)
+    fn_lst=os.listdir()
+    ifl=[]
+    for fn in fn_lst:
+        if fn.find(trgt)!=-1:
+            ifl.append(fn)
+    return ifl
+
+def return_bincounts_bdranges(folder,bin_edges,ds=5.,width=200.):
+    '''
+    Example Usage:
+    retval_lst=return_bincounts_bdranges(folder,bin_edges,ds=5.,width=200.)
+    beep(10)
+    '''
+
+    input_fn_lst=get_files_in_folder(folder,trgt='_traj_')
+    print(f"binning {len(input_fn_lst)} files...")
+
+    def routine(input_fn):
+        try:
+            bin_count_death, bin_count_birth,DT=comp_bdrange_bincounts(input_fn,bin_edges,ds=ds,width=width)
+            return bin_count_death, bin_count_birth, DT
+        except Exception as e:
+            return None
+
+    def agg(retval1,retval2):
+        val_lst=[]
+        for val1,val2 in zip(retval1,retval2):
+            val_lst.append(val1+val2)
+        retval=tuple(val_lst)
+        return retval
+
+    bag = db.from_sequence(input_fn_lst, npartitions=10).map(routine)
+    # retval_lst=list(bag)
+    # # took extra 16 minutes? slow... dask doesn't appear to cache like spark does...
+    # bag = db.from_sequence(retval_lst, npartitions=10).accumulate(agg)
+    # retval=list(bag)
+    # #DONE: instead, use agg to use retval_lst as input
+
+    start = time.time()
+    retval_lst = list(bag)
+    print(f"the run time for filtering files was {(time.time()-start)/60:.2f} minutes.")
+    return retval_lst
+
+def get_fig_from_csv(save_fn,save_folder):
+    # list(birth_ranges)
+    os.chdir(save_folder)
+    df=pd.read_csv(save_fn)
+    df.head()
+    range_values=df.r.values
+    brate_values=df.brate.values
+    drate_values=df.drate.values
+    fig,ax=PlotRangesBD(range_values,brate_values,drate_values,DT,fontsize=16,figsize=(7,5))
+    ax.set_xlim([0,1.])
+    # ax.set_yscale('log')
+    # print(save_fn)
+    return fig
+
 if __name__=="__main__":
-    input_fn=f"{nb_dir}/Data/initial-conditions-suite-2/ds_5_param_set_8_V_0.5_fastkernel/ic_200x200.001.13_traj_sr_400_mem_0.csv"
-    bin_edges=get_bin_edges(input_fn,ds=5.,width=200.,nbins=40)
+    file=search_for_file()
+    #TODO: token LR trial
+    # file="/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_3.8_diffCoef_0.0005/trajectories/ic001.13_traj_sr_600_mem_0.csv"
 
-    #TODO: use dask.bag on UB
-    input_fn_lst=[input_fn]
-    for input_fn in input_fn_lst:
-        bin_count_death, bin_count_birth,DT=comp_bdrange_bincounts(input_fn,bin_edges,ds=5.,width=200.)
+    #token FK trial
+    # file="/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8_fastkernel_V_0.4/trajectories/ic_200x200.001.12_traj_sr_400_mem_2.csv"
+    # file='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8_fastkernel_V_0.4/trajectories/ic_200x200.001.12_traj_sr_400_mem_2.csv'
+    input_fn=file
+    folder=os.path.dirname(file)
+    df=pd.read_csv(input_fn)
+    DT=compute_DT(df,round_t_to_n_digits=3)
+    trialname=os.path.basename(os.path.dirname(folder))
+    print(f"there was {DT} ms between observations for the trial run, {trialname}")
 
-    #TODO: reduce using dask.bag
-    # bin_count_death=sum_bin_count(bin_count_death1,bin_count_death2)
-    # bin_count_birth=sum_bin_count(bin_count_birth1,bin_count_birth2)
+    bin_edges=np.arange(0,10.05,0.05) #cm
 
+    retval_lst=return_bincounts_bdranges(folder,bin_edges,ds=5.,width=200.)
+    beep(2)
+
+    #post processing
+    trial_count=len(retval_lst)
+    retval = retval_lst[0]
+    count=1
+    net_bin_count_death, net_bin_count_birth, DT=retval
+    for retval in retval_lst[1:]:
+        bin_count_death, bin_count_birth, DT_local=retval
+        if DT==DT_local:
+            net_bin_count_death+=bin_count_death
+            net_bin_count_birth+=bin_count_birth
+            count+=1
+
+    assert (count==trial_count)
+    range_values,brate_values,drate_values=comp_bdrates_by_bin(net_bin_count_birth,net_bin_count_death,bin_edges,DT)
+
+    print(f"N={sum(net_bin_count_death)} spiral tip birth/death events were considered.")
+
+    #save as .csv in a centralized location with a reasonable name that can be loaded later
+    df=pd.DataFrame({
+        'r':range_values,
+        'brate':brate_values,
+        'drate':drate_values
+    })
+
+    i=folder.find('Data')
+    data_folder=folder[:i+4]
+    tnl=folder[i+5:].split('/')[:2]
+    trialname=tnl[0]+'_'+tnl[1]
+    trialname=trialname.replace('_','-').lower()
+    save_fn=trialname+f'-nbins-{bin_edges.shape[0]-1}.csv'
+
+    save_foldername='reaction-ranges'
+    os.chdir(data_folder)
+    if not os.path.exists(save_foldername):
+        os.mkdir(save_foldername)
+    save_folder=os.path.abspath(save_foldername)
+    os.chdir(save_foldername)
+
+    bin_count_death, bin_count_birth,DT=comp_bdrange_bincounts(input_fn,bin_edges,ds=5.,width=200.)
     range_values,brate_values,drate_values=comp_bdrates_by_bin(bin_count_birth,bin_count_death,bin_edges,DT)
-    # #TODO: put ^this in a routine that asks for a trajectory folder as input
-    #TODO: compute/print summary statistics
-    # print(f"for this trial,")
-    # print(f"\tdeath range was {np.mean(death_ranges):.3f} +- {np.std(death_ranges):.3f} cm")
-    # print(f"\tbirth range was {np.mean(birth_ranges):.3f} +- {np.std(birth_ranges):.3f} cm")
-    # print(f"\ttime between two frames was {DT} ms")
-
-    # #Plot the results
-    # fig,ax=PlotRangesBD(range_values,brate_values,drate_values,DT,fontsize=16,figsize=(7,5))
-    # fig.show()
