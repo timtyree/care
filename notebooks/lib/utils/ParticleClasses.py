@@ -1,5 +1,16 @@
-import numpy as np
+import numpy as np, pandas as pd, json
 from ..utils.dist_func import get_distance_L2_pbc
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NpEncoder, self).default(obj)
 
 class ParticlePBC(dict):
     r"""Point-like particle that is to be distinguished over a series of observations.
@@ -108,6 +119,71 @@ class ParticlePBC(dict):
         cols = df.columns.tolist()
         cols = cols[-1:] + cols[:-1]
         return df[cols]
+
+    def separate_data_to_dicts(self):
+        '''separates contour data from particle data for one particle.
+        does not change particle.
+        Example Usage:
+        dict_particle_out,dict_greater,dict_lesser=separate_data_to_dicts(particle)
+        '''
+        pid=self.pid
+        dict_particle=dict(particle)
+        #remove any numpy array objects _values
+        keys=set(self.keys())
+        keys_lesser_contour_only={
+            'lesser_curvature_values',
+            'lesser_V_values',
+            'lesser_xy_values',
+            'lesser_arclen_values'
+        }
+        keys_greater_contour_only={
+            'greater_curvature_values',
+            'greater_V_values',
+            'greater_xy_values',
+            'greater_arclen_values'
+        }
+        keys_lesser_common={
+            't','pid','lesser_pid'
+        }
+        keys_greater_common={
+            't','pid','greater_pid'
+        }
+        keys_particle=keys.difference(keys_lesser_contour_only).difference(keys_greater_contour_only)
+        dict_lesser={}
+        try:
+            for key in sorted(keys_lesser_contour_only):
+                value=dict_particle.pop(key)
+                dict_lesser[key]=value
+            for key in sorted(keys_lesser_common):
+                dict_lesser[key]=dict_particle[key]
+            dict_greater={}
+            for key in sorted(keys_greater_contour_only):
+                value=dict_particle.pop(key)
+                dict_greater[key]=value
+            for key in sorted(keys_greater_common):
+                dict_greater[key]=dict_particle[key]
+        except KeyError as e:
+            dict_lesser=None
+            dict_greater=None
+
+        #TODO(later): update the __init__ method of the ParticlePBCSet class so it inlcudes all keys in dict_topo
+        #handle values with a missing first entry
+        key_lst_missing_first_entry=['s1','s2','pid','greater_mean_V','lesser_mean_V','greater_mean_curvature','lesser_mean_curvature']
+        minlen=9e9
+        for key in dict_particle.keys():
+            l=len(dict_particle[key])
+            if l<minlen:
+                minlen=l
+        #     print(f"{key}:{l}")
+        dict_particle_out={}
+        for key in dict_particle.keys():
+            v_lst=dict_particle[key]
+            l=len(v_lst)
+            if l==minlen:
+                dict_particle_out[key]=v_lst
+            elif l==minlen+1:
+                dict_particle_out[key]=v_lst[1:]
+        return dict_particle_out,dict_greater,dict_lesser
 
 class ParticlePBCDict(dict):
     def __init__(self, dict_tips, width,height, **kwargs):
@@ -388,3 +464,40 @@ class ParticlePBCDict(dict):
         particle=self[pid_pair[0]]
         xy0=np.array((particle['x'][0],particle['y'][0]))
         return xy0
+
+    def separate_data_to_pandas(self):
+        '''Example Usage:
+        df, dict_greater_dict, dict_lesser_dict=separate_data_to_pandas(pdict)
+        '''
+        df_lst=[]
+        dict_greater_dict={}
+        dict_lesser_dict={}
+        for pid in sorted(self.keys()):
+            particle=pdict[pid]
+            dict_particle_out,dict_greater,dict_lesser=separate_data_to_dicts(particle)
+            dict_greater_dict[pid]=dict_greater
+            dict_lesser_dict[pid]=dict_lesser
+            df_lst.append(pd.DataFrame(dict_particle_out))
+        df=pd.concat(df_lst)
+        return df, dict_greater_dict, dict_lesser_dict
+
+    def to_csv_and_json(self,modname):
+        '''Example Usage:
+        modname=f"{nb_dir}/Data/test_data/recursive_death_test"
+        to_csv_and_json(pdict,modname)
+        '''
+        df, dict_greater_dict, dict_lesser_dict=self.separate_data_to_pandas()
+        #save all particles in one csv
+        save_dir=modname+"_particles_only.csv"
+        df.to_csv(save_dir,index=False)
+
+        #save greater/lesser contours as one json, indexed by pid
+        save_fn=modname+f"_greater_contours.json"
+        # os.system('touch '+save_fn)
+        with open(save_fn,"w") as fp:
+            json.dump(dict_greater_dict,fp,cls=NpEncoder,indent=0,sort_keys=True)
+
+        save_fn=modname+f"_lesser_contours.json"
+        with open(save_fn,"w") as fp:
+            json.dump(dict_lesser_dict,fp,cls=NpEncoder,indent=0,sort_keys=True)
+        return self
