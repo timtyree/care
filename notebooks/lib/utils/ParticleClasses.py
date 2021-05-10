@@ -127,6 +127,7 @@ class ParticlePBC(dict):
         dict_particle_out,dict_greater,dict_lesser=separate_data_to_dicts(particle)
         '''
         pid=self.pid
+        particle=self
         dict_particle=dict(particle)
         #remove any numpy array objects _values
         keys=set(self.keys())
@@ -455,7 +456,6 @@ class ParticlePBCDict(dict):
         txt=stack_txt(inVc,outVc,inmhjdfx,outmhjdfx,dVcdt)
         return txt
 
-
     def find_starting_point(self,pid_pair):
         '''find_starting_point returns xy position of the first particle in pid_pair.
         suppose the pid_pair are birth partners.
@@ -473,8 +473,8 @@ class ParticlePBCDict(dict):
         dict_greater_dict={}
         dict_lesser_dict={}
         for pid in sorted(self.keys()):
-            particle=pdict[pid]
-            dict_particle_out,dict_greater,dict_lesser=separate_data_to_dicts(particle)
+            particle=self[pid]
+            dict_particle_out,dict_greater,dict_lesser=particle.separate_data_to_dicts()
             dict_greater_dict[pid]=dict_greater
             dict_lesser_dict[pid]=dict_lesser
             df_lst.append(pd.DataFrame(dict_particle_out))
