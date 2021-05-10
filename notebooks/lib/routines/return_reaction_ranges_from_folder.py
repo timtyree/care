@@ -5,12 +5,13 @@ from .compute_interactions import compute_df_interactions
 # TODO: wrap this in a function that takes a .csv trajectory input_fn, and a set of bins and returns counts in those bins
 # TODO: run on a folder of (still wrapped) trajectories
 
-def compute_DT(df,round_t_to_n_digits=3):
+def compute_DT(df,round_t_to_n_digits):
     '''DT is the time between two observations'''
     DT=np.around(df[(df.frame==1)].t.values[0]-df[(df.frame==0)].t.values[0],round_t_to_n_digits)
     return DT
 
-def return_bd_ranges(input_fn,DS=5./200.,round_t_to_n_digits=3):
+def return_bd_ranges(input_fn,DS,round_t_to_n_digits=3):
+    #DS is dsdpixel
     df=pd.read_csv(input_fn)
     DT=compute_DT(df,round_t_to_n_digits=round_t_to_n_digits)
     #compute interactions
@@ -20,7 +21,7 @@ def return_bd_ranges(input_fn,DS=5./200.,round_t_to_n_digits=3):
     birth_ranges=DS*df_interactions.r0.values
     return death_ranges,birth_ranges,DT
 
-def get_bin_edges(input_fn,ds=5.,width=200.,nbins=40):
+def get_bin_edges(input_fn,ds,width,nbins):
     death_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS=ds/width,round_t_to_n_digits=3)
     a=death_ranges
     bin_totals,bin_edges=np.histogram(
@@ -88,10 +89,10 @@ def get_files_in_folder(folder,trgt):
             ifl.append(fn)
     return ifl
 
-def return_bincounts_bdranges(folder,bin_edges,ds=5.,width=200.):
+def return_bincounts_bdranges(folder,bin_edges,ds,width):
     '''
     Example Usage:
-    retval_lst=return_bincounts_bdranges(folder,bin_edges,ds=5.,width=200.)
+    retval_lst=return_bincounts_bdranges(folder,bin_edges,ds=5.,width=width)
     beep(10)
     '''
 
@@ -138,6 +139,88 @@ def get_fig_from_csv(save_fn,save_folder):
     # print(save_fn)
     return fig
 
+def run_reaction_ranges_routine(folder):
+    input_fn_lst=get_files_in_folder(folder,trgt=trgt)
+    input_fn=input_fn_lst[0]
+
+    #get width if specified for a given folder
+    width=200.
+    i=folder.find('00x')
+    if i !=-1:
+        s=folder[i+3:]
+        width=float(eval(s.split('/')[0]))
+
+    input_fn=file
+    folder=os.path.dirname(input_fn)
+    df=pd.read_csv(input_fn)
+    DT=compute_DT(df,round_t_to_n_digits=3)
+    trialname=os.path.basename(os.path.dirname(folder))
+    print(f"there was {DT} ms between observations for the trial run, {trialname}")
+
+    bin_edges=np.arange(0,10.05,0.05) #cm
+
+    retval_lst=return_bincounts_bdranges(folder,bin_edges,ds=5.,width=width)
+    beep(2)
+
+    #post processing
+    trial_count=len(retval_lst)
+    retval = retval_lst[0]
+    count=1
+    net_bin_count_death, net_bin_count_birth, DT=retval
+    for retval in retval_lst[1:]:
+        bin_count_death, bin_count_birth, DT_local=retval
+        if DT==DT_local:
+            net_bin_count_death+=bin_count_death
+            net_bin_count_birth+=bin_count_birth
+            count+=1
+
+    assert (count==trial_count)
+    range_values,brate_values,drate_values=comp_bdrates_by_bin(net_bin_count_birth,net_bin_count_death,bin_edges,DT)
+
+    print(f"N={sum(net_bin_count_death)} spiral tip birth/death events were considered.")
+
+    #save as .csv in a centralized location with a reasonable name that can be loaded later
+    df=pd.DataFrame({
+        'r':range_values,
+        'brate':brate_values,
+        'drate':drate_values
+    })
+
+    i=folder.find('Data')
+    data_folder=folder[:i+4]
+    tnl=folder[i+5:].split('/')[:2]
+    trialname=tnl[0]+'_'+tnl[1]
+    trialname=trialname.replace('_','-').lower()
+    save_fn=trialname+f'-nbins-{bin_edges.shape[0]-1}-DT-{DT:.2f}.csv'
+
+    save_foldername='reaction-ranges'
+    os.chdir(data_folder)
+    if not os.path.exists(save_foldername):
+        os.mkdir(save_foldername)
+    save_folder=os.path.abspath(save_foldername)
+    os.chdir(save_foldername)
+
+    # bin_count_death, bin_count_birth,DT=comp_bdrange_bincounts(input_fn,bin_edges,ds=5.,width=width)
+    # range_values,brate_values,drate_values=comp_bdrates_by_bin(bin_count_birth,bin_count_death,bin_edges,DT)
+
+    df.to_csv(save_fn,index=False)
+    print(f"reaction range results saved in {os.path.abspath(save_fn)}")
+    return True
+
+def get_folders_directly_containing_trgt(rootdir,trgt):
+    '''
+    Example Usage:
+    rootdir=f'{nb_dir}/Data'
+    trgt='_traj_'
+    folder_lst=get_folder_directly_containing_trgt(rootdir,trgt)
+    '''
+    folder_lst=[]
+    for path, dirs, files in os.walk(rootdir):
+        input_fn_lst=get_files_in_folder(path,trgt=trgt)
+        if len(input_fn_lst)>0:
+            folder_lst.append(path)
+    return folder_lst
+
 if __name__=="__main__":
     file=search_for_file()
     #TODO: token LR trial
@@ -155,7 +238,7 @@ if __name__=="__main__":
 
     bin_edges=np.arange(0,10.05,0.05) #cm
 
-    retval_lst=return_bincounts_bdranges(folder,bin_edges,ds=5.,width=200.)
+    retval_lst=return_bincounts_bdranges(folder,bin_edges,ds,width)
     beep(2)
 
     #post processing
@@ -196,5 +279,5 @@ if __name__=="__main__":
     save_folder=os.path.abspath(save_foldername)
     os.chdir(save_foldername)
 
-    bin_count_death, bin_count_birth,DT=comp_bdrange_bincounts(input_fn,bin_edges,ds=5.,width=200.)
-    range_values,brate_values,drate_values=comp_bdrates_by_bin(bin_count_birth,bin_count_death,bin_edges,DT)
+    # bin_count_death, bin_count_birth,DT=comp_bdrange_bincounts(input_fn,bin_edges,ds=5.,width=200.)
+    # range_values,brate_values,drate_values=comp_bdrates_by_bin(bin_count_birth,bin_count_death,bin_edges,DT)
