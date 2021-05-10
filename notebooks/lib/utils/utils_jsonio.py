@@ -1,5 +1,22 @@
 
 import json
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NpEncoder, self).default(obj)
+
+def save_dict_to_json(pdict,save_fn):
+    #save all output values as json
+    os.system('touch '+save_fn)
+    with open(save_fn,"w") as fp:
+        json.dump(dict(pdict),fp,cls=NpEncoder,indent=1,sort_keys=True)
+
 def write_parameters_to_json(param_dict, param_file_name):
     '''Example Usage:
     write_parameters_to_json(kwargs, 'lib/param_set_8.json')

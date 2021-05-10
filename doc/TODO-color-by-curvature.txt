@@ -1,0 +1,9 @@
+TODO: make video coloring curvature 
+- mean curvature of activation front colors the spiral tips
+- local curvature colors the activation /deactivation front (for all 4 contours)
+	- hot/cold with alpha=1. for high/low curvature of the V==V_threshold level set
+	- hot/cold with alpha=0.3 for high/low curvature of the dVdt==0 level set
+
+TODO: directly use comp_curvature_array with the smallest sample neighborhood that yields results equivalent to the full results... Define ^this in terms of a local_curvature_kernel... 
+TODO(later): cythonize ^this local_curvature_kernel?
+

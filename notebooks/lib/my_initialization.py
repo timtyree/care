@@ -14,3 +14,15 @@ if not 'nb_dir' in globals():
     nb_dir = os.getcwd()
 
 from numba import njit
+
+
+
+darkmode=False
+if darkmode:
+	# For darkmode plots
+	from jupyterthemes import jtplot
+	jtplot.style(theme='monokai', context='notebook', ticks=True, grid=False)
+
+gpumode=False
+if gpumode:
+    import cudf
