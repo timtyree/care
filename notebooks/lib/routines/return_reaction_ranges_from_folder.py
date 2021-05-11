@@ -41,7 +41,6 @@ def comp_bdrange_bincounts(input_fn,bin_edges,ds,width):
     bin_count_birth,_=np.histogram(birth_ranges,bins=bin_edges)
     return bin_count_death, bin_count_birth,DT
 
-
 def agg(retval1,retval2):
     val_lst=[]
     for val1,val2 in zip(retval1,retval2):
@@ -129,7 +128,7 @@ def get_fig_from_csv(save_fn,save_folder):
     # list(birth_ranges)
     os.chdir(save_folder)
     df=pd.read_csv(save_fn)
-    df.head()
+    #df.head()
     range_values=df.r.values
     brate_values=df.brate.values
     drate_values=df.drate.values
