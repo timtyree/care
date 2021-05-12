@@ -13,6 +13,9 @@ from .measures_from_emsd import *
 from .arclength import *
 from .curvature import *
 from .full_color_contours import *
+from .compute_phase_angles import *
+from .compute_relative_velocities import *
+from .comp_tips_safely import *
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *
 

@@ -103,7 +103,7 @@ class ParticlePBC(dict):
         return self
 
     def to_pandas(self):
-        primitive = (int, str, bool)
+        primitive = (int, str, bool, float)
         def is_primitive(thing):
             return isinstance(thing, primitive)
 

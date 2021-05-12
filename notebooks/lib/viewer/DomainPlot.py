@@ -1,9 +1,76 @@
-
 from .. import *
+from ..viewer.multicolored_lines import plotColoredContour
+
+def ShowTipsAndColoredContours(fig,ax,dict_tips,
+						   fontsize=18,cmap='hot',
+						  annotating=True,textcolor='white',
+						  vmin_tips=-np.pi/4.,vmax_tips=np.pi/4.):
+	xy_values_lst=dict_tips['greater_xy_values']
+	c_values_lst =dict_tips['greater_curvature_values']
+	plotColoredContour(fig,ax,xy_values_lst,c_values_lst,
+						  cmap='hot',use_colorbar=False,
+					   vmin=0.,vmax=3.,lw=3,navg=40,alpha=0.05)
+	#plot the list of lesser contours
+	xy_values_lst=dict_tips['lesser_xy_values']
+	c_values_lst =dict_tips['lesser_curvature_values']
+	plotColoredContour(fig,ax,xy_values_lst,c_values_lst,
+						  cmap='hot',use_colorbar=False,
+					   vmin=0.,vmax=3.,lw=3,alpha=0.5)
+
+
+	#plot spiral tips. color inner spiral tip by slow variable
+	x_values=np.array(dict_tips['x'])
+	y_values=np.array(dict_tips['y'])
+	c_values=np.array(dict_tips['phi'])
+	n_tips = x_values.shape[0]
+	ax.scatter(x=x_values, y=y_values, s=300, c=1+0.*c_values, marker='*', zorder=3, alpha=.5, vmin=0.,vmax=1.)
+	ax.scatter(x=x_values, y=y_values, s=100, c=c_values, marker='*',
+			   zorder=3, alpha=.8, vmin=vmin_tips,vmax=vmax_tips, cmap='bwr')
+
+	if annotating:
+		t=dict_tips['t']
+		time_step_string=f"  t = {t:.1f} ms"
+		message_string=f"  num. = {n_tips}"
+		ax.text(.97,.13,time_step_string,
+				horizontalalignment='right',color=textcolor,fontsize=fontsize,
+				transform=ax.transAxes)
+		ax.text(.97,.05,message_string,
+				horizontalalignment='right',color=textcolor,fontsize=fontsize,
+				transform=ax.transAxes)
+	return None
+
+#plot system with colored curvature
+def SaveTipsAndColoredContours(img,frameno,dict_tips,save_folder=None,save_fn=None,vmin_img=-85.,vmax_img=35.,inch=5):
+	save=True
+	figsize=(inch,inch)
+	fig, ax = plt.subplots(figsize=figsize)#, sharex=True, sharey=True)
+	ax.imshow(img,vmin=vmin_img,vmax=vmax_img,cmap='gray')
+	ShowTipsAndColoredContours(fig,ax,dict_tips,
+							   fontsize=18,cmap='hot',
+							  annotating=True,textcolor='white',
+							  vmin_tips=-np.pi/4.,vmax_tips=np.pi/4.)
+	width,height=img.shape[:2]
+	ax.set_xlim([0,width])
+	ax.set_ylim([0,height])
+	ax.axis('off')
+
+	if not save:
+		plt.show()
+	else:
+		if save_fn is None:
+			save_fn = f"img{frameno:07d}.png"
+			frameno += 1
+	#         plt.tight_layout()
+		if save_folder is not None:
+			os.chdir(save_folder)
+		plt.savefig(save_fn,dpi=720/inch, bbox_inches='tight',pad_inches=0);
+		plt.close();
+	return frameno
+
 
 #TODO(later): plot these tips with their u's and v's
 # Display the image and plot all pbc contours found properly!
-def save_plot_as_png(img, dimgdt, x_values, y_values, c_values, n_tips, t, save_folder, frameno, 
+def save_plot_as_png(img, dimgdt, x_values, y_values, c_values, n_tips, t, save_folder, frameno,
 	save = True, inch = 6, save_fn=None, **kwargs):
 	''''''
 	fig, ax = plt.subplots(figsize=(inch,inch))

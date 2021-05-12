@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
-def plotMulticoloredLine(fig,ax,x_values,y_values,c_values,cmap='jet',use_colorbar=True,vmin=None,vmax=None):
+from ..measure._utils_find_contours import split_contour_into_contiguous
+
+def plotMulticoloredLine(fig,ax,x_values,y_values,c_values,cmap='coolwarm',use_colorbar=True,vmin=None,vmax=None,alpha=1.,lw=2):
     '''x_values,y_values,c_values are each 1-by-N numpy arrays.'''
     #define the relevant segments
     points = np.array([x_values, y_values]).T.reshape(-1, 1, 2)
@@ -22,11 +24,11 @@ def plotMulticoloredLine(fig,ax,x_values,y_values,c_values,cmap='jet',use_colorb
     if vmax is None:
         vmax=c_values.max()
     norm = plt.Normalize(vmin, vmax)
-    lc = LineCollection(segments, cmap=cmap, norm=norm)
+    lc = LineCollection(segments, cmap=cmap, norm=norm, alpha=alpha)
     # lc = LineCollection(segments, cmap='hot', norm=norm)
     # Set the values used for colormapping
     lc.set_array(c_values)
-    lc.set_linewidth(2)
+    lc.set_linewidth(lw)
     line = ax.add_collection(lc)
     if use_colorbar:
         fig.colorbar(line, ax=ax)
@@ -40,7 +42,29 @@ def plotMulticoloredLine(fig,ax,x_values,y_values,c_values,cmap='jet',use_colorb
     # line = ax.add_collection(lc)
     # if use_colorbar:
     #     fig.colorbar(line, ax=ax)
-    return fig,ax
+    return None
+
+def plotColoredContour(fig,ax,xy_values_lst,c_values_lst,
+                      cmap='hot',use_colorbar=False,
+                      vmin=0.,vmax=3.,lw=3,navg=20,alpha=1.):
+    for i in range(len(c_values_lst)):
+        c_values=c_values_lst[i].copy()
+        #compute moving average of c_values
+        for k in range(navg):
+            c_values[1:]=(c_values[1:]+c_values[:-1])/2.
+        xy_values=xy_values_lst[i]
+        contour_lst = split_contour_into_contiguous(xy_values)
+        for contour in contour_lst:
+            x_values=contour[:,0]
+            y_values=contour[:,1]
+            plotMulticoloredLine(fig,ax,
+                               x_values,
+                               y_values,
+                               c_values,
+                               cmap=cmap,
+                               use_colorbar=use_colorbar,
+                              vmin=vmin,vmax=vmax,lw=lw,alpha=alpha)
+    return None
 
 if __name__=='__main__':
     x = np.linspace(0, 3 * np.pi, 500)

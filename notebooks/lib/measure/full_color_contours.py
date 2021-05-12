@@ -203,17 +203,17 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 		return True
 	return update_with_full_color_observations
 
-def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_threshold = 40,size_threshold = 0,ds=5.,**kwargs):
+def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_threshold=100,size_threshold=0,ds=5.,**kwargs):
 	'''
 	Example Usage:
 	'''
-	#jit compile arclength module to llvm machine code
-	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
-	distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
-	project_point_2D=get_project_point_2D(width=width,height=height)
-	subtract_pbc=get_subtract_pbc(width=width,height=height)
-	comp_perimeter=get_comp_perimeter(width=width,height=height)
-	fix_node_id=get_fix_node_id(width=width,height=height)
+	# #jit compile arclength module to llvm machine code
+	# locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
+	# distance_L2_pbc=get_distance_L2_pbc(width=width,height=height)
+	# project_point_2D=get_project_point_2D(width=width,height=height)
+	# subtract_pbc=get_subtract_pbc(width=width,height=height)
+	# comp_perimeter=get_comp_perimeter(width=width,height=height)
+	# fix_node_id=get_fix_node_id(width=width,height=height)
 	retval=get_arclength_module(width=width,height=height)
 	locate_node_indices_simple, locate_node_indices, compute_arclength_values, compute_arclength, compute_arclength_values_upto_next, compute_arclength_values_for_tips=retval
 	# update_dict_topo_with_arclen_observations=get_update_dict_topo_with_arclen_observations(width=height,height=height,**kwargs)
@@ -369,6 +369,7 @@ def find_tips_with_pbc_knots_full_color(contours1, contours2, s1in_lst, s2in_lst
 
 	#TODO: call ^this function with contours_to_simple_tips_pbc_full_color
 	'''
+	xshift=0.5;yshift=0.5
 	width,height=txt.shape[:2]
 	s1_list = []; s2_list = []; x_lst = []; y_lst = []; txt_lst=[]
 	for n1, contour1_lst in zip(s1in_lst,contours1):
@@ -385,7 +386,7 @@ def find_tips_with_pbc_knots_full_color(contours1, contours2, s1in_lst, s2in_lst
 						x_lst.append(x)
 						y_lst.append(y)
 						#TODO: locally interpolate txt
-						txt_lst.append(bilinear_interpolate_channel(x, y, width, height, txt))
+						txt_lst.append(bilinear_interpolate_channel(x+xshift, y+yshift, width, height, txt))
 	#DONE: sort####compute node_id_values=?? using contour1_len_values and locally determined values in the sublist
 	sorted_lst=sorted(zip(x_lst,y_lst,s1_lst,s2_lst, txt_lst))
 	sorted_values=np.array(sorted_lst)

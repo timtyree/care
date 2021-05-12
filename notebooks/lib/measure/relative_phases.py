@@ -28,7 +28,7 @@ def compute_phases_between(d1,d2,dict_activation_front,field='lesser_xy_values')
     x2_minus_x1_hat_values=xy2_minus_xy1_values[:,0]/range_values
     y2_minus_y1_hat_values=xy2_minus_xy1_values[:,1]/range_values
     xy2_minus_xy1_hat_values=np.array(list(zip(x2_minus_x1_hat_values,y2_minus_y1_hat_values)))
-    
+
 
     #compute directions of activation fronts.  store as pandas.DataFrame.
     daf=dict_activation_front
@@ -69,7 +69,7 @@ def compute_phases_between(d1,d2,dict_activation_front,field='lesser_xy_values')
 
         phi1_lst.append(phi1)
         phi2_lst.append(phi2)
-    
+
     phi1_values=np.array(phi1_lst)
     phi2_values=np.array(phi2_lst)
 
@@ -78,7 +78,7 @@ def compute_phases_between(d1,d2,dict_activation_front,field='lesser_xy_values')
     phi1_values[boo]=np.pi/2.
     boo=np.isnan(phi2_values)
     phi2_values[boo]=np.pi/2.
-    
+
     return range_values,phi1_values,phi2_values
 
 
@@ -86,6 +86,52 @@ def comp_relative_phase(phi1_values,phi2_values):
     phi_sum_values=phi2_values+phi1_values
     phi_diff_values=phi2_values-phi1_values
     return phi_sum_values, phi_diff_values
+
+
+def compute_phi_values(dict_tips):
+    '''compute phase angle using lesser contour
+    Example Usage:
+    phi_lst=compute_phi_values(dict_tips)
+    dict_tips['phi']=phi_lst
+    '''
+    pid_pair_list=list(zip(dict_tips['pid'],dict_tips['lesser_pid']))
+    phi_lst=[]
+    for item in pid_pair_list:
+        pid,pid_mate=item
+        xy1_value=np.array((dict_tips['x'][pid],dict_tips['y'][pid]))
+        xy2_value=np.array((dict_tips['x'][pid_mate],dict_tips['y'][pid_mate]))
+        xy_values_activation_front=dict_tips['lesser_xy_values'][pid]
+        phi1,phi2=compute_phases_between_kernel(xy1_value,xy2_value,xy_values_activation_front)
+        phi_lst.append(phi1)
+    return phi_lst
+
+def compute_phases_between_kernel(xy1_value,xy2_value,xy_values_activation_front):
+    '''computes the phases between particle 1 and particle 2 in units of radians.
+    returns range between particles in units of pixels
+    #TODO(later, to scale method): convert all subtraction operations to explicitely enforce pbc...
+    # print(t_values[i])
+    '''
+    # compute displacement unit vector from tip 1 to tip 2
+    xy2_minus_xy1_value=xy2_value-xy1_value
+    range_value=np.linalg.norm(xy2_minus_xy1_value)#, axis=1)
+    x2_minus_x1_hat_value=xy2_minus_xy1_value[0]/range_value
+    y2_minus_y1_hat_value=xy2_minus_xy1_value[1]/range_value
+    xy2_minus_xy1_hat_value=np.array((x2_minus_x1_hat_value,y2_minus_y1_hat_value))
+#     xy2_minus_xy1_hat_value=np.array(list(zip(x2_minus_x1_hat_value,y2_minus_y1_hat_value)))
+    #compute the angles made with the activation front
+    xy_values=xy_values_activation_front
+    dx1dx2_hat=xy2_minus_xy1_hat_value
+    #compute a1_hat and a2_hat
+    a1=xy_values[1]-xy_values[0]
+    # xy_values[2]-xy_values[1]
+    # xy_values[3]-xy_values[2]
+    # xy_values[4]-xy_values[3]
+    a1_hat=a1/np.linalg.norm(a1)
+    a2=xy_values[-2]-xy_values[-1]
+    a2_hat=a2/np.linalg.norm(a2)
+    phi1=np.arcsin(np.cross(dx1dx2_hat,a1))
+    phi2=np.arcsin(np.cross(-1.*dx1dx2_hat,a2))
+    return phi1,phi2
 
 ##############
 #Example Usage
@@ -128,7 +174,7 @@ def simulate_pdict_example(dt=0.001,V_threshold=-50.):
     #TODO: compute each of the the final scalar values needed for the following...
     #TODO: test angular difference between cartesion acceleration and acceleration in the direction of the activation front versus time
     #TODO: linearly track lesser_arclen of these two death events on a dt=0.001 ms timescale fixed at the basic subpixel resolution
-    #TODO: test proposition that lesser_arclen always drops shortly annihilating, perhaps on the 0.01~0.02 (ms?) timescale.  
+    #TODO: test proposition that lesser_arclen always drops shortly annihilating, perhaps on the 0.01~0.02 (ms?) timescale.
     # ^This would support the mechanism of annihilation involving the connection of activation fronts/strings with some tension to contract
     # ^This would support using a model of spiral tip dynamics along an activation front to inform our reaction rate calculations
     # HINT: consider rate = 1/expected_time_to_death, where the arclength behaves in a predictable way, i.e.
