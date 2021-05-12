@@ -9,13 +9,13 @@ def ShowTipsAndColoredContours(fig,ax,dict_tips,
 	c_values_lst =dict_tips['greater_curvature_values']
 	plotColoredContour(fig,ax,xy_values_lst,c_values_lst,
 						  cmap='hot',use_colorbar=False,
-					   vmin=0.,vmax=3.,lw=3,navg=40,alpha=0.05)
+					   vmin=0.,vmax=3.,lw=3,navg=60,alpha=0.05)
 	#plot the list of lesser contours
 	xy_values_lst=dict_tips['lesser_xy_values']
 	c_values_lst =dict_tips['lesser_curvature_values']
 	plotColoredContour(fig,ax,xy_values_lst,c_values_lst,
 						  cmap='hot',use_colorbar=False,
-					   vmin=0.,vmax=3.,lw=3,alpha=0.5)
+					   vmin=0.,vmax=3.,lw=3,navg=60,alpha=0.5)
 
 
 	#plot spiral tips. color inner spiral tip by slow variable

@@ -117,7 +117,7 @@ def zip_tips(dict_simp,dict_topo,dict_in_to_out):
                 pass
     return dict_tips
 
-def get_comp_tips(width,height,V_threshold):
+def get_comp_tips(width,height,V_threshold,search_range=40.):
     '''
     Example Usage:
     comp_tips=get_comp_tips(width,height,V_threshold)
@@ -133,11 +133,37 @@ def get_comp_tips(width,height,V_threshold):
         dict_topo=comp_dict_topo_full_color(img, dimgdt, t, txt)
         #for each tip from (img and img_prev), find the nearest tip from (img and dimgdt)
         #         dict_in_to_out,dict_in_to_dist=map_simp_to_topo(dict_simp,dict_topo)
-        in_to_out=sort_particles_indices(dict_topo, dict_simp, search_range=40.)
+        in_to_out=sort_particles_indices(dict_topo, dict_simp, search_range=search_range)
         #return the dict of all ^those tips
         dict_tips=zip_tips(dict_simp,dict_topo,in_to_out)
+        #TODO: handle when lesser_pid and/or greater_pid is not included in the list
+        #TODO: test reindex dict_tips works
+        ntips=len(dict_tips['pid'])
+        pid_map={}
+        for n in range(ntips):
+            pid=dict_tips['pid'][n]
+            pid_map[pid]=n
+            dict_tips['pid'][n]=pid_map[pid]
+        for m,pid in enumerate(dict_tips['lesser_pid']):
+            try:
+                n=pid_map[pid]
+            except KeyError as e:
+                n=-1
+            dict_tips['lesser_pid'][m]=n
+        for m,pid in enumerate(dict_tips['greater_pid']):
+            try:
+                n=pid_map[pid]
+            except KeyError as e:
+                n=-1
+            dict_tips['greater_pid'][m]=n        # for pid in dict_tips['greater_pid']:
+        #     n=pid_map[pid]
+        #     dict_tips['greater_pid'][n]=pid_map[dict_tips['greater_pid'][n]]
         #compute relative phase information along the lesser front
-        phi_lst=compute_phi_values(dict_tips)
+        try:
+            phi_lst=compute_phi_values(dict_tips)
+        except IndexError as e:
+            print((dict_tips['pid'],dict_tips['x'],dict_tips['y']))
+            raise(e)
         dict_tips['phi']=phi_lst
 
         return dict_tips

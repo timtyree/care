@@ -102,6 +102,8 @@ def compute_phi_values(dict_tips):
         xy2_value=np.array((dict_tips['x'][pid_mate],dict_tips['y'][pid_mate]))
         xy_values_activation_front=dict_tips['lesser_xy_values'][pid]
         phi1,phi2=compute_phases_between_kernel(xy1_value,xy2_value,xy_values_activation_front)
+        if np.isnan(phi1):
+            phi1=np.pi/2.
         phi_lst.append(phi1)
     return phi_lst
 
