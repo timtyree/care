@@ -9,8 +9,9 @@
 # 	-y -c:v libx264 -filter:v fps=fps=60 \
 # 	-s hd720 mov/tmp/tmp.MTS
 ffmpeg -i ../../notebooks/Figures/mov/img%07d.png \
-	-y -c:v libx264 -filter:v fps=fps=40 \
-	-s hd720 ../mov/tmp/tmp.MTS
+	-y -c:v libx264 \
+	-vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black,fps=fps=60" -pix_fmt yuv420p \
+	-s hd720 ../mov/tmp/tmp.MTS \
 #concat a folder of pngs to a *.MTS
 # ffmpeg -i frame_every_1_ms/img%09d.png \
 # 	-y -c:v libx264 -filter:v fps=fps=60 \
@@ -35,7 +36,7 @@ ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
 	-q 0 -vf drawtext="
 	arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,
 	fade=t=in:st=0:d=1.0,
-	fade=t=out:st=1.9:d=1.0,fps=fps=40
+	fade=t=out:st=1.9:d=1.0,fps=fps=60
 	" -c:v libx264 -b:v 1000k -s hd720 \
 	-video_track_timescale 2000 -y -c:a aac -ar 0 \
 	-ac 0 -sample_fmt fltp -t 4 tmp/intro.mp4

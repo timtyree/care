@@ -46,12 +46,16 @@ def plotMulticoloredLine(fig,ax,x_values,y_values,c_values,cmap='coolwarm',use_c
 
 def plotColoredContour(fig,ax,xy_values_lst,c_values_lst,
                       cmap='hot',use_colorbar=False,
-                      vmin=0.,vmax=3.,lw=3,navg=20,alpha=1.):
+                      vmin=0.,vmax=10.,lw=3,navg=20,alpha=1.):
     for i in range(len(c_values_lst)):
-        c_values=c_values_lst[i].copy()
+        c_values=np.abs(c_values_lst[i])#.copy()
         #compute moving average of c_values
-        for k in range(navg):
-            c_values[1:]=(c_values[1:]+c_values[:-1])/2.
+        # for k in range(navg):
+        #     c_values[1:]=(c_values[1:]+c_values[:-1])/2.
+        c_lst=[]
+        for j in range(c_values.shape[0]):
+            c_lst.append(np.mean(c_values[j:j+navg]))
+        c_values=np.array(c_lst)
         xy_values=xy_values_lst[i]
         contour_lst = split_contour_into_contiguous(xy_values)
         for contour in contour_lst:

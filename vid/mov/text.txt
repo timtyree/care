@@ -1,3 +1,2 @@
 
-TEXT=$'this is from 
-the Luo-Rudy model'
+TEXT=$'colored lines indicate curvature'
