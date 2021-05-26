@@ -1,5 +1,7 @@
 import numpy as np
 from ..utils.utils_traj import find_jumps, unwrap_for_each_jump
+from scipy.interpolate import splprep, splev
+from scipy import interpolate
 
 def unwrap_contour(x_values,y_values,width,height):
     x_values = x_values.astype('float64')
@@ -61,3 +63,60 @@ def compute_curvature(array):
                     'acceleration':acceleration,
                    }
     return dict_curvature
+
+def comp_curvature(xy_values,s=2):
+    '''s is a smoothing parameter. s=0 forces agreement with xy_values, but does not produce smooth curvature
+    xy_values is an Nx2 np.array discretizing a continuous curve
+    Note that (i) we force interpolation by using s=0,
+    (ii) the parameterization, u, is generated automatically.
+    Example Usage:
+    curvature_values=comp_curvature(xy_values)
+    '''
+    # x=xy_values[:,0]
+    # y=xy_values[:,1]
+
+    xp=xy_values[:,0]
+    yp=xy_values[:,1]
+    assert (xy_values.shape[1]==2)
+    okay = np.where(np.abs(np.diff(xp)) + np.abs(np.diff(yp)) > 0)
+    x = np.r_[xp[okay], xp[-1], xp[0]]
+    y = np.r_[yp[okay], yp[-1], yp[0]]
+    # print(x.shape)#error has shape (430,)
+    # print(y.shape)#error has shape (430,)
+    # try:
+    # xyavg=xy_values[:-1]/2+xy_values[1:]/2
+    # tck, u = splprep(xy_values.T,s=s)#s=0)
+    tck, u = splprep([x, y],s=s)#,per=1,nest=1000,task=0,k=3)#s=0)
+    # except Exception as e:
+    #     print("ERROR:")
+    #     print(e)
+    #     print(xy_values)
+    #
+    #
+    #     # print(x.shape)
+    #     # print(y.shape)
+    # print(np.array(x))
+    # print(np.array(y))
+    new_points = splev(u, tck)
+    dxds,dyds = splev(u, tck, der=1)
+    dx2ds2,dy2ds2 = splev(u, tck, der=2)
+    curvature_values = np.abs(dx2ds2 * dyds - dxds * dy2ds2) / (dxds * dxds + dyds * dyds)**1.5
+    return curvature_values
+
+def comp_interpolated_points(xy_values,s=2):
+    '''s is a smoothing parameter. s=0 forces agreement with xy_values, but does not produce smooth curvature
+    xy_values is an Nx2 np.array discretizing a continuous curve
+    Note that (i) we force interpolation by using s=0,
+    (ii) the parameterization, u, is generated automatically.
+    Example Usage:
+    new_points=comp_interpolated_points(xy_values)
+    '''
+    xp=xy_values[:,0]
+    yp=xy_values[:,1]
+    assert (xy_values.shape[1]==2)
+    okay = np.where(np.abs(np.diff(xp)) + np.abs(np.diff(yp)) > 0)
+    x = np.r_[xp[okay], xp[-1], xp[0]]
+    y = np.r_[yp[okay], yp[-1], yp[0]]
+    tck, u = splprep([x, y],s=s)#,per=1)#s=0)
+    new_points = splev(u, tck)
+    return new_points

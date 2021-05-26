@@ -48,8 +48,14 @@ def get_compute_arclength_values_full_color(width,height):
 
 		contour_xy_values_unwrapped=np.stack((x_values,y_values)).T
 		assert(contour_xy_values_unwrapped.shape[1]==2)
-		dict_curvature=compute_curvature(contour_xy_values_unwrapped)
-
+		# new_points=np.array(comp_interpolated_points(contour_xy_values_unwrapped))
+		#slow and noisy
+		# dict_curvature=compute_curvature(new_points)
+		# #simple and smooth
+		# # print(contour_xy_values_unwrapped.shape)
+		curvature_values=comp_curvature(contour_xy_values_unwrapped)#,s=2.)
+		dict_curvature={'curvature':curvature_values[:-1]}
+		# dict_curvature['curvature']=curvature_values
 		return arclen_values, contour_color_values, dict_curvature, contour_xy_values
 
 	return compute_arclength_values_full_color
