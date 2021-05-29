@@ -1,0 +1,25 @@
+DONE(now): the uncertainty is more than i realized at high densities.  Uncertainty must not be estimated versus q via bootstrap on my ultrabook, silly!  Just increase niter!
+DONE(now best): find the top 5 from run 10 for the LR/FK model
+DONE(better): make run 11 contain the right sized number of random samples from the set of linear combinations of the given top 5 from run 10.
+DONE(better): dev ^that
+m(x0,\varkappa;kappa,r,D)-m_LR,FK
+DONE(nowish): rank the top 5 sets of ^these parameters, holding the others fixed, and going from there.
+
+############# For Particle Annihilation Project: ################
+TODO: plot the token control trial for dt=1e-7 or dt=1e-6.  Do the high density collision rates change?
+TODO: if so, then try simulating with/without forces when dt=1e-6.  Do high density collision rates remain consistent?
+
+TODO: numerically compute mean minimum distance between particles given uniformly distributed positions for a given particle density.
+
+############# For PV Reentry Project: ################
+Nagiv says you will always get AF if you pace aggresively enough.
+I think a good metric of AF response is time to termination (ttt)
+
+Experimental Design (in silico):
+1. pace sinus rhythm once
+1. at a variable time , \tau later, pace from a difference site
+1. measure the earliest time when the activation front does not exist anymore > ttt
+1. repeat for each site.  Plot all ttt. Pick a reasonable threshold ttt_threshold
+
+Question:
+Which sites support ttt>ttt_threshold for reasonably small tau?
