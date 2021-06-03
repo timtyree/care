@@ -48,13 +48,13 @@ def get_compute_arclength_values_full_color(width,height):
 
 		contour_xy_values_unwrapped=np.stack((x_values,y_values)).T
 		assert(contour_xy_values_unwrapped.shape[1]==2)
-		# new_points=np.array(comp_interpolated_points(contour_xy_values_unwrapped))
+		new_points=np.array(comp_interpolated_points(contour_xy_values_unwrapped))
 		#slow and noisy
-		# dict_curvature=compute_curvature(new_points)
-		# #simple and smooth
+		dict_curvature=compute_curvature(new_points)
+		# #simple and smooth... but scipy throws ValueError: Invalid inputs.
 		# # print(contour_xy_values_unwrapped.shape)
-		curvature_values=comp_curvature(contour_xy_values_unwrapped)#,s=2.)
-		dict_curvature={'curvature':curvature_values[:-1]}
+		# curvature_values=comp_curvature(contour_xy_values_unwrapped)#,s=2.)
+		# dict_curvature={'curvature':curvature_values[:-1]}
 		# dict_curvature['curvature']=curvature_values
 		return arclen_values, contour_color_values, dict_curvature, contour_xy_values
 
@@ -66,16 +66,27 @@ def get_format_dict_contour(width,height,model='LR'):
 		raise('model not yet implemented!')
 	def format_dict_contour(arclen_values,  contour_color_values, dict_curvature=None):
 		'''contour information given in full color'''
-		# TODO: format contour as DataFrame using the activation front arclength parameter, sigma
-		assert contour_color_values.shape[1]==18 #redundant with model kwarg
 		c_values=contour_color_values.T
-		dict_contour={
-			'sigma':arclen_values,
-			'V':c_values[0].copy(),
-			'dVdt':c_values[-2].copy(),
-			'Ca':c_values[1].copy(),
-			'dCadt':c_values[-1].copy()
-		}
+		# TODO: format contour as DataFrame using the activation front arclength parameter, sigma
+		if contour_color_values.shape[1]==18: #redundant with model kwarg
+			# LR model
+			dict_contour={
+				'sigma':arclen_values,
+				'V':c_values[0].copy(),
+				'dVdt':c_values[-2].copy(),
+				'Ca':c_values[1].copy(),
+				'dCadt':c_values[-1].copy()
+			}
+		elif contour_color_values.shape[1]==3:
+			# FK model
+			V_values=c_values[0].copy()
+			dict_contour={
+				'sigma':arclen_values,
+				'V':c_values[0].copy(),   #actuallly dimensionless voltage, v
+				'dVdt':c_values[0].copy(),#actuallly dimensionless voltage, v
+				'Ca':c_values[2].copy(),  #actually slow variable, s
+				'dCadt':c_values[1].copy()#actually fast variable, f
+			}
 		if dict_curvature is not None:
 			dict_contour.update(dict_curvature)
 		return dict_contour
