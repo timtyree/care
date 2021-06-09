@@ -501,3 +501,26 @@ class ParticlePBCDict(dict):
         with open(save_fn,"w") as fp:
             json.dump(dict_lesser_dict,fp,cls=NpEncoder,indent=0,sort_keys=True)
         return self
+
+    def get_field_values(self,field,index=0):
+        pid_lst=self.get_alive_particles()
+        last_particle=self[pid_lst[index]]
+        values=np.array(last_particle[field])
+        return values
+
+    def get_sigma_max_values(self,ds=5.,field='lesser_arclen',pid=None):
+        if pid is None:
+            pid_lst=pdict.get_alive_particles()
+            last_particle=self[pid_lst[0]]
+        else:
+            last_particle=self[pid]
+        scale=ds/last_particle.width #cm/pixel
+        sigma_max_values=scale*np.array(last_particle[field])
+        return sigma_max_values
+
+    def get_t_values(self,ds=5.,field='t', index=0,scale=1.):
+        pid_lst=self.get_alive_particles()
+        last_particle=self[pid_lst[index]]
+        # scale=1.#ms per ms
+        t_values=scale*np.array(last_particle[field])
+        return t_values

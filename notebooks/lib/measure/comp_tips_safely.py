@@ -9,7 +9,7 @@ def comp_dict_simp(img,img_prev,V_threshold):
     Example Usage:
     dict_simp=comp_dict_simp(img,img_prev,V_threshold)
     '''
-    lst_values_x,lst_values_y,_, lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy=find_intersections(array1=img,array2=img_prev,level1=V_threshold,level2=V_threshold,theta_threshold = 0.)
+    lst_values_x,lst_values_y,_, lst_values_grad_ux, lst_values_grad_uy, lst_values_grad_vx, lst_values_grad_vy=find_intersections(array1=img,array2=img_prev,level1=V_threshold,level2=V_threshold)
     dict_simp={
         'x':lst_values_x,
         'y':lst_values_y,
@@ -23,11 +23,18 @@ def comp_dict_simp(img,img_prev,V_threshold):
 
 def get_sort_particles_indices(width,height):
     dist_L2_pbc=get_distance_L2_pbc(width=width,height=height)
-    def sort_particles_indices(dict_topo, dict_simp, search_range=40.):
+    def sort_particles_indices(dict_out, dict_in, search_range=40.):
         '''sorts from dict_topo indicies to dict_simp indicies.  returns dict
+        DONE: make this map from dict_simp to dict_topo
+        TODO: tune search_range using an estimate of max displacement between observations
+
         Example Usage:
         in_to_out=sort_particles_indices(dict_topo, dict_simp, search_range=40.)
         '''
+        dict_topo=dict_out
+        dict_simp=dict_in
+        #TODO(later): switch the names of dict_simp/topo in the rest of this function, then swap ^that.
+        #   As it is, the instantaneous position is being recorded
         pid_out_lst=list(range(len(list(dict_simp['x']))))
         pid_in_lst =dict_topo['pid']
         x_lst=dict_topo['x'];y_lst=dict_topo['y'];
@@ -89,17 +96,21 @@ def zip_tips(dict_simp,dict_topo,dict_in_to_out):
 
     dict_tips={};pid_lst=[]
     pid_in_lst=list(dict_in_to_out.keys())
-    #for each item referenced in dict_in_to_out, update first with the full color results
+    #TODO: make from dict_simp to dict_topo
+    #TODO: ensure the final pid being recorded is from dict_simp
+    #for each item referenced from dict_in_to_out, update first with the full color results
     for pid in pid_in_lst:
         pid_out=dict_in_to_out[pid]
         for key in dict_topo.keys():
             value=dict_topo[key]
             if is_primitive(value):
                 dict_tips[key]=value
+            # elif :#heretim?
             elif set(dict_tips.keys()).issuperset({key}):
                 dict_tips[key].append(value[pid])
             else:
                 dict_tips[key]=[value[pid]]
+            pid_lst.append(pid)
 
     #if key is not in dict_tips, update it with all pid values
     new_keys=list(set(dict_simp.keys()).difference(set(dict_topo.keys())))
@@ -115,6 +126,8 @@ def zip_tips(dict_simp,dict_topo,dict_in_to_out):
                 dict_tips[key]=[dict_simp[key][pid_out]]
             except TypeError as e:
                 pass
+            pid_lst.append(pid)
+    dict_tips['pid']=pid_lst
     return dict_tips
 
 def get_comp_tips(width,height,V_threshold,search_range=40.):
