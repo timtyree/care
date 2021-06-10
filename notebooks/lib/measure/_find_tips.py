@@ -111,7 +111,7 @@ def contours_to_simple_tips_pbc(contours1,contours2,width, height,jump_threshold
     '''
     contour1_lst_lst, contour2_lst_lst, s1in_lst, s2in_lst = preprocess_contours_and_enumerate(contours1, contours2, width, height, jump_threshold = jump_threshold, size_threshold = size_threshold)
 
-    #detect tips as above and return tip number as above
+    #detect tips as above and return tip number as above 
     #DONE: at the end of find_tips_with_pbc_knots, return the net node indices of the contour1_lst_lst, which may be used later with contour1_len_lst
     contour1_len_values=np.array([len(x) for x in contour1_lst_lst])
     s1_lst, s2_lst, x_lst, y_lst = find_tips_with_pbc_knots(contour1_lst_lst, contour2_lst_lst, s1in_lst, s2in_lst)

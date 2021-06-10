@@ -31,14 +31,14 @@ def get_sort_particles_indices(width,height):
         Example Usage:
         in_to_out=sort_particles_indices(dict_topo, dict_simp, search_range=40.)
         '''
-        dict_topo=dict_out
-        dict_simp=dict_in
+        # dict_topo=dict_out
+        # dict_simp=dict_in
         #TODO(later): switch the names of dict_simp/topo in the rest of this function, then swap ^that.
         #   As it is, the instantaneous position is being recorded
-        pid_out_lst=list(range(len(list(dict_simp['x']))))
-        pid_in_lst =dict_topo['pid']
-        x_lst=dict_topo['x'];y_lst=dict_topo['y'];
-        x2_lst=dict_simp['x'];y2_lst=dict_simp['y'];
+        pid_out_lst=list(range(len(list(dict_out['x']))))
+        pid_in_lst =list(range(len(list(dict_in['x']))))
+        x_lst=dict_in['x'];y_lst=dict_in['y'];
+        x2_lst=dict_out['x'];y2_lst=dict_out['y'];
         # make dict that maps dict_tips['pid'] to nearest list(self.keys()) that has tmax as its time
         in_to_out={}
         #for each point[pid_in]
@@ -94,26 +94,31 @@ def zip_tips(dict_simp,dict_topo,dict_in_to_out):
     def is_primitive(thing):
         return isinstance(thing, primitive)
 
-    dict_tips={};pid_lst=[]
+    dict_tips=dict()
     pid_in_lst=list(dict_in_to_out.keys())
+    dict_simp_keys=dict_topo.keys()
+    dict_topo_keys=dict_topo.keys()
     #TODO: make from dict_simp to dict_topo
     #TODO: ensure the final pid being recorded is from dict_simp
+
+    # any field values in dict_topo over to dict_tips
     #for each item referenced from dict_in_to_out, update first with the full color results
     for pid in pid_in_lst:
         pid_out=dict_in_to_out[pid]
-        for key in dict_topo.keys():
+        for key in dict_topo_keys:
             value=dict_topo[key]
             if is_primitive(value):
                 dict_tips[key]=value
             # elif :#heretim?
+            # then not primitive and is list of values indexed by pid,pid_out
+            # if the field already exists, append the next particle's value to the list
             elif set(dict_tips.keys()).issuperset({key}):
                 dict_tips[key].append(value[pid])
-            else:
+            else:#else, the field does not exist and initialize it with a list containing the next particle's value
                 dict_tips[key]=[value[pid]]
-            pid_lst.append(pid)
 
-    #if key is not in dict_tips, update it with all pid values
-    new_keys=list(set(dict_simp.keys()).difference(set(dict_topo.keys())))
+    #if key is not in dict_tips, update it with all pid values (for using the simple computation of simple tips)
+    new_keys=list(set(dict_simp_keys).difference(set(dict_topo_keys)))
     for key in new_keys:
         for pid in pid_in_lst:
             pid_out=dict_in_to_out[pid]
@@ -126,8 +131,15 @@ def zip_tips(dict_simp,dict_topo,dict_in_to_out):
                 dict_tips[key]=[dict_simp[key][pid_out]]
             except TypeError as e:
                 pass
-            pid_lst.append(pid)
-    dict_tips['pid']=pid_lst
+
+    #This ensures correct greater/lesser tips correspond, even though based of lagged observations that compare txt to txt_prev
+    #copy some select values from dict_simp into dict_tips for using full color results
+    key_lst=['pid','lesser_pid','greater_pid','lesser_arclen','greater_arclen',
+        'greater_arclen_values','greater_mean_V','greater_mean_curvature','greater_xy_values','greater_V_values','greater_curvature_values',
+        'lesser_arclen_values','lesser_mean_V','lesser_mean_curvature','lesser_xy_values','lesser_V_values','lesser_curvature_values'
+    ]
+    for key in key_lst:
+        dict_tips[key]=dict_simp[key]
     return dict_tips
 
 def get_comp_tips(width,height,V_threshold,search_range=40.):
@@ -135,22 +147,29 @@ def get_comp_tips(width,height,V_threshold,search_range=40.):
     Example Usage:
     comp_tips=get_comp_tips(width,height,V_threshold)
     dict_tips=comp_tips(img,img_prev,dimgdt, t, txt)
+
+    TODO: find out why sort_particles_indices or zip_tips is giving me bozo results
     '''
     #TODO(later): compute level sets of all 2D arrays... and save the runtime of computing img's level set twice...
     sort_particles_indices=get_sort_particles_indices(width,height)
-    comp_dict_topo_full_color=get_comp_dict_topo_full_color(width=width,height=height,level1=V_threshold,level2=0.)
+    comp_dict_topo_instant=get_comp_dict_topo_full_color(width=width,height=height,level1=V_threshold,level2=0.)
+    comp_dict_topo_lagged=get_comp_dict_topo_full_color(width=width,height=height,level1=V_threshold,level2=V_threshold)
     def comp_tips(img,img_prev,dimgdt, t, txt):
         #compute intersection points of level sets of img and img_prev
-        dict_simp=comp_dict_simp(img,img_prev,V_threshold)
+        # dict_simp=comp_dict_simp(img,img_prev,V_threshold)       #simple method without archlen observations
+        dict_simp=comp_dict_topo_lagged(img, img_prev, t, txt) #slow method with archlen observations
+        #DONE: made sure contours1 is being used to compute activation fronts/arclen
+        #HINT: in function update_with_full_color_observations in full_color_contours.py in
         #compute intersection points of level sets of img and dimgdt
-        dict_topo=comp_dict_topo_full_color(img, dimgdt, t, txt)
+        dict_topo=comp_dict_topo_instant(img, dimgdt, t, txt)
         #for each tip from (img and img_prev), find the nearest tip from (img and dimgdt)
         #         dict_in_to_out,dict_in_to_dist=map_simp_to_topo(dict_simp,dict_topo)
-        in_to_out=sort_particles_indices(dict_topo, dict_simp, search_range=search_range)
+        in_to_out=sort_particles_indices(dict_out=dict_topo, dict_in=dict_simp, search_range=search_range)
         #return the dict of all ^those tips
         dict_tips=zip_tips(dict_simp,dict_topo,in_to_out)
-        #TODO: handle when lesser_pid and/or greater_pid is not included in the list
+        #TODO: better handle when lesser_pid and/or greater_pid is not included in the list
         #TODO: test reindex dict_tips works
+        # try:
         ntips=len(dict_tips['pid'])
         pid_map={}
         for n in range(ntips):
@@ -171,6 +190,9 @@ def get_comp_tips(width,height,V_threshold,search_range=40.):
             dict_tips['greater_pid'][m]=n        # for pid in dict_tips['greater_pid']:
         #     n=pid_map[pid]
         #     dict_tips['greater_pid'][n]=pid_map[dict_tips['greater_pid'][n]]
+        # except KeyError as e:
+        #     pass
+
         #compute relative phase information along the lesser front
         try:
             phi_lst=compute_phi_values(dict_tips)

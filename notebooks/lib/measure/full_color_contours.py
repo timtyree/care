@@ -112,13 +112,16 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 	format_dict_contour=get_format_dict_contour(width,height)
 	def update_with_full_color_observations(dict_topo,contours1,contours2,txt):
 		'''
-		Example Usage:
+		updates dict_topo with observations of the contours specified herein.
 		'''
 		xy_values=np.array(list(zip(dict_topo['x'],dict_topo['y'])))
 		s1_values=np.array(dict_topo['s1'])
 		s2_values=np.array(dict_topo['s2'])
 		s_values=s1_values
+		#use contours1 to generate activation fronts
 		contours=contours1
+		# #use contours2 to generate activation fronts
+		# contours=contours2
 		node_id_lst=locate_node_indices_simple(xy_values,s_values,contours)
 		# j_lst,s_lst,arclen_values_lst,j_nxt_lst=compute_arclength_values_for_tips(xy_values,node_id_lst,s_values,contours)
 		retval=compute_colored_arclength_values_for_tips(xy_values, node_id_lst,s_values,contours,txt)
@@ -195,8 +198,6 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 		dict_topo['pid']                   = list(range(ntips))
 		dict_topo['greater_pid']           = greater_pid_lst
 		dict_topo['lesser_pid']            = lesser_pid_lst
-		dict_topo['greater_arclen']        = greater_arclen_lst
-		dict_topo['lesser_arclen']         = lesser_arclen_lst
 		dict_topo['greater_arclen_values'] = greater_arclen_values_lst
 		dict_topo['lesser_arclen_values']  = lesser_arclen_values_lst
 		dict_topo['greater_arclen']        = greater_arclen_lst
