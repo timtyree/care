@@ -2,7 +2,7 @@ from .. import *
 import numpy as np
 from ..controller.controller_LR import get_one_step_explicit_synchronous_splitting
 
-def init_methods(width,height,ds,dt,V_threshold=-50,jump_threshold=40,**kwargs):
+def init_methods(width,height,ds,dt,nb_dir,V_threshold=-50,jump_threshold=40,**kwargs):
     '''
     Example Usage:
     one_step,comp_distance,comp_dict_tips=init_methods(width,height,ds,dt,V_threshold=-50,jump_threshold=40)

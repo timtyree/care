@@ -1,4 +1,5 @@
 import numpy as np, pandas as pd
+from ..utils.projection_func import get_subtract_pbc
 #Programmer: Tim Tyree
 #Date: 5.10.2021
 #Group: Rappel
@@ -17,6 +18,34 @@ import numpy as np, pandas as pd
 #######
 #Module
 #######
+def get_compute_displacements_between(width,height):
+    subtract_pbc=get_subtract_pbc(width=width,height=height)
+    def compute_displacements_between(d1,d2):
+        '''computes the displacements between particle 1 and particle 2 in units of pixels'''
+        # compute displacement unit vector from tip 1 to tip 2
+        xy1_values=np.array(list(zip(d1['x'],d1['y'])))
+        xy2_values=np.array(list(zip(d2['x'],d2['y'])))
+
+        xy2_minus_xy1_values=np.zeros_like(xy2_values)
+        for j in range(xy2_values.shape[0]):
+            xy2_minus_xy1_values[j]=subtract_pbc(xy2_values[j],xy1_values[j])
+        return xy2_minus_xy1_values
+    return compute_displacements_between
+
+def get_compute_ranges_between(width,height):
+    '''Example Usage:
+    compute_ranges_between=get_compute_ranges_between(width=width,height=height)
+    range_values=compute_ranges_between(d1,d2)
+    '''
+    compute_displacements_between=get_compute_displacements_between(width=width,height=height)
+    def compute_ranges_between(d1,d2):
+        '''computes the phases between particle 1 and particle 2 in units of radians.
+        returns range between particles in units of pixels'''
+        xy2_minus_xy1_values=compute_displacements_between(d1,d2)
+        range_values=np.linalg.norm(xy2_minus_xy1_values, axis=1)
+        return range_values
+    return compute_ranges_between
+
 def compute_phases_between(d1,d2,dict_activation_front,field='lesser_xy_values'):
     '''computes the phases between particle 1 and particle 2 in units of radians.
     returns range between particles in units of pixels'''
@@ -145,7 +174,7 @@ def simulate_pdict_example(dt=0.001,V_threshold=-50.):
     inVc,outVc,inmhjdfx,outmhjdfx,dVcdt=unstack_txt(txt)
     width,height=txt.shape[:2]
     print(txt.shape)
-    one_step,comp_distance,comp_dict_tips=init_methods(width,height,ds,dt,V_threshold=V_threshold,jump_threshold=40)
+    one_step,comp_distance,comp_dict_tips=init_methods(width,height,ds,dt,nb_dir,V_threshold=V_threshold,jump_threshold=40,**kwargs)
     comp_dict_topo_full_color=comp_dict_tips
     #reidentify the tips to be tracked
     img=inVc[...,0];dimgdt=dVcdt[...,0]

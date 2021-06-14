@@ -170,24 +170,30 @@ def get_comp_tips(width,height,V_threshold,search_range=40.):
         #TODO: better handle when lesser_pid and/or greater_pid is not included in the list
         #TODO: test reindex dict_tips works
         # try:
-        ntips=len(dict_tips['pid'])
-        pid_map={}
-        for n in range(ntips):
-            pid=dict_tips['pid'][n]
-            pid_map[pid]=n
-            dict_tips['pid'][n]=pid_map[pid]
-        for m,pid in enumerate(dict_tips['lesser_pid']):
-            try:
-                n=pid_map[pid]
-            except KeyError as e:
-                n=-1
-            dict_tips['lesser_pid'][m]=n
-        for m,pid in enumerate(dict_tips['greater_pid']):
-            try:
-                n=pid_map[pid]
-            except KeyError as e:
-                n=-1
-            dict_tips['greater_pid'][m]=n        # for pid in dict_tips['greater_pid']:
+
+
+        # #reindexing not needed with dict_in=dict_simp
+        # ntips=len(dict_tips['pid'])
+        # pid_map={}
+        # for n in range(ntips):
+        #     pid=dict_tips['pid'][n]
+        #     pid_map[pid]=n
+        #     dict_tips['pid'][n]=pid_map[pid]
+        # for m,pid in enumerate(dict_tips['lesser_pid']):
+        #     try:
+        #         n=pid_map[pid]
+        #     except KeyError as e:
+        #         n=-1
+        #     dict_tips['lesser_pid'][m]=n
+        # for m,pid in enumerate(dict_tips['greater_pid']):
+        #     try:
+        #         n=pid_map[pid]
+        #     except KeyError as e:
+        #         n=-1
+        #     dict_tips['greater_pid'][m]=n
+
+
+        # for pid in dict_tips['greater_pid']:
         #     n=pid_map[pid]
         #     dict_tips['greater_pid'][n]=pid_map[dict_tips['greater_pid'][n]]
         # except KeyError as e:

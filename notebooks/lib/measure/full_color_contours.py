@@ -95,7 +95,8 @@ def get_format_dict_contour(width,height,model='LR'):
 def get_update_with_full_color_observations(width,height,**kwargs):
 	'''
 	Example Usage:
-	comp_dict_topo_simple=get_comp_dict_topo_simple(width=200.,height=200.)
+	update_with_full_color_observations=get_update_with_full_color_observations(width=200.,height=200.)
+	update_with_full_color_observations(dict_topo,contours1,contours2,txt)
 	'''
 	#jit compile arclength module to llvm machine code
 	locate_nearest_point_index = get_locate_nearest_point_index(width=width,height=height)
@@ -218,7 +219,7 @@ def get_update_with_full_color_observations(width,height,**kwargs):
 		dict_topo['greater_curvature_values']        = greater_curvature_values_lst
 		dict_topo['lesser_curvature_values']         = lesser_curvature_values_lst
 
-		return True
+		return dict_topo
 	return update_with_full_color_observations
 
 def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_threshold=100,size_threshold=0,ds=5.,**kwargs):
@@ -263,7 +264,7 @@ def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_thresho
 		# s1_values=np.array(dict_topo['s1'])
 		# s2_values=np.array(dict_topo['s2'])
 		#update dict_topo with arclength information
-		update_with_full_color_observations(dict_topo,contours1,contours2,txt)
+		dict_topo=update_with_full_color_observations(dict_topo,contours1,contours2,txt)
 		# ntips=dict_topo[]
 		# # scale all arclen values to centimeters
 

@@ -120,7 +120,7 @@ class ParticlePBC(dict):
         cols = cols[-1:] + cols[:-1]
         return df[cols]
 
-    def separate_data_to_dicts(self):
+    def separate_data_to_dicts(self,pid=None):
         '''separates contour data from particle data for one particle.
         does not change particle.
         Example Usage:
@@ -184,6 +184,9 @@ class ParticlePBC(dict):
                 dict_particle_out[key]=v_lst
             elif l==minlen+1:
                 dict_particle_out[key]=v_lst[1:]
+
+        if pid is not None:
+            dict_particle_out['pid']=pid
         return dict_particle_out,dict_greater,dict_lesser
 
 class ParticlePBCDict(dict):
@@ -474,7 +477,7 @@ class ParticlePBCDict(dict):
         dict_lesser_dict={}
         for pid in sorted(self.keys()):
             particle=self[pid]
-            dict_particle_out,dict_greater,dict_lesser=particle.separate_data_to_dicts()
+            dict_particle_out,dict_greater,dict_lesser=particle.separate_data_to_dicts(pid=None)
             dict_greater_dict[pid]=dict_greater
             dict_lesser_dict[pid]=dict_lesser
             df_lst.append(pd.DataFrame(dict_particle_out))
@@ -486,7 +489,7 @@ class ParticlePBCDict(dict):
         modname=f"{nb_dir}/Data/test_data/recursive_death_test"
         to_csv_and_json(pdict,modname)
         '''
-        df, dict_greater_dict, dict_lesser_dict=self.separate_data_to_pandas()
+        df, dict_greater_dict, dict_lesser_dict=self.separate_data_to_pandas()#pid=pid)
         #save all particles in one csv
         save_dir=modname+"_particles_only.csv"
         df.to_csv(save_dir,index=False)
