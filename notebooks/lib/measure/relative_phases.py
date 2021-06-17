@@ -21,13 +21,24 @@ from ..utils.projection_func import get_subtract_pbc
 def get_compute_displacements_between(width,height):
     subtract_pbc=get_subtract_pbc(width=width,height=height)
     def compute_displacements_between(d1,d2):
-        '''computes the displacements between particle 1 and particle 2 in units of pixels'''
-        # compute displacement unit vector from tip 1 to tip 2
-        xy1_values=np.array(list(zip(d1['x'],d1['y'])))
-        xy2_values=np.array(list(zip(d2['x'],d2['y'])))
+        '''computes the displacements between particle 1 and particle 2 in units of pixels.
+        supposes the index indexes time.'''
+        #align locations by index
+        dd=d1[['x','y']].copy()
+        dd[['xx','yy']]=d2[['x','y']]
+        dd.dropna(inplace=True)
 
-        xy2_minus_xy1_values=np.zeros_like(xy2_values)
-        for j in range(xy2_values.shape[0]):
+        # compute displacement unit vector from tip 1 to tip 2
+        xy1_values=np.array(list(zip(dd['x'],dd['y'])))
+        xy2_values=np.array(list(zip(dd['xx'],dd['yy'])))
+
+        #I think this length check is unnecessary
+        s1=xy1_values.shape[0]
+        s2=xy2_values.shape[0]
+        xy2_minus_xy1_values=np.zeros((np.min((s1,s2)),2))
+
+        #compute displacements between
+        for j in range(xy2_minus_xy1_values.shape[0]):
             xy2_minus_xy1_values[j]=subtract_pbc(xy2_values[j],xy1_values[j])
         return xy2_minus_xy1_values
     return compute_displacements_between
