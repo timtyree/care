@@ -6,6 +6,7 @@ from ..utils.projection_func import get_subtract_pbc
 from .relative_phases import *
 from .compute_relative_velocities import *
 from ..routines.compute_interactions import compute_df_interactions
+from .compute_phase_angles import *
 
 def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
    # Consolidate all csv files into one object
@@ -17,9 +18,77 @@ def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
    df.to_csv(file_out, index=False, encoding=encoding)
    return os.path.abspath(file_out)
 
+def filter_before(df,tmin=100,t_column='t'):
+	'''filter all time earlier than tmin'''
+	tmin=100#ms
+	boo=df[t_column]<tmin
+	df.drop(df[boo],inplace=True)
+	return df
+
 ##########################################
 # Annihilation
 ##########################################
+def get_compute_final_inout_angles(width,height):
+	subtract_pbc=get_subtract_pbc(width=width,height=height)
+	def compute_final_inout_angles(d1,d2):
+		'''computes the unsigned angles between the final velocity of d1 near death for one tip pair.
+		Updates d1,d2 with fields.  aligns locations by index.  supposes index is the field, frame
+		Example Usage:
+		compute_final_inout_angles=get_compute_final_inout_angles(width,height)
+		tdeath_values,angle_values=compute_final_inout_angles(d1,d2)
+		'''
+		#compute displacement of d1 with pbc
+		xy_values=np.array(list(zip(d1['x'],d1['y'])))
+		dshifted=d1.shift(1).copy()
+		# dshifted=d1.shift(-1).copy()
+		xy_next_values=np.array(list(zip(dshifted['x'],dshifted['y'])))
+		dxy1_values=np.zeros_like(xy_values)+np.nan
+		# compute displacement unit vector from tip 1 to tip 2
+		xy_values=np.array(list(zip(d1['x'],d1['y'])))
+		dshifted=d1.shift(1).copy()
+		# dshifted=d1.shift(-1).copy()
+		xy_next_values=np.array(list(zip(dshifted['x'],dshifted['y'])))
+		dxy1_values=np.zeros_like(xy_values)+np.nan
+		#compute displacements between
+		for j in range(dxy1_values.shape[0]):
+			dxy1_values[j]=subtract_pbc(xy_next_values[j],xy_values[j])
+		d1['dx']=dxy1_values[:,0]
+		d1['dy']=dxy1_values[:,1]
+		d1['dt']=d1['t'].diff().shift(-1).iloc[1:-1]
+		# d1[['dx','dy','dt']]=d1[['x','y','t']].diff().shift(-1).iloc[1:-1]
+		d1['displacement']=np.sqrt(d1['dx']**2+d1['dy']**2)
+		d1['dx_hat']=d1['dx']/d1['displacement']
+		d1['dy_hat']=d1['dy']/d1['displacement']
+
+		#compute COM relative to d1
+		d1['x2']=d2['x']
+		d1['y2']=d2['y']
+		xy1_values=np.array(list(zip(d1['x'],d1['y'])))
+		xy2_values=np.array(list(zip(d1['x2'],d1['y2'])))
+		dxy12_values=np.zeros_like(xy1_values)+np.nan
+		#compute displacements between
+		for j in range(dxy12_values.shape[0]):
+			dxy12_values[j]=subtract_pbc(xy2_values[j],xy1_values[j])
+		d1['comx']=xy1_values[:,0]+dxy12_values[:,0]/2
+		d1['comy']=xy1_values[:,1]+dxy12_values[:,1]/2
+
+		#compute the radial unit vector of d1
+		d1['rx']=xy1_values[:,0]-d1['comx']
+		d1['ry']=xy1_values[:,1]-d1['comy']
+		d1['rx_hat']=d1['rx']/np.sqrt(d1['rx']**2+d1['ry']**2)
+		d1['ry_hat']=d1['ry']/np.sqrt(d1['rx']**2+d1['ry']**2)
+
+		#compute unsigned angle between velocity and the radial unit vector
+		# compute dot product between tip 1 and tip 2
+		cosine_series=d1['dx_hat']*d1['rx_hat']+d1['dy_hat']*d1['ry_hat']
+		d1['theta']=np.arccos(cosine_series)   #radians
+		d1.dropna(inplace=True)
+
+		angle_values=d1['theta'].values
+		tdeath_values=d1['t'].values[-1]-d1['t'].values #ms
+		return tdeath_values,angle_values
+	return compute_final_inout_angles
+
 def compute_annihilation_events(input_fn,
 								width,
 								height,
@@ -29,7 +98,7 @@ def compute_annihilation_events(input_fn,
 								min_range=1.,
 								round_t_to_n_digits=3,
 								use_min_duration=True,
-								use_grad_voltage=False,
+								use_grad_voltage=True,
 								printing=True,
 								**kwargs):
 	'''input_fn is a string locating the directory of a _trajectories .csv file.
@@ -47,17 +116,20 @@ def compute_annihilation_events(input_fn,
 	#     use_min_duration=True#broken for false
 	#     use_grad_voltage=False
 	df=pd.read_csv(input_fn)
-	DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
-	if printing:
-		print(f"the time resolution is {DT} ms.")
+	try:
+		DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
+		if printing:
+			print(f"the time resolution is {DT} ms.")
+			
+	except AttributeError as e:
+		return f'Warning: AttributeError raise for {input_fn}.  frame is probably missing from the input DataFrame instance...'
 
 	dsdpixel = ds / width  #cm per pixel
 	DS = dsdpixel
 	#compile jit
-	compute_angle_between_final_velocities = get_compute_angle_between_final_velocities(
-		width, height)
-	compute_ranges_between = get_compute_ranges_between(width=width,
-														height=height)
+	compute_final_inout_angles=get_compute_final_inout_angles(width,height)
+	# compute_angle_between_final_velocities = get_compute_angle_between_final_velocities(width, height)
+	compute_ranges_between = get_compute_ranges_between(width=width,height=height)
 
 	# death_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
 	#compute interactions
@@ -104,10 +176,8 @@ def compute_annihilation_events(input_fn,
 			nobs = range_values[1:-1].shape[0]
 			if nobs > 1:
 				#compute angle between velocities
-				tdeath_values, angle_between_values = compute_angle_between_final_velocities(
-					d1, d2)
-				theta_values = angle_between_values
-				#heretim
+				# tdeath_values, theta_values = compute_angle_between_final_velocities(d1, d2)
+				tdeath_values, theta_values = compute_final_inout_angles(d1, d2)
 				#align range_values and theta_values
 				boo = ~np.isnan(theta_values)
 				theta_values = theta_values[boo]
@@ -185,8 +255,12 @@ def save_annihilation_events(input_fn,
 	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
 	save_fn=save_annihilation_events(input_fn,width,height,ds,save_folder=None,save_fn=None)#,**kwargs)
 	'''
-	df_phases = compute_annihilation_events(input_fn, width, height, ds,
-											**kwargs)
+	df_phases = compute_annihilation_events(input_fn, width, height, ds, **kwargs)
+	if df_phases is None:
+		return f"Warning: no annihilation events considered valid for trial located at \n\t {input_fn}"
+	if type(df_phases)!=type(pd.DataFrame):
+		return df_phases
+
 	if save_folder is None:
 		#save df_phases as csv
 		save_folder = os.path.dirname(
@@ -224,6 +298,67 @@ def get_routine_traj_to_annihilation(width=200,height=200,ds=5.,
 ##########################################
 # Creation
 ##########################################
+def get_compute_initial_inout_angles(width,height):
+	subtract_pbc=get_subtract_pbc(width=width,height=height)
+	def compute_initial_inout_angles(d1,d2):
+		'''computes the unsigned angles between the initial velocity of d1 near birth for one tip pair.
+		Updates d1,d2 with fields.  aligns locations by index.  supposes index is the field, frame
+		Example Usage:
+		compute_initial_inout_angles=get_compute_initial_inout_angles(width,height)
+		tbirth_values,angle_values=compute_initial_inout_angles(d1,d2)
+		'''
+		#compute displacement of d1 with pbc
+		xy_values=np.array(list(zip(d1['x'],d1['y'])))
+		dshifted=d1.shift(1).copy()
+		# dshifted=d1.shift(-1).copy()
+		xy_next_values=np.array(list(zip(dshifted['x'],dshifted['y'])))
+		dxy1_values=np.zeros_like(xy_values)+np.nan
+		# compute displacement unit vector from tip 1 to tip 2
+		xy_values=np.array(list(zip(d1['x'],d1['y'])))
+		dshifted=d1.shift(1).copy()
+		# dshifted=d1.shift(-1).copy()
+		xy_next_values=np.array(list(zip(dshifted['x'],dshifted['y'])))
+		dxy1_values=np.zeros_like(xy_values)+np.nan
+		#compute displacements between
+		for j in range(dxy1_values.shape[0]):
+			dxy1_values[j]=subtract_pbc(xy_next_values[j],xy_values[j])
+		d1['dx']=dxy1_values[:,0]
+		d1['dy']=dxy1_values[:,1]
+		d1['dt']=d1['t'].diff().shift(-1).iloc[1:-1]
+		# d1[['dx','dy','dt']]=d1[['x','y','t']].diff().shift(-1).iloc[1:-1]
+		d1['displacement']=np.sqrt(d1['dx']**2+d1['dy']**2)
+		d1['dx_hat']=d1['dx']/d1['displacement']
+		d1['dy_hat']=d1['dy']/d1['displacement']
+
+		#compute COM relative to d1
+		d1['x2']=d2['x']
+		d1['y2']=d2['y']
+		xy1_values=np.array(list(zip(d1['x'],d1['y'])))
+		xy2_values=np.array(list(zip(d1['x2'],d1['y2'])))
+		dxy12_values=np.zeros_like(xy1_values)+np.nan
+		#compute displacements between
+		for j in range(dxy12_values.shape[0]):
+			dxy12_values[j]=subtract_pbc(xy2_values[j],xy1_values[j])
+		d1['comx']=xy1_values[:,0]+dxy12_values[:,0]/2
+		d1['comy']=xy1_values[:,1]+dxy12_values[:,1]/2
+
+		#compute the radial unit vector of d1
+		d1['rx']=xy1_values[:,0]-d1['comx']
+		d1['ry']=xy1_values[:,1]-d1['comy']
+		d1['rx_hat']=d1['rx']/np.sqrt(d1['rx']**2+d1['ry']**2)
+		d1['ry_hat']=d1['ry']/np.sqrt(d1['rx']**2+d1['ry']**2)
+
+		#compute unsigned angle between velocity and the radial unit vector
+		# compute dot product between tip 1 and tip 2
+		cosine_series=d1['dx_hat']*d1['rx_hat']+d1['dy_hat']*d1['ry_hat']
+		d1['theta']=np.arccos(cosine_series)   #radians
+		d1.dropna(inplace=True)
+
+		angle_values=d1['theta'].values
+		tbirth_values=d1['t'].values-d1['t'].values[0] #ms
+		return tbirth_values,angle_values
+	return compute_initial_inout_angles
+
 def compute_creation_events(input_fn,
 								width,
 								height,
@@ -258,11 +393,9 @@ def compute_creation_events(input_fn,
 	dsdpixel = ds / width  #cm per pixel
 	DS = dsdpixel
 	#compile jit
-	compute_angle_between_initial_velocities = get_compute_angle_between_initial_velocities(
-		width, height)
-	compute_ranges_between = get_compute_ranges_between(width=width,
-														height=height)
-
+	compute_initial_inout_angles=get_compute_initial_inout_angles(width,height)
+	# compute_angle_between_initial_velocities = get_compute_angle_between_initial_velocities(width, height)
+	compute_ranges_between = get_compute_ranges_between(width=width,height=height)
 	# birth_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
 	#compute interactions
 	df_interactions = compute_df_interactions(input_fn, DS=DS)
@@ -307,10 +440,8 @@ def compute_creation_events(input_fn,
 			nobs = range_values[1:-1].shape[0]
 			if nobs > 1:
 				#compute angle between velocities
-				tbirth_values, angle_between_values = compute_angle_between_initial_velocities(
-					d1, d2)
-				theta_values = angle_between_values
-				#heretim
+				tbirth_values, theta_values = compute_initial_inout_angles(d1, d2)
+				# tbirth_values, theta_values = compute_angle_between_initial_velocities(d1, d2)
 				#align range_values and theta_values
 				boo = ~np.isnan(theta_values)
 				theta_values = theta_values[boo]
@@ -388,8 +519,10 @@ def save_creation_events(input_fn,
 	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
 	save_fn=save_creation_events(input_fn,width,height,ds,save_folder=None,save_fn=None)#,**kwargs)
 	'''
-	df_phases = compute_creation_events(input_fn, width, height, ds,
-											**kwargs)
+	df_phases = compute_creation_events(input_fn, width, height, ds,**kwargs)
+	if df_phases is None:
+		return f"Warning: no annihilation events considered valid for trial located at \n\t {input_fn}"
+
 	if save_folder is None:
 		#save df_phases as csv
 		save_folder = os.path.dirname(

@@ -1,7 +1,7 @@
 # Tim Tyree
 # 12.18.2020
 
-import trackpy, pandas as pd, numpy as np
+import trackpy, pandas as pd, numpy as np, os
 from .. import *
 from ..utils.dist_func import *
 def compute_track_tips_pbc(df, mem, sr,

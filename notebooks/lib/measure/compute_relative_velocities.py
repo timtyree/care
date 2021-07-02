@@ -89,6 +89,7 @@ def get_compute_angle_between_final_velocities(width,height):
         d1['angle_between']=np.arccos(cosine_series)   #radians
         angle_between_values=d1['angle_between'].values
         tdeath_values=d1['t'].values[-1]-d1['t'].values #ms
+
         # # limit the values of tdeath to d1 or d2 depending on who is shorter
         # tdeath2_values=d2['t'].values[-1]-d2['t'].values
         # t1_min=np.min(tdeath_values)
@@ -100,6 +101,10 @@ def get_compute_angle_between_final_velocities(width,height):
         d1.dropna(inplace=True)
         return tdeath_values,angle_between_values
     return compute_angle_between_final_velocities
+
+# compute the ray beginning at the center of mass of the two spiral tips and extending towards the given spiral tip
+#TODO: compute (un)signed angle
+#DONT: sort by right/left handed spiral tips?
 
 def get_compute_angle_between_initial_velocities(width,height):
     # compute_displacements_between=get_compute_displacements_between(width,height)

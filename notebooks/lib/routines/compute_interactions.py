@@ -1,15 +1,19 @@
 # compute_interactions.py
 from ..my_initialization import *
 from ..utils.utils_traj import *
-def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200):
-    '''input_file_name is a .csv of spiral tip trajecotries'''
+
+
+
+def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200,tmin=100):
+    '''input_file_name is a .csv of spiral tip trajecotries.
+    filters time before tmin'''
     distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
     #list of length sorted trajectories
     df = pd.read_csv(input_file_name)
     using_particle=True
     if using_particle:
         df['cid']=df['particle']
-    df = df[df.t>100].copy()
+    df = df[df.t>tmin].copy()
     df.reset_index(inplace=True)
     s = df.groupby('particle').t.count()
     s = s.sort_values(ascending=False)

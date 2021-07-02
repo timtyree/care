@@ -7,6 +7,11 @@ import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
 # from tkinter import filedialog, Tk
 from glob import glob
 from tkinter import Tk,filedialog
+
+def print_dict(input_dict):
+    for key in input_dict.keys():
+        print(f"{key}={input_dict[key]}")
+
 def get_all_trial_folders_not_archived(ic_suite_fn):
 	os.chdir(ic_suite_fn)
 	dir_lst=os.listdir()
