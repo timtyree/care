@@ -20,7 +20,6 @@ def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
 
 def filter_before(df,tmin=100,t_column='t'):
 	'''filter all time earlier than tmin'''
-	tmin=100#ms
 	boo=df[t_column]<tmin
 	df.drop(df[boo],inplace=True)
 	return df
@@ -100,6 +99,7 @@ def compute_annihilation_events(input_fn,
 								use_min_duration=True,
 								use_grad_voltage=True,
 								printing=True,
+								tmin=100.,
 								**kwargs):
 	'''input_fn is a string locating the directory of a _trajectories .csv file.
 	Returns pandas.Dataframe instance.
@@ -120,9 +120,9 @@ def compute_annihilation_events(input_fn,
 		DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
 		if printing:
 			print(f"the time resolution is {DT} ms.")
-			
+
 	except AttributeError as e:
-		return f'Warning: AttributeError raise for {input_fn}.  frame is probably missing from the input DataFrame instance...'
+		return f'Warning: AttributeError raise for {input_fn}.  "frame" is probably missing from the input DataFrame instance...'
 
 	dsdpixel = ds / width  #cm per pixel
 	DS = dsdpixel
@@ -133,7 +133,7 @@ def compute_annihilation_events(input_fn,
 
 	# death_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
 	#compute interactions
-	df_interactions = compute_df_interactions(input_fn, DS=DS)
+	df_interactions = compute_df_interactions(input_fn, DS=DS,width=width,height=height,tmin=tmin)
 	df_interactions.dropna(inplace=True)
 	death_ranges = DS * df_interactions.rT.values
 	birth_ranges = DS * df_interactions.r0.values
@@ -182,11 +182,10 @@ def compute_annihilation_events(input_fn,
 				boo = ~np.isnan(theta_values)
 				theta_values = theta_values[boo]
 				assert (range_values.shape[0] == t_to_death_values.shape[0])
+				t_values = t_to_death_values[1:-1]
 				if use_min_duration:
 					#filter by min_duration
-					t_values = t_to_death_values[1:-1]
-					boo_keep = min_duration <= np.max(t_values) - np.min(
-						t_values)
+					boo_keep = min_duration <= np.max(t_values) - np.min(t_values)
 					#filter by min_range
 					boo_keep &= min_range <= np.max(range_values)
 				else:
@@ -258,7 +257,7 @@ def save_annihilation_events(input_fn,
 	df_phases = compute_annihilation_events(input_fn, width, height, ds, **kwargs)
 	if df_phases is None:
 		return f"Warning: no annihilation events considered valid for trial located at \n\t {input_fn}"
-	if type(df_phases)!=type(pd.DataFrame):
+	if type(df_phases)!=type(pd.DataFrame()):
 		return df_phases
 
 	if save_folder is None:
@@ -446,11 +445,10 @@ def compute_creation_events(input_fn,
 				boo = ~np.isnan(theta_values)
 				theta_values = theta_values[boo]
 				assert (range_values.shape[0] == t_to_birth_values.shape[0])
+				t_values = t_to_birth_values[1:-1]
 				if use_min_duration:
 					#filter by min_duration
-					t_values = t_to_birth_values[1:-1]
-					boo_keep = min_duration <= np.max(t_values) - np.min(
-						t_values)
+					boo_keep = min_duration <= np.max(t_values) - np.min(t_values)
 					#filter by min_range
 					boo_keep &= min_range <= np.max(range_values)
 				else:
@@ -521,8 +519,9 @@ def save_creation_events(input_fn,
 	'''
 	df_phases = compute_creation_events(input_fn, width, height, ds,**kwargs)
 	if df_phases is None:
-		return f"Warning: no annihilation events considered valid for trial located at \n\t {input_fn}"
-
+		return f"Warning: no creation events considered valid for trial located at \n\t {input_fn}"
+	if type(df_phases)!=type(pd.DataFrame()):
+		return df_phases
 	if save_folder is None:
 		#save df_phases as csv
 		save_folder = os.path.dirname(

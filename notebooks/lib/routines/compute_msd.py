@@ -128,10 +128,14 @@ def get_longest_trajectories(input_file_name, width, height, n_tips = 1,DS = 5/2
     df_traj['t'] = df_traj.t.round(round_t_to_n_digits)
     # df_traj['x'] = df_traj.x.round(6)
     # df_traj['y'] = df_traj.y.round(6)
-    df_traj['grad_ux'] = df_traj.grad_ux.round(5)
-    df_traj['grad_uy'] = df_traj.grad_uy.round(5)
-    df_traj['grad_vx'] = df_traj.grad_vx.round(5)
-    df_traj['grad_vy'] = df_traj.grad_vy.round(5)
+    try:
+        df_traj['grad_ux'] = df_traj.grad_ux.round(5)
+        df_traj['grad_uy'] = df_traj.grad_uy.round(5)
+        df_traj['grad_vx'] = df_traj.grad_vx.round(5)
+        df_traj['grad_vy'] = df_traj.grad_vy.round(5)
+    except AttributeError as e:
+        #the trajectories are apparently missing field gradients...
+        pass
     #     assert ( (np.array(sorted(set(df_traj['particle'].values)))==np.array(sorted(pid_longest_lst))).all())
     return df_traj
 
