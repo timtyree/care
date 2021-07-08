@@ -20,6 +20,8 @@ from .comp_tips_safely import get_comp_tips
 from .compute_relative_velocities import *
 from .relative_phases import *
 from .compute_topological_events import *
+from .bootstrap import *
+from .powerlaw import *
 
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *
