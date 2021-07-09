@@ -29,8 +29,8 @@ def compute_95CI_ols(x,y):
     #standard deviation of intercept
     sb = np.sqrt(ssE*(1/n+xbar**2/SSxx))
     #compute 95% CI for parameters
-    Delta_m = 2*sm
-    Delta_b = 2*sb
+    Delta_m = 1.96*sm
+    Delta_b = 1.96*sb
     #compute Rsquared
     Rsquared=(SSyy-SSE)/SSyy
     #format results as a human readable dict

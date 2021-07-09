@@ -5,3 +5,4 @@ from .termination_time_plots import *
 from .ShowDomainWithTipsAndContours import *
 from .PlotEMSD import *
 from .AngularHistogram import *
+from .PlotMeanRadialVelocities import *

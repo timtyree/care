@@ -16,8 +16,6 @@ def comp_power_scale(B,Delta_B,m,Delta_m):
     M=B**m
     return M,Delta_M
 
-
-
 def fit_power_law(x,y):
     dict_loglog=compute_95CI_ols(np.log(x),np.log(y))
     m=dict_loglog['m']

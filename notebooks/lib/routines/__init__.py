@@ -11,3 +11,4 @@ from .generate_tip_logs_LR_model_cy import * #LR model
 from .kwargs_LR_model_cy import *
 # from .kwargs_LR import *
 from .return_min_distance import *
+from .compute_mean_radial_velocities import *
