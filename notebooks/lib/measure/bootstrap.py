@@ -37,3 +37,55 @@ def bootstrap_95CI_Delta_mean(x,num_samples=1000):
     _, p = normaltest(mean_values)
     Delta_mean=1.96*sig
     return Delta_mean,p
+
+def bin_and_bootstrap_xy_values(x,y,xlabel='r',ylabel='drdt',bins='auto',min_numobs=None,num_bootstrap_samples=1000):
+    R_values=x
+    dRdt_values=y
+    num_samples=num_bootstrap_samples
+    #implement measure of dRdt that explicitely bins by radius
+    counts,r_edges=np.histogram(R_values,bins=bins)
+    range_values=r_edges
+    if min_numobs is None:
+        min_numobs=np.mean(counts)/8
+
+    r_lst=[];drdt_lst=[];Delta_r_lst=[];Delta_drdt_lst=[];
+    count_lst=[];p_r_lst=[];p_drdt_lst=[]
+    for j in range(r_edges.shape[0]-1):
+        numobs=counts[j]
+        if numobs>min_numobs:
+            boo=(R_values>=r_edges[j])&(R_values<r_edges[j+1])
+            r_values=R_values[boo]
+            drdt_values=dRdt_values[boo]
+            #compute mean values in bin
+            r=np.mean(r_values)
+            drdt=np.mean(drdt_values)
+            # compute 95% CI for mean
+            Delta_r,p_r=bootstrap_95CI_Delta_mean(r_values,
+                                                 num_samples=num_samples)
+            Delta_drdt,p_drdt=bootstrap_95CI_Delta_mean(drdt_values,
+                                                 num_samples=num_samples)
+            #append results to list
+            r_lst.append(r)
+            drdt_lst.append(drdt)
+            Delta_r_lst.append(Delta_r)
+            Delta_drdt_lst.append(Delta_drdt)
+            p_r_lst.append(p_r)
+            p_drdt_lst.append(p_drdt)
+            count_lst.append(numobs)
+    r_values=np.array(r_lst)
+    drdt_values=np.array(drdt_lst)
+    Delta_r_values=np.array(Delta_r_lst)
+    Delta_drdt_values=np.array(Delta_drdt_lst)
+    p_r_values=np.array(p_r_lst)
+    p_drdt_values=np.array(p_drdt_lst)
+    count_values=np.array(count_lst)
+    dict_out={
+        xlabel:r_values,
+        ylabel:drdt_values,
+        f'Delta_{xlabel}':Delta_r_values,
+        f'Delta_{ylabel}':Delta_drdt_values,
+        f'p_{xlabel}':p_r_values,
+        f'p_{ylabel}':p_drdt_values,
+        'counts':count_values
+    }
+    return dict_out

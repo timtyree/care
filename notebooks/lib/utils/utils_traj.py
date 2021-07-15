@@ -200,7 +200,8 @@ def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_d
     return df_traj
 
 def comparable_velocities(d,d_alt,angle_threshold = np.pi/4, num_tail=5,num_head=5):
-    '''a comparable_velocity filter for whether d and d_alt have tails and heads have similar directions of mean velocity
+    '''TODO: compute velocities with pbc
+    a comparable_velocity filter for whether d and d_alt have tails and heads have similar directions of mean velocity
     boo = comparable_velocities(d,d_alt,angle_threshold = np.pi/4)'''
     #DONE: compute mean_tail_velocity of tip to be merged into, d
     vx = np.mean(d.tail(num_tail).x.diff().dropna().values)
