@@ -253,15 +253,16 @@ def generate_msd_figures_routine_for_list(file_name_list, n_tips,DT, DS,L, outpu
     print(f"Num. file names in list = {len(file_name_list)}.")
     df=pd.read_csv(input_file_name)
     #compute DT explicitely
-    DT = np.mean(df.t.diff().dropna().values) #ms per frame
+    # DT = np.mean(df.t.diff().dropna().values) #ms per frame
 
     #compute ensemble mean squared displacement for the longest n_tips for each trial in file_name_list
     os.chdir(folder_name)
+    #Nota bene: compute_emsd_for_longest_trajectories returns a pandas.DataFrame instance
     dict_out_lst=[compute_emsd_for_longest_trajectories(input_file_name, n_tips=n_tips,DS=DS,DT=DT,L=L) for input_file_name in file_name_list]
     if len(dict_out_lst)==0:
         print(f"""no sufficiently long lasting trajectory was found.  returning None, None for
         input_file_name, {input_file_name}.""")
-        return None, None
+        return "Warning: "
     df = pd.concat(dict_out_lst)
     df.reset_index(inplace=True,drop=True)
     #save results
