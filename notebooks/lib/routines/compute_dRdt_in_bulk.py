@@ -1,24 +1,25 @@
 from .. import *
 import pandas as pd, numpy as np
 
-def get_routine_for_computing_dRdt_in_bulk(width,ds,
+def get_routine_for_computing_dRdt_in_bulk(width,ds,DT,
                                        use_drop_shorter_than=False,
                                        drop_shorter_than=150,
                                        round_t_to_n_digits=5,
                                        frame_min=0,
                                        num_frames_between=1,
                                        use_random_frames=False,
-                                       num_random_frames=500):
+                                       num_random_frames=500,
+                                       max_dist_thresh=5,**kwargs):
     '''
     Example Usage:
     routine_for_computing_dRdt_in_bulk=routine_for_computing_dRdt_in_bulk(width)
     '''
     distance_L2_pbc=get_distance_L2_pbc(width=width, height=width)
-    dist_thresh=width/2
+    dist_thresh=max_dist_thresh
     def routine_for_computing_dRdt_in_bulk(input_fn):
         #load the data
         df_raw=pd.read_csv(input_fn)
-        DT = compute_DT(df_raw, round_t_to_n_digits=round_t_to_n_digits) #ms/frame
+        # DT = compute_DT(df_raw, round_t_to_n_digits=round_t_to_n_digits) #ms/frame
         DS=ds/width #cm/pixel
         # print(f"time between two observations is {DT} milliseconds.")
         if use_drop_shorter_than:
@@ -43,7 +44,7 @@ def get_routine_for_computing_dRdt_in_bulk(width,ds,
         for frame in frames_input:
             #TODO: extend to consider all pid present in frame
             R_values, dRdt_values = comp_neighboring_radial_velocities_between_frames(df_raw,frame=frame,num_frames_between=num_frames_between,
-                                    distance_L2_pbc=distance_L2_pbc,dist_thresh=dist_thresh,DS=DS,DT=DT)
+                                    distance_L2_pbc=distance_L2_pbc,dist_thresh=dist_thresh,DS=DS,DT=DT,**kwargs)
             R_out_lst.extend(R_values)
             dRdt_out_lst.extend(dRdt_values)
         #     printProgressBar(frame + 1, frame_final, prefix = 'Progress:', suffix = 'Complete', length = 50)
@@ -59,11 +60,11 @@ def get_routine_for_computing_dRdt_in_bulk(width,ds,
             'r':R_values,
             'drdt':dRdt_values,
         })
-        save_folder='/'.join(os.path.dirname(input_fn).split('/')[:-1])+'/general_radial_velocities'
+        save_folder='/'.join(os.path.dirname(input_fn).split('/')[:-1])+f'/radial_neighbor_velocities_framemin_{frame_min}_numframesbetween_{num_frames_between}_maxdistthrsh_{max_dist_thresh}'
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
         os.chdir(save_folder)
-        save_fn=os.path.basename(input_fn).replace('.csv',f'_drdt_distthrsh_{dist_thresh}.csv')
+        save_fn=os.path.basename(input_fn).replace('.csv',f'_drdt.csv')
         df_out.to_csv(save_fn,index=False)
         return os.path.abspath(save_fn)
     return routine_for_computing_dRdt_in_bulk

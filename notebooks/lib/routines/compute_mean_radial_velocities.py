@@ -95,12 +95,12 @@ def get_ranges_to_others(xy_self,xy_others, pid_others, distance_L2_pbc,dist_thr
             R_lst.append (  float(dist) )
     return np.array(R_lst), np.array(pid_lst)
 
-def comp_radial_velocities_between_frames(df,frame,frame_nxt,distance_L2_pbc,dist_thresh,
+def comp_radial_velocities_between_frames(df,frame,frame_nxt,distance_L2_pbc,dist_thresh,pid_col,
     DS,DT,pid=None,use_forward_R=False):
     #get data in the current frame
     dff=df[df.frame==frame]
     xy_values=dff[['x','y']].values
-    pid_values=dff['particle'].values
+    pid_values=dff[pid_col].values
 
     if pid is None:
         #(optional) randomly pick 1 particle from the current frame
@@ -117,7 +117,7 @@ def comp_radial_velocities_between_frames(df,frame,frame_nxt,distance_L2_pbc,dis
     #get data in the next frame
     dff=df[df.frame==frame_nxt]
     xy_values=dff[['x','y']].values
-    pid_values=dff['particle'].values
+    pid_values=dff[pid_col].values
 
     R_out_lst=[]
     dRdt_out_lst=[]
@@ -149,7 +149,7 @@ def comp_radial_velocities_between_frames(df,frame,frame_nxt,distance_L2_pbc,dis
                 #TODO(later, optionally): mark rows that have been visited as visited
     return R_out_lst, dRdt_out_lst
 
-def comp_neighboring_radial_velocities_between_frames(df,frame,num_frames_between,distance_L2_pbc,dist_thresh,DS,DT):
+def comp_neighboring_radial_velocities_between_frames(df,frame,num_frames_between,distance_L2_pbc,dist_thresh,DS,DT,pid_col='particle',**kwargs):
     '''Computes radial velocities between frames, frame and frame_nxt, for particles that are nearest to eachother.  Filters values when minimum R is larger than Rthresh
     Double counting is removed using a method that rounds to 12 digits because of floating point arithmetic error.  14 seemed to work, but 12 is satisfies my paranoia more...
     Example Usage:
@@ -159,10 +159,10 @@ def comp_neighboring_radial_velocities_between_frames(df,frame,num_frames_betwee
     #get data in the current frame
     dff=df[df.frame==frame]
     xy_values=dff[['x','y']].values
-    pid_values=dff['particle'].values
+    pid_values=dff[pid_col].values
     R_lst=[];dRdt_lst=[]
     for pid in pid_values:
-        _R_lst,_dRdt_lst = comp_radial_velocities_between_frames(df,frame=frame,frame_nxt=frame+num_frames_between,pid=pid,DS=DS,DT=DT,distance_L2_pbc=distance_L2_pbc,dist_thresh=dist_thresh)
+        _R_lst,_dRdt_lst = comp_radial_velocities_between_frames(df,frame=frame,frame_nxt=frame+num_frames_between,pid=pid,DS=DS,DT=DT,distance_L2_pbc=distance_L2_pbc,dist_thresh=dist_thresh,pid_col=pid_col)
         if len(_R_lst)>0:
             Rmin=np.min(_R_lst)
             arg=np.argmin(_R_lst)
@@ -194,7 +194,7 @@ def comp_all_radial_velocities_between_frames(df,frame,frame_nxt,distance_L2_pbc
     #get data in the current frame
     dff=df[df.frame==frame]
     xy_values=dff[['x','y']].values
-    pid_values=dff['particle'].values
+    pid_values=dff[pid_col].values
     R_lst=[];dRdt_lst=[]
     for pid in pid_values:
         _R_lst,_dRdt_lst = comp_radial_velocities_between_frames(df,frame=frame,frame_nxt=frame+num_frames_between,pid=pid)
