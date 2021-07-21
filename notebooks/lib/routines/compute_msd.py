@@ -16,14 +16,14 @@ def preprocess_log(input_file_name):
     output_file_name = generate_track_tips_pbc(input_file_name, save_fn=None)
     return output_file_name
 
-def unwrap_trajectories(input_file_name, output_file_name, width, height, DS, **kwargs):
+def unwrap_trajectories(input_file_name, output_file_name, width, height, DS, pid_col='particle',**kwargs):
     # load trajectories
     df = pd.read_csv(input_file_name)
-    pid_lst = sorted(set(df.particle.values))
+    pid_lst = sorted(set(df[pid_col].values))
     #(duplicates filtered earlier_ _  _ _ ) filter_duplicate_trajectory_indices is slow (and can probs be accelerated with a sexy pandas one liner)
     pid_lst_filtered = pid_lst#filter_duplicate_trajectory_indices(pid_lst,df)
     # pid_lst_filtered = filter_duplicate_trajectory_indices(pid_lst,df)
-    df = pd.concat([unwrap_traj_and_center(df[df.particle==pid], width, height, DS, **kwargs) for pid in pid_lst_filtered])
+    df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width, height, DS, **kwargs) for pid in pid_lst_filtered])
     #save results
     # dirname = os.path.dirname(input_file_name).split('/')[-1]
     dirname='trajectories'

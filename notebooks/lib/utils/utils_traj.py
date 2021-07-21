@@ -53,6 +53,13 @@ def unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height, **kwa
                     BX=True
     return xv,yv
 
+def get_DT(df,t_col='t',pid_col='particle'):
+    '''
+    Example Usage:
+    DT=get_DT(df) #ms
+    '''
+    DT=np.mean(df[df[pid_col]==0][t_col].diff().dropna().values)
+    return DT
 
 def unwrap_traj_and_center(d, width, height, DS, **kwargs):
     '''d is a dataframe of 1 trajectory with pbc.  edits d to have pbc-unwrapped x,y coords and returns d.'''
