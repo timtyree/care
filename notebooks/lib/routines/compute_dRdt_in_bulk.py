@@ -1,7 +1,7 @@
 from .. import *
 import pandas as pd, numpy as np
 
-def routine_for_computing_dRdt_in_bulk(width,ds,
+def get_routine_for_computing_dRdt_in_bulk(width,ds,
                                        use_drop_shorter_than=False,
                                        drop_shorter_than=150,
                                        round_t_to_n_digits=5,
