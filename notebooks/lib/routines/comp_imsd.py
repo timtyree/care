@@ -1,6 +1,7 @@
 import numpy as np, pandas as pd
 from .. import *
 from ..utils.utils_traj import unwrap_traj_and_center
+from ..measure.compute_msd_simple import msd_fft
 #simple routine for computation of individual mean squared displacements
 # Programmer: Tim Tyree
 # 7.20.2021
@@ -12,8 +13,8 @@ def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pa
     fps = 1./DT #output time units is in same time units as inputs
 
     #extract the trajectory as a DataFrame instance
-    t1=dft1[dft1.index==pid].values[0]
-    t2=dft2[dft2.index==pid].values[0]
+    t1=float(dft1[dft1.index==pid].values[0])
+    t2=float(dft2[dft2.index==pid].values[0])
     # print(f"computing msd for particle {pid} from times {t1} to {t2} ms...")
 
     #extract the trajectory as a DataFrame instance
@@ -22,22 +23,27 @@ def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pa
     boo&= df[t_col]<=t2
     dff=df[boo]
 
-    if max_lagtime is None:
-        max_lagtime=dff.index.values.shape[0]
-
-    # Input units are pixels and frames. Output units are microns and seconds.
-    df_out=trackpy.motion.msd(
-        traj=dff,
-        mpp=1.,#does nothing
-        fps=fps,
-        max_lagtime=max_lagtime,
-        detail=False
-    )
-    lagt_values,msd_values=df_out[['lagt','msd']].values.T
+    #TODO: extract r from  dff
+    my_r=dff[['x','y']].values
+    msd_values=msd_fft(my_r)
+    lag_values=DT*np.arange(msd_values.shape[0])
     return lagt_values,msd_values
 
+#trackpy is scaling is unavoidably deprecated
+# if max_lagtime is None:
+#     max_lagtime=dff.index.values.shape[0]
+# # Input units are pixels and frames. Output units are microns and seconds.
+# df_out=trackpy.motion.msd(
+#     traj=dff,
+#     mpp=1.,#does nothing
+#     fps=fps,
+#     max_lagtime=max_lagtime,
+#     detail=False
+# )
+# lagt_values,msd_values=df_out[['lagt','msd']].values.T
+# return lagt_values,msd_values
 
-def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
+def comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
                          minimum_lifetime,crop_start_by,crop_end_by,
                          pid_col,t_col,max_lagtime=None,
                          **kwargs):
@@ -45,8 +51,15 @@ def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
     computes the mean squared displacements for each trajectory listed in input_fn
     input_fn gives the location of a trajectory file with columns x,y,frames, and some pid_col.
     trajectory that may have periodic periodic boundary conditions on a square domain.
+
+
+    Example Usage:
+    input_fn=''
+    df_msd=comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
+                             minimum_lifetime,crop_start_by,crop_end_by,
+                             pid_col,t_col,max_lagtime=None,
+                             **kwargs)
     '''
-    df=pd.read_csv(input_fn)
     height=width
     DS=ds/width
 
@@ -87,6 +100,22 @@ def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
 
     df_out=pd.DataFrame({'pid':pid_out_lst,'lagt':lagt_out_lst,'msd':msd_out_lst})
     return df_out
+
+
+def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
+                         minimum_lifetime,crop_start_by,crop_end_by,
+                         pid_col,t_col,max_lagtime=None,
+                         **kwargs):
+    '''
+    computes the mean squared displacements for each trajectory listed in input_fn
+    input_fn gives the location of a trajectory file with columns x,y,frames, and some pid_col.
+    trajectory that may have periodic periodic boundary conditions on a square domain.
+    '''
+    df=pd.read_csv(input_fn)
+    return comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
+                         minimum_lifetime,crop_start_by,crop_end_by,
+                         pid_col,t_col,max_lagtime=None,
+                         **kwargs)
 
 def routine_compute_imsd(input_fn,save_folder=None,**kwargs):
     #compute results
