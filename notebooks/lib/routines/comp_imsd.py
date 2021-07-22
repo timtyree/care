@@ -26,7 +26,7 @@ def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pa
     #TODO: extract r from  dff
     my_r=dff[['x','y']].values
     msd_values=msd_fft(my_r)
-    lag_values=DT*np.arange(msd_values.shape[0])
+    lagt_values=DT*np.arange(msd_values.shape[0])
     return lagt_values,msd_values
 
 #trackpy is scaling is unavoidably deprecated
@@ -121,13 +121,13 @@ def routine_compute_imsd(input_fn,save_folder=None,**kwargs):
     #compute results
     df_msd=compute_each_mean_squared_displacement(input_fn,**kwargs)
     #save results
-    dirname = os.path.dirname(input_fn).split('/')[-1]
     folder_name=os.path.dirname(input_fn)
+    dirname = folder_name.split('/')[-1]
     if save_folder is None:
         save_folder = folder_name.replace(dirname,'msd')
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
     os.chdir(save_folder)
-    output_fn=input_fn.replace('.csv','_emsd.csv')
+    output_fn=os.path.basename(input_fn).replace('.csv','_emsd.csv')
     df_msd.to_csv(output_fn, index=False)
     return os.path.abspath(output_fn)

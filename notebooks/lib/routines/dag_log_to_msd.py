@@ -91,12 +91,25 @@ def dag_a_postprocess(emsd_fn,trial_folder_name,dir_out,**kwargs):
 def run_routine_log_to_unwrapped_trajectory(input_file_name,sr, mem,L,  use_cache=True, DS=0.025, **kwargs):
     '''ic is a .csv file name of a tip log.'''
     traj_fn = os.path.abspath(input_file_name).replace('/Log','/trajectories').replace('log.csv', f'traj_sr_{sr}_mem_{mem}.csv')
-    output_file_name = traj_fn.replace('/trajectories','/trajectories_unwrap').replace('.csv',"_unwrap.csv")
-    if not use_cache or not os.path.exists(traj_fn):
-        traj_fn = generate_track_tips_pbc(input_file_name, save_fn=traj_fn,sr=sr,mem=mem, width=L,height=L)#,**kwargs)
-    if not use_cache or not os.path.exists(output_file_name):
-        retval_ignore = unwrap_trajectories(traj_fn, output_file_name,width=L,height=L,DS=DS)
-    return os.path.abspath(output_file_name)
+	#save results
+	input_fn=input_file_name
+    folder_name=os.path.dirname(input_fn)
+    dirname = folder_name.split('/')[-1]
+    save_folder = folder_name.replace(dirname,'trajectories_unwrap')
+    if not os.path.exists(save_folder):
+        os.mkdir(save_folder)
+    os.chdir(save_folder)
+    output_fn=os.path.basename(input_fn).replace('.csv','_emsd.csv')
+    df_msd.to_csv(output_fn, index=False)
+    return os.path.abspath(output_fn)
+
+##deprecated
+# output_file_name = traj_fn.replace('/trajectories','/trajectories_unwrap').replace('.csv',"_unwrap.csv")
+# if not use_cache or not os.path.exists(traj_fn):
+#     traj_fn = generate_track_tips_pbc(input_file_name, save_fn=traj_fn,sr=sr,mem=mem, width=L,height=L)#,**kwargs)
+# if not use_cache or not os.path.exists(output_file_name):
+#     retval_ignore = unwrap_trajectories(traj_fn, output_file_name,width=L,height=L,DS=DS)
+# return os.path.abspath(output_file_name)
 
 def run_routine_unwrapped_trajectories_to_diffcoeff_summary(file_name_list,trial_folder_name,L,DS,use_cache=True,n_tips=1,**kwargs):
     '''file_name_list is a list of strings locating files ending in _unwrap.csv'''

@@ -1,3 +1,4 @@
+import numpy as np
 def autocorrFFT(x):
     N=len(x)
     F = np.fft.fft(x, n=2*N)  #2*N because of zero-padding

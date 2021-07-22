@@ -1,5 +1,6 @@
 import numpy as np, pandas as pd, dask.bag as db
 from scipy.stats import normaltest
+import time
 
 def test_normality(x,alpha = 0.05):
     '''performs D'Agostino and Pearson's omnibus test for normality.
@@ -38,7 +39,7 @@ def bootstrap_95CI_Delta_mean(x,num_samples=1000):
     Delta_mean=1.96*sig
     return Delta_mean,p
 
-def bin_and_bootstrap_xy_values(x,y,xlabel='r',ylabel='drdt',bins='auto',min_numobs=None,num_bootstrap_samples=1000,npartitions=1,**kwargs):
+def bin_and_bootstrap_xy_values(x,y,xlabel,ylabel,bins='auto',min_numobs=None,num_bootstrap_samples=1000,npartitions=1,**kwargs):
     R_values=x
     dRdt_values=y
     num_samples=num_bootstrap_samples
@@ -105,7 +106,7 @@ def bin_and_bootstrap_xy_values(x,y,xlabel='r',ylabel='drdt',bins='auto',min_num
 ###########################################
 # Parallel implementation on multiple cores
 ###########################################
-def get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,num_samples=100,min_numobs=100,**kwargs):
+def get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,counts,num_samples=100,min_numobs=100,**kwargs):
     '''x_values,y_values,x_bin_edges are 1 dimensional numpy arrays.
     returns the function, routine_bootstrap_bin.'''
     R_values=x_values
@@ -127,6 +128,8 @@ def get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,num_samples=100,min_
             Delta_drdt,p_drdt=bootstrap_95CI_Delta_mean(drdt_values,
                                                  num_samples=num_samples)
             return np.array((r,drdt,Delta_r,Delta_drdt,p_r,p_drdt,numobs))
+        else:
+            return None
     return routine_bootstrap_bin
 
 def bin_and_bootstrap_xy_values_parallel(x,
@@ -139,6 +142,8 @@ def bin_and_bootstrap_xy_values_parallel(x,
                                npartitions=1,
                                use_test=True,
                                test_val=0,printing=True,**kwargs):
+    x_values=x
+    y_values=y
     num_samples=num_bootstrap_samples
     counts,x_bin_edges=np.histogram(x_values,bins=bins)
     bin_id_lst=list(range(x_bin_edges.shape[0]-1))
@@ -146,7 +151,7 @@ def bin_and_bootstrap_xy_values_parallel(x,
         min_numobs=np.mean(counts)/8
 
     #bake method to bootstrap 95%CI of mean of y conditioned on x being within a given bin
-    routine_bootstrap_bin=get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,num_samples=num_samples,min_numobs=min_numobs)
+    routine_bootstrap_bin=get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,counts,num_samples=num_samples,min_numobs=min_numobs)
     def routine(input_val):
         try:
             return routine_bootstrap_bin(input_val)
@@ -165,7 +170,8 @@ def bin_and_bootstrap_xy_values_parallel(x,
         print(f"run time for bootstrapping was {time.time()-start:.2f} seconds.")
 
     array_out=np.stack([x for x in retval if x is not None])
-    columns=['r','drdt','Delta_r','Delta_drdt','p_r','p_drdt','count']
+    columns=[xlabel,ylabel,f'Delta_{xlabel}',f'Delta_{ylabel}',f'p_{xlabel}',f'p_{ylabel}','counts']
+    # columns=['r','drdt','Delta_r','Delta_drdt','p_r','p_drdt','counts']
     df=pd.DataFrame(data=array_out,columns=columns)
-    df=df.astype({'count': 'int32'})
+    df=df.astype({'counts': 'int32'})
     return df

@@ -22,7 +22,7 @@ from .relative_phases import *
 from .compute_topological_events import *
 from .bootstrap import *
 from .powerlaw import *
-from .comp_msd_simple import *
+from .compute_msd_simple import *
 
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *
