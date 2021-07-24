@@ -8,8 +8,12 @@ from ..measure import *
 def format_plot_general(**kwargs):
     return format_plot(**kwargs)
 
-def format_plot(ax,xlabel='lag (seconds)',ylabel=r'MSD (cm$^2$)',fontsize=20,use_loglog=False,**kwargs):
-    #format plot
+def format_plot(ax,xlabel,ylabel,fontsize=20,use_loglog=False,**kwargs):
+    '''format plot formats the matplotlib axis instance, ax,
+    performing routine formatting to the plot,
+    labeling the x axis by the string, xlabel and
+    labeling the y axis by the string, ylabel
+    '''
     if use_loglog:
         ax.set_xscale('log')
         ax.set_yscale('log')
