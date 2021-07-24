@@ -7,6 +7,7 @@ from .relative_phases import *
 from .compute_relative_velocities import *
 from ..routines.compute_interactions import compute_df_interactions
 from .compute_phase_angles import *
+from ..utils.utils_traj import get_DT
 
 def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
    # Consolidate all csv files into one object
@@ -81,7 +82,9 @@ def get_compute_final_inout_angles(width,height):
 		# compute dot product between tip 1 and tip 2
 		cosine_series=d1['dx_hat']*d1['rx_hat']+d1['dy_hat']*d1['ry_hat']
 		d1['theta']=np.arccos(cosine_series)   #radians
-		d1.dropna(inplace=True)
+
+        #Caution: I commented out the following line because d1['t'].values[-1] failed as a size zero arrays
+        # d1.dropna(inplace=True)
 
 		angle_values=d1['theta'].values
 		tdeath_values=d1['t'].values[-1]-d1['t'].values #ms
@@ -91,7 +94,7 @@ def get_compute_final_inout_angles(width,height):
 def compute_annihilation_events(input_fn,
 								width,
 								height,
-								ds,
+								ds,pid_col,
 								range_threshold=1.,
 								min_duration=20.,
 								min_range=1.,
@@ -117,7 +120,8 @@ def compute_annihilation_events(input_fn,
 	#     use_grad_voltage=False
 	df=pd.read_csv(input_fn)
 	try:
-		DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
+		DT = get_DT(df, pid_col=pid_col)
+        # DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
 		if printing:
 			print(f"the time resolution is {DT} ms.")
 
@@ -133,7 +137,7 @@ def compute_annihilation_events(input_fn,
 
 	# death_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
 	#compute interactions
-	df_interactions = compute_df_interactions(input_fn, DS=DS,width=width,height=height,tmin=tmin)
+	df_interactions = compute_df_interactions(input_fn, DS=DS,width=width,height=height,tmin=tmin,pid_col=pid_col)
 	df_interactions.dropna(inplace=True)
 	death_ranges = DS * df_interactions.rT.values
 	birth_ranges = DS * df_interactions.r0.values
@@ -157,8 +161,8 @@ def compute_annihilation_events(input_fn,
 		try:
 			pid_queue.remove(pid_deathmate)
 			#extract d1,d2
-			d1 = df[df.particle == pid].copy()
-			d2 = df[df.particle == pid_deathmate].copy()
+			d1 = df[df[pid_col] == pid].copy()
+			d2 = df[df[pid_col] == pid_deathmate].copy()
 			d1.index = d1.frame
 			d2.index = d2.frame
 			#compute ranges between
@@ -245,7 +249,7 @@ def compute_annihilation_events(input_fn,
 def save_annihilation_events(input_fn,
 							 width,
 							 height,
-							 ds,
+							 ds,pid_col,
 							 save_folder=None,
 							 save_fn=None,
 							 **kwargs):
@@ -254,7 +258,7 @@ def save_annihilation_events(input_fn,
 	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
 	save_fn=save_annihilation_events(input_fn,width,height,ds,save_folder=None,save_fn=None)#,**kwargs)
 	'''
-	df_phases = compute_annihilation_events(input_fn, width, height, ds, **kwargs)
+	df_phases = compute_annihilation_events(input_fn, width, height, ds, pid_col=pid_col, **kwargs)
 	if df_phases is None:
 		return f"Warning: no annihilation events considered valid for trial located at \n\t {input_fn}"
 	if type(df_phases)!=type(pd.DataFrame()):
@@ -361,7 +365,7 @@ def get_compute_initial_inout_angles(width,height):
 def compute_creation_events(input_fn,
 								width,
 								height,
-								ds,
+								ds,pid_col,
 								range_threshold=1.,
 								min_duration=20.,
 								min_range=1.,
@@ -385,7 +389,8 @@ def compute_creation_events(input_fn,
 	#     use_min_duration=True#broken for false
 	#     use_grad_voltage=False
 	df=pd.read_csv(input_fn)
-	DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
+	DT = get_DT(df, pid_col=pid_col)
+    # DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
 	if printing:
 		print(f"the time resolution is {DT} ms.")
 
@@ -397,7 +402,7 @@ def compute_creation_events(input_fn,
 	compute_ranges_between = get_compute_ranges_between(width=width,height=height)
 	# birth_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
 	#compute interactions
-	df_interactions = compute_df_interactions(input_fn, DS=DS)
+	df_interactions = compute_df_interactions(input_fn, DS=DS,pid_col=pid_col)
 	df_interactions.dropna(inplace=True)
 	birth_ranges = DS * df_interactions.rT.values
 	birth_ranges = DS * df_interactions.r0.values

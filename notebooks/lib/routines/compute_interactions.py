@@ -4,7 +4,7 @@ from ..utils.utils_traj import *
 
 
 
-def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200,tmin=100):
+def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200,tmin=100,pid_col='particle'):
     '''input_file_name is a .csv of spiral tip trajecotries.
     filters time before tmin'''
     distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
@@ -12,10 +12,10 @@ def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200,tmin
     df = pd.read_csv(input_file_name)
     using_particle=True
     if using_particle:
-        df['cid']=df['particle']
+        df['cid']=df[pid_col]
     df = df[df.t>tmin].copy()
     df.reset_index(inplace=True)
-    s = df.groupby('particle').t.count()
+    s = df.groupby(pid_col).t.count()
     s = s.sort_values(ascending=False)
     pid_longest_lst = list(s.index.values)#[:n_tips])
     #compute lifetime_of_sibling
@@ -23,13 +23,13 @@ def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200,tmin
     for pid in pid_longest_lst:
         # pid = pid_longest_lst[0]
         # - DONE: identify the birth mate of a given spiral tip
-        d = df[df.particle == pid]
+        d = df[df[pid_col] == pid]
         #identify the death partner
         # nearest_pid, reaction_distance_death, t_of_death = identify_death_partner(df=f,pid=pid)
         #identify the birth partner of that given tip
-        pid_partner, reaction_distance_birth, t_of_life = identify_birth_partner(df=df,cid=pid,distance_L2_pbc=distance_L2_pbc)
-        pid_partner_death, reaction_distance_death, t_of_death = identify_death_partner(df=df,cid=pid,distance_L2_pbc=distance_L2_pbc)
-        d_other = df[df.particle==pid_partner]
+        pid_partner, reaction_distance_birth, t_of_life = identify_birth_partner(df=df,cid=pid,distance_L2_pbc=distance_L2_pbc,pid_col=pid_col)
+        pid_partner_death, reaction_distance_death, t_of_death = identify_death_partner(df=df,cid=pid,distance_L2_pbc=distance_L2_pbc,pid_col=pid_col)
+        d_other = df[df[pid_col]==pid_partner]
 
         # compute lifetimes of ^those spiral tips. compute average_lifetime.
         absdiff,avgval=comp_lifetime_diff_and_avg(d,d_other)

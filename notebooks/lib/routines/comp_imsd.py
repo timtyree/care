@@ -1,4 +1,4 @@
-import numpy as np, pandas as pd
+import numpy as np, pandas as pd, os
 from .. import *
 from ..utils.utils_traj import unwrap_traj_and_center
 from ..measure.compute_msd_simple import msd_fft
@@ -10,8 +10,6 @@ def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pa
     Example Usage:
     lagt_values,msd_values=compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pid_explicit')
     '''
-    fps = 1./DT #output time units is in same time units as inputs
-
     #extract the trajectory as a DataFrame instance
     t1=float(dft1[dft1.index==pid].values[0])
     t2=float(dft2[dft2.index==pid].values[0])
@@ -23,13 +21,14 @@ def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pa
     boo&= df[t_col]<=t2
     dff=df[boo]
 
-    #TODO: extract r from  dff
+    #extract r from  dff
     my_r=dff[['x','y']].values
     msd_values=msd_fft(my_r)
-    lagt_values=DT*np.arange(msd_values.shape[0])
+    lagt_values=DT*(np.arange(msd_values.shape[0]))
     return lagt_values,msd_values
 
 #trackpy is scaling is unavoidably deprecated
+# fps = 1./DT #output time units is in same time units as inputs
 # if max_lagtime is None:
 #     max_lagtime=dff.index.values.shape[0]
 # # Input units are pixels and frames. Output units are microns and seconds.

@@ -5,52 +5,40 @@ from ..my_initialization import *
 from .. import *
 from .dist_func import *
 
-def unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height, **kwargs):
-    '''ux,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array) '''
+def unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height,
+    jump_thresh=None, **kwargs):
+    '''unwrap_for_each_jump iterates over the jumps indexed in jump_index_array
+    and shifts all positions later in the trajectory such that the distance
+    between consecutive points is minimized.
+    Both boundaries may be crossed independently
+
+    Example Usage:
+    ux,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height)
+    '''
     yv = y_values.copy()
     xv = x_values.copy()
-    for j in  jump_index_array:
+    for j in  sorted(jump_index_array):
         DX = xv[j]-xv[j+1]
         DY = yv[j]-yv[j+1]
-        BX = True
-        BY = True
-        if np.abs(DY)>np.abs(DX):
-            #the jump happened over the y boundary
+        # BX = True
+        # BY = True
+        if np.abs(DY)>jump_thresh:
+            #a jump happened over the y boundary
             if DY>0:
                 #the jump happend from bottom to top
-                if BY:
-                    yv[j+1:] = yv[j+1:]+height
-#                     BY=False
-                else:
-                    #taking care of parity
-                    BY=True
+                yv[j+1:] = yv[j+1:]+height
             else:
                 #the jump happened from top to bottom
-                if BY:
-                    yv[j+1:] = yv[j+1:]-height
-#                     BY=False
-                else:
-                    #taking care of parity
-                    BY=True
-        else:
-            #the jump happened over the x boundary
+                yv[j+1:] = yv[j+1:]-height
+
+        if np.abs(DX)>jump_thresh:
+            #a jump happened over the x boundary
             if DX>0:
                 #the jump happend from left to right
-                if BX:
-                    xv[j+1:] = xv[j+1:]+width
-#                     BX=False
-                else:
-                    #taking care of parity
-                    BX=True
-
+                xv[j+1:] = xv[j+1:]+width
             else:
-                #the jump happend from left to right
-                if BX:
-                    xv[j+1:] = xv[j+1:]-width
-#                     BX=False
-                else:
-                    #taking care of parity
-                    BX=True
+                #the jump happened from right to left
+                xv[j+1:] = xv[j+1:]-width
     return xv,yv
 
 def get_DT(df,t_col='t',pid_col='particle'):
@@ -61,22 +49,35 @@ def get_DT(df,t_col='t',pid_col='particle'):
     DT=np.mean(df[df[pid_col]==0][t_col].diff().dropna().values)
     return DT
 
-def unwrap_traj_and_center(d, width, height, DS, **kwargs):
-    '''d is a dataframe of 1 trajectory with pbc.  edits d to have pbc-unwrapped x,y coords and returns d.'''
-    if d.t.values.shape[0]<=1:
-        return None
-    DT = np.mean(d.t.diff().dropna().values) #ms per frame
-    # DS = 5/200
-    x_values = d.x.values.astype('float64')
-    y_values = d.y.values.astype('float64')
-    jump_index_array, spd_lst = find_jumps(x_values,y_values,width,height,DS,DT,**kwargs)
-    # find_jumps(x_values,y_values,DS=DS,DT=DT)
-    xv,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array, width=width,height=height)
+def unwrap_xy_values(x_values,y_values,width,height,jump_thresh=None,**kwargs):
+    '''returns a path with periodic boundary conditions that is unwrapped and centered
+    if jump_thresh=None, then jump_thresh=np.min(width,height)/2.
+    TODO: add support for re-using jit compiled distance_L2_pbc'''
+    jump_index_array, spd_lst = find_jumps(x_values,y_values,width,height,jump_thresh=jump_thresh,**kwargs)
+    xv,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array, width=width,height=height,jump_thresh=jump_thresh,**kwargs)
+    return xv,yv
 
+def unwrap_and_center_xy_values(x_values,y_values,width,height,jump_thresh=None,**kwargs):
+    '''returns a path with periodic boundary conditions that is unwrapped and centered
+    if jump_thresh=None, then jump_thresh=np.min(width,height)/2.
+    TODO: add support for re-using jit compiled distance_L2_pbc'''
+    xv,yv=unwrap_xy_values(x_values,y_values,width,height,jump_thresh=jump_thresh,**kwargs)
     #subtract off the initial position for plotting's sake
     xv -= xv[0]
     yv -= yv[0]
-    #     return xv,yv
+    return xv,yv
+
+def unwrap_traj_and_center(d, width, height,jump_thresh=None,**kwargs):
+    '''d is a dataframe of 1 trajectory with pbc listed in fields 'x' and 'y'.  edits d to have pbc-unwrapped x,y coords and returns d.
+    jump_thresh is the minimum displacement to be considered a jump
+    '''
+    if d['x'].values.shape[0]==0:
+        return None
+    # DT = np.mean(d[t_col].diff().dropna().values) #ms per frame
+    # DS = 5/200
+    x_values = d.x.values.astype('float64')
+    y_values = d.y.values.astype('float64')
+    xv,yv = unwrap_and_center_xy_values(x_values,y_values,width,height,jump_thresh=jump_thresh,**kwargs)
 
     #store these values in the dataframe
     d = d.copy()
@@ -84,6 +85,8 @@ def unwrap_traj_and_center(d, width, height, DS, **kwargs):
     d.loc[:,'x'] = xv
     d.loc[:,'y'] = yv
     return d
+
+
 
 
 def filter_duplicate_trajectory_indices(pid_longest_lst,df_traj):
@@ -105,31 +108,34 @@ def filter_duplicate_trajectory_indices(pid_longest_lst,df_traj):
     return pid_longest_lst_filtered
 
 
-def get_all_longer_than(df,DT,T_min=1000):
-    '''df is a pandas.DataFrame instance with columns, x, y, t, frame, and particle.
+def get_all_longer_than(df,DT,T_min=1000,pid_col='particle'):
+    '''df is a pandas.DataFrame instance with columns, x, y, t, frame, and some pid_col.
     returns a pandas.DataFrame instance with only the trajectories that last at least T_min, in same time units as DT.
     also removes all trajectories that do not move.'''
-    durations=DT*df.groupby('particle').x.count()
+    durations=DT*df.groupby(pid_col).x.count()
     boo=T_min<durations
     #identify any particles that live less time than T_min
     pid_drop_lst=durations[~boo].index.values
     boo_drop=False
     for pid in pid_drop_lst:
-        boo_drop|=df.particle==pid
+        boo_drop|=df[pid_col]==pid
     #identify any particles that do not move
-    stdx=df.groupby('particle').x.std()
+    stdx=df.groupby(pid_col).x.std()
     boo_drop|=stdx==0
     #drop those marked particles
     df.drop(index=boo_drop[boo_drop].index,inplace=True)
     return df
 
-def find_jumps(x_values,y_values, width, height, DS, DT, jump_thresh=None, distance_L2_pbc=None, **kwargs):
+def find_jumps(x_values,y_values, width, height, jump_thresh=None, distance_L2_pbc=None, **kwargs):
     '''Example Usage:
     jump_index_array, spd_lst = find_jumps(x_values,y_values,width=200,height=200, DS,DT, jump_thresh=None)
-    spd_lst is a list of speeds in units of DS/DT.'''
+    spd_lst is a list of speeds in units of DS/DT.
+    x_values and y_values are numpy.array instances that describe a 2-dimensional trajectory that potentially exhibits jumps.
+    jump_thresh is the minimum threshold displacement to be considered a jump in the same units as x and y.
+    '''
     #compute the speed of this longest trajectory using pbc
     if jump_thresh is None:
-        thresh = np.min((width,height))/2 #threshold displacement to be considered a jump
+        thresh = np.min((width,height))/2 #minimum threshold displacement to be considered a jump
     else:
         thresh = jump_thresh
     if distance_L2_pbc is None:
@@ -143,7 +149,7 @@ def find_jumps(x_values,y_values, width, height, DS, DT, jump_thresh=None, dista
         #compute a speed for i = 0,1,2,...,N-1
         pt_nxt = np.array((x_values[i+1],y_values[i+1]))
         pt_prv = np.array((x_values[i],y_values[i]))
-        spd = distance_L2_pbc(pt_nxt,pt_prv)*DS/DT #pixels per ms
+        spd = distance_L2_pbc(pt_nxt,pt_prv)#*DS/DT #pixels per ms
         spd_lst.append(spd)
         spd = np.linalg.norm(pt_nxt-pt_prv)
         spd_lst_naive.append(np.linalg.norm(spd))
@@ -182,7 +188,7 @@ def find_jumps_non_pbc(x_values,y_values,width,height, DS,DT, jump_thresh=None,d
     return jump_index_array, spd_lst
 
 
-def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_digits, width,height,**kwargs):
+def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_digits, width,height,jump_thresh=None,**kwargs):
     #select the longest n trajectories
     df = pd.read_csv(input_file_name)
     df.reset_index(inplace=True)
@@ -196,7 +202,7 @@ def return_longest_n_and_truncate(input_file_name,n_tips, DS, DT, round_t_to_n_d
         d = df[(df.particle==pid)].copy()
         x_values, y_values = d[['x','y']].values.T
         index_values = d.index.values.T
-        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=width,height=height, DS=DS,DT=DT, jump_thresh=20.,**kwargs)#.25)
+        jump_index_array, spd_lst = find_jumps(x_values,y_values,width=width,height=height, jump_thresh=jump_thresh,**kwargs)#.25)
         if len(jump_index_array)>0:
             ji = jump_index_array[0]
             d.drop(index=index_values[ji:], inplace=True)
@@ -271,7 +277,7 @@ def get_tips_in_range(xy_self,xy_others, pid_others, distance_L2_pbc,dist_thresh
                 pid_lst.append (  int(pid_other) )
     return pid_lst
 
-def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None,verbose=False):
+def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None,verbose=False,pid_col='particle'):
     """identify birth mate using set difference.
     Example Usage:
     cid_birthmate, nearest_dist_birth, t_birth = identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None)
@@ -310,7 +316,7 @@ def identify_birth_partner(df,cid,distance_L2_pbc,cid_others=None,verbose=False)
     return cid_birthmate, nearest_dist, float(t)
 
 
-def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None,verbose=False):
+def identify_death_partner(df,cid,distance_L2_pbc,cid_others=None,verbose=False,pid_col='particle'):
     """identify death mate using set difference.
     Example Usage:
     cid_deathmate, nearest_dist_death, t_death = identify_death_partner(df,cid,distance_L2_pbc)

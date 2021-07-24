@@ -1,0 +1,11 @@
+# GOAL: have msd and average drdt versus r measured for each trial_name_folder in a list
+- TODO: modify drdt function to only consider no more than a certain time since annihilation
+- DONE: verify that these functions work on the particle model
+- TODO: make an initial function that prints lifetime stats to help me decide parameter values
+- TODO: dev lib.viewer.gener_bluf.py (Hint: see stackoverflow)
+- TODO(lib.viewer.gener_bluf.py): make a function that does each elementary step of the analysis to generate for each folder a 1 page bluff.pdf with a rasterized/nonrasterized Images
+
+
+
+# NEXT GOAL: compute D, m, b for each folder in trial_name_folder_lst
+# NEXT GOAL: look for xy scaling that can best map the particle model onto the full model

@@ -13,3 +13,5 @@ from .kwargs_LR_model_cy import *
 from .return_min_distance import *
 from .compute_mean_radial_velocities import *
 from .comp_imsd import *
+from .dag_log_to_msd import *
+from .compute_dRdt_in_bulk import *

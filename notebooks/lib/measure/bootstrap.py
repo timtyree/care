@@ -40,6 +40,12 @@ def bootstrap_95CI_Delta_mean(x,num_samples=1000):
     return Delta_mean,p
 
 def bin_and_bootstrap_xy_values(x,y,xlabel,ylabel,bins='auto',min_numobs=None,num_bootstrap_samples=1000,npartitions=1,**kwargs):
+    '''see docstring for bin_and_bootstrap_xy_values_parallel'''
+    type_in=type(np.ndarray([]))
+    if type(x)!=type_in:
+        raise "InputError: x and y must have type np.ndarray!"
+    if type(y)!=type_in:
+        raise "InputError: x and y must have type np.ndarray!"
     R_values=x
     dRdt_values=y
     num_samples=num_bootstrap_samples
@@ -109,6 +115,11 @@ def bin_and_bootstrap_xy_values(x,y,xlabel,ylabel,bins='auto',min_numobs=None,nu
 def get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,counts,num_samples=100,min_numobs=100,**kwargs):
     '''x_values,y_values,x_bin_edges are 1 dimensional numpy arrays.
     returns the function, routine_bootstrap_bin.'''
+    type_in=type(np.ndarray([]))
+    if type(x_values)!=type_in:
+        raise "InputError: x and y must have type np.ndarray!"
+    if type(y_values)!=type_in:
+        raise "InputError: x and y must have type np.ndarray!"
     R_values=x_values
     dRdt_values=y_values
     r_edges=x_bin_edges
@@ -134,14 +145,36 @@ def get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,counts,num_samples=1
 
 def bin_and_bootstrap_xy_values_parallel(x,
                                y,
-                               xlabel,
-                               ylabel,
+                               xlabel='x',
+                               ylabel='y',
                                bins='auto',
                                min_numobs=None,
                                num_bootstrap_samples=1000,
                                npartitions=1,
                                use_test=True,
-                               test_val=0,printing=True,**kwargs):
+                               test_val=0,printing=False,**kwargs):
+    '''
+    bin_and_bootstrap_xy_values_parallel returns a pandas.DataFrame instance with the following columns
+    columns=[xlabel,ylabel,f'Delta_{xlabel}',f'Delta_{ylabel}',f'p_{xlabel}',f'p_{ylabel}','counts']
+    Output Field for a given x bin include:
+    - y       : the simple mean value of y
+    - Delta_y : difference between the mean value and the edge of the 95% confidence interval of the mean value
+    - p_y     : p value estimating the liklihood to reject the null hypothesis which claims the boostrapped distribution is normally distributed.
+    - counts  : the number of observations in this bin
+
+    Arguments x and y are assumed to be 1 dimensional numpy.array instances.
+    If p_y reliably has values less than 0.05, then consider increasing num_bootstrap_samples
+
+    bin_and_bootstrap_xy_values_parallel passes the kwarg, bins, to numpy.histogram
+    to generate x bins, it then passes each x bin to npartitions dask workers, each of which
+    selects the y values that correspond to the x values within its respective bin.  With these
+    x and y values in hand, that worker bootstraps num_bootstrap_samples samples of approximations of
+    the mean value for those x and y values.
+
+    A bin is ignored if it contains no more than min_numobs
+    observations.  If min_numobs=None, then min_numobs=np.mean(counts)/8, where counts is the array of
+    counts in each bin.
+    '''
     x_values=x
     y_values=y
     num_samples=num_bootstrap_samples

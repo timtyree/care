@@ -13,7 +13,7 @@ def print_dict(input_dict):
         print(f"{key}={input_dict[key]}")
 
 def get_log_files(trial_folder_name, extension='/Log/', trgt='.csv'):
-    '''    
+    '''
     #Example Usage:
     input_fn="/Users/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_1500_varkappa_0/trajectories/pbc_particle_log144_traj_sr_30_mem_0.csv"
     trial_folder_name=os.path.dirname(os.path.dirname(input_fn))
@@ -21,7 +21,7 @@ def get_log_files(trial_folder_name, extension='/Log/', trgt='.csv'):
 
     '''
     os.chdir(trial_folder_name+extension)
-    input_fn_lst=[os.path.abspath(fn) for fn in os.listdir() if fn[-4:]==trgt]
+    input_fn_lst=[os.path.abspath(fn) for fn in os.listdir() if fn[-len(trgt):]==trgt]
     return input_fn_lst
 
 def get_all_trial_folders_not_archived(ic_suite_fn):

@@ -1,5 +1,8 @@
 import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
+# functions for plotting the ensemble average mean squared displacement
+# Tim Tyree
+# 7.23.2021
 
 def PlotMeanSquaredDisplacements(ax,
                              x_values,
