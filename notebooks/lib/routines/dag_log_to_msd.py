@@ -85,22 +85,59 @@ def dag_a_postprocess(emsd_fn,trial_folder_name,dir_out,**kwargs):
 	retval= generate_diffcoeff_figures(input_file_name,trial_folder_name,dir_out=dir_out,**kwargs)
 	return retval
 
-####################
-# Finished Routines
-####################
-def run_routine_log_to_unwrapped_trajectory(input_file_name,sr, mem,L,  use_cache=True, DS=0.025, **kwargs):
+def run_routine_log_to_unwrapped_trajectory(input_file_name,sr, mem,L,use_cache,DS=0.025, **kwargs):
 	'''ic is a .csv file name of a tip log.'''
 	traj_fn = os.path.abspath(input_file_name).replace('/Log','/trajectories').replace('log.csv', f'traj_sr_{sr}_mem_{mem}.csv')
-	#save results
+	return os.path.abspath(input_fn)
+
+########################
+# Convenience Functions
+########################
+def mkdir_sister_savefolder(input_file_name,sister_folder_name='trajectories_unwrap'):
+	''''''
 	input_fn=input_file_name
 	folder_name=os.path.dirname(input_fn)
 	dirname = folder_name.split('/')[-1]
-	save_folder = folder_name.replace(dirname,'trajectories_unwrap')
+	save_folder = folder_name.replace(dirname,sister_folder_name)
+	if not os.path.exists(save_folder):
+	    os.mkdir(save_folder)
+	return os.path.abspath(save_folder)
+
+def save_df_to_csv(df,save_folder,input_fn,ext_in='.csv',ext_out='_out.csv'):
+	'''save pandas.DataFrame instance to .csv in save_folder
+	output_fn=os.path.basename(input_fn).replace(ext_in,ext_out)
+	'''
 	if not os.path.exists(save_folder):
 	    os.mkdir(save_folder)
 	os.chdir(save_folder)
-	output_fn=os.path.basename(input_fn).replace('.csv','_emsd.csv')
-	df_msd.to_csv(output_fn, index=False)
+	output_fn=os.path.basename(input_fn).replace(ext_in,ext_out)
+	df.to_csv(output_fn, index=False)
+	return os.path.abspath(output_fn)
+
+####################
+# Finished Routines
+####################
+def run_routine_log_to_unwrapped_trajectory(input_file_name,sr, mem,L,use_cache,DS=0.025, **kwargs):
+	'''ic is a .csv file name of a tip log.'''
+	traj_save_folder=mkdir_sister_savefolder(input_file_name,sister_folder_name='trajectories')
+	traj_fn = os.path.abspath(input_file_name).replace('/Log','/trajectories').replace('log.csv', f'traj_sr_{sr}_mem_{mem}.csv')
+
+	#not deprecated?
+	if not use_cache or not os.path.exists(traj_fn):
+	    traj_fn = generate_track_tips_pbc(input_file_name, save_fn=traj_fn,sr=sr,mem=mem, width=L,height=L,**kwargs)
+
+	# #save results
+	# input_fn=input_file_name
+	# folder_name=os.path.dirname(input_fn)
+	# dirname = folder_name.split('/')[-1]
+	# save_folder = folder_name.replace(dirname,'trajectories_unwrap')
+	save_folder=mkdir_sister_savefolder(input_file_name,sister_folder_name='trajectories_unwrap')
+	if not os.path.exists(save_folder):
+	    os.mkdir(save_folder)
+	os.chdir(save_folder)
+	output_fn=os.path.basename(traj_fn).replace('.csv','_unwrap.csv')
+	if not use_cache or not os.path.exists(output_fn):
+	    retval_ignore = unwrap_trajectories(traj_fn, output_fn,width=L,height=L,DS=DS)
 	return os.path.abspath(output_fn)
 
 ##deprecated

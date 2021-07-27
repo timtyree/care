@@ -1,4 +1,47 @@
 import numpy as np
+
+########################################################
+# Compute Mean Squared Displacements via particle averaging
+########################################################
+def return_msd_particle_average(input_fn,ds,width,height,use_unwrap,pid_col='pid_explicit',t_col='t',
+                                **kwargs):
+    '''
+    input_fn is a .csv locating a trajectory file with particles identified by pid_col
+    and time indicated by t_col
+    ds is the total domain size and width and height are the number of length units / pixels afforded to the original computational domain.
+    kwargs are passed to unwrap_traj_and_center
+
+    previously named return_msd_phys
+    TODO: GPU accelerate this pandas-like function with rapids cudf
+    '''
+    df=pd.read_csv(input_fn)
+    trial_folder_name=os.path.dirname(os.path.dirname(input_fn))
+
+
+    #(bad)particle data analyzed using full model pipeline
+    # input_fn="/Users/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_1500_varkappa_0/trajectories_unwrap/pbc_particle_log121_traj_sr_30_mem_0_unwrap.csv"
+    # width=10 #width of computational domain
+    # ds   =10  #cm
+    # #from here on, we will use units in terms of those used by the full model
+    # height=width
+    DS=ds/width
+    if use_unwrap is True:
+        #unwrap trajectories
+        pid_lst = sorted(set(df[pid_col].values))
+        #(duplicates filtered earlier in full model pipeline.  Unnecessary in particle model with explicit tracking_ _  _ _ ) filter_duplicate_trajectory_indices is slow (and can probs be accelerated with a sexy pandas one liner)
+        # pid_lst_filtered = filter_duplicate_trajectory_indices(pid_lst,df)
+        df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width=width, height=height, **kwargs) for pid in pid_lst])
+    DT=get_DT(df,pid_col=pid_col) #ms
+    df[df.frame==2].describe()
+    df['sd']=df['x']**2+df['y']**2
+    d_msd=df.groupby('t')['sd'].mean()
+    lagt_values=d_msd.index.values
+    msd_values=d_msd.values
+    return lagt_values,msd_values
+
+########################################################
+# Compute Mean Squared Displacements via time averaging
+########################################################
 def autocorrFFT(x):
     N=len(x)
     F = np.fft.fft(x, n=2*N)  #2*N because of zero-padding

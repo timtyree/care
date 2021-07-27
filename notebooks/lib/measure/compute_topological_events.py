@@ -83,8 +83,8 @@ def get_compute_final_inout_angles(width,height):
 		cosine_series=d1['dx_hat']*d1['rx_hat']+d1['dy_hat']*d1['ry_hat']
 		d1['theta']=np.arccos(cosine_series)   #radians
 
-        #Caution: I commented out the following line because d1['t'].values[-1] failed as a size zero arrays
-        # d1.dropna(inplace=True)
+		#Caution: I commented out the following line because d1['t'].values[-1] failed as a size zero arrays
+		# d1.dropna(inplace=True)
 
 		angle_values=d1['theta'].values
 		tdeath_values=d1['t'].values[-1]-d1['t'].values #ms
@@ -96,16 +96,18 @@ def compute_annihilation_events(input_fn,
 								height,
 								ds,pid_col,
 								range_threshold=1.,
-								min_duration=20.,
+								min_duration=20.,max_dur=150,
 								min_range=1.,
-								round_t_to_n_digits=3,
+								round_t_to_n_digits=5,
 								use_min_duration=True,
 								use_grad_voltage=True,
-								printing=True,
+								printing=False,
 								tmin=100.,
 								**kwargs):
 	'''input_fn is a string locating the directory of a _trajectories .csv file.
+	min_range must be smaller than the max range between a pair of spiral tips for them to be considered
 	Returns pandas.Dataframe instance.
+	max_dur is the maximum amount of time before annihilation that will be considered
 	Example Usage:
 	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
 	df_phases=compute_annihilation_events(input_fn,width,height,ds)#,**kwargs)
@@ -121,7 +123,7 @@ def compute_annihilation_events(input_fn,
 	df=pd.read_csv(input_fn)
 	try:
 		DT = get_DT(df, pid_col=pid_col)
-        # DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
+		# DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
 		if printing:
 			print(f"the time resolution is {DT} ms.")
 
@@ -166,27 +168,42 @@ def compute_annihilation_events(input_fn,
 			d1.index = d1.frame
 			d2.index = d2.frame
 			#compute ranges between
-			range_values = compute_ranges_between(d1, d2) * dsdpixel
+			range_values,t_values=compute_ranges_between(d1,d2,t_col='t',**kwargs)
+			boo=t_values > -max_dur
+			t_values=t_values[boo]
+			range_values=range_values[boo]* dsdpixel
+
+			# range_values = compute_ranges_between(d1, d2) * dsdpixel
 			length = range_values.shape[0]
-			#compute x,y values
+			#compute x,y values and time values
 			if use_grad_voltage:
 				t_to_death_values, phi1_values, phi2_values, phi_sum_values, phi_diff_values = compute_phase_angles_from_grad_voltage(
 					d1, d2)
-
+				boo=t_to_death_values>-max_dur
+				t_to_death_values=t_to_death_values[boo]
+				phi1_values=phi1_values[boo]
+				phi2_values=phi2_values[boo]
+				phi_sum_values=phi_sum_values[boo]
+				phi_diff_values=phi_diff_values[boo]
 			else:
 				t_vals = d1['t'].values[-length:]
 				t_to_death_values = np.max(t_vals) - t_vals
+				boo=t_to_death_values>-max_dur
+				t_to_death_values=t_to_death_values[boo]
 
-			nobs = range_values[1:-1].shape[0]
+			nobs = range_values.shape[0]#   is the following needed? #[1:-1].shape[0]
 			if nobs > 1:
 				#compute angle between velocities
 				# tdeath_values, theta_values = compute_angle_between_final_velocities(d1, d2)
 				tdeath_values, theta_values = compute_final_inout_angles(d1, d2)
-				#align range_values and theta_values
-				boo = ~np.isnan(theta_values)
-				theta_values = theta_values[boo]
-				assert (range_values.shape[0] == t_to_death_values.shape[0])
-				t_values = t_to_death_values[1:-1]
+				boo=tdeath_values>-max_dur
+				tdeath_values=tdeath_values[boo]
+				theta_values=theta_values[boo]
+				# #align range_values and theta_values
+				# boo = ~np.isnan(theta_values)
+				# theta_values = theta_values[boo]
+				# assert (range_values.shape[0] == t_to_death_values.shape[0])
+				# t_values = t_to_death_values[1:-1]
 				if use_min_duration:
 					#filter by min_duration
 					boo_keep = min_duration <= np.max(t_values) - np.min(t_values)
@@ -196,43 +213,86 @@ def compute_annihilation_events(input_fn,
 					boo_keep = min_range <= np.max(range_values)
 
 				if boo_keep:
+					pid_values=pid + 0 * t_values.astype('int')
+					pid_deathmate_values=pid_deathmate + 0 * t_values.astype('int')
+					tdeath_values=np.around(tdeath_values,round_t_to_n_digits)
+
 					if use_grad_voltage:
+						# phi1_values=phi1_values#[1:-1]np.abs(phi1_values)[1:-1]
+						# phi2_values=phi2_values#[1:-1]np.abs(phi2_values)[1:-1]
+						#determine the shortest length of all output sources
+						length_out=np.min((
+							tdeath_values.shape[0],
+							theta_values.shape[0],
+							range_values.shape[0],
+							pid_values.shape[0],
+							pid_deathmate_values.shape[0],
+							phi1_values.shape[0],
+							phi2_values.shape[0],
+							phi_sum_values.shape[0],
+							phi_diff_values.shape[0]
+						))
+						#set the length of each output array to length_out
+						pid_values=pid_values[-length_out:].copy()
+						pid_deathmate_values=pid_deathmate_values[-length_out:].copy()
+						tdeath_values=tdeath_values[-length_out:].copy()
+						range_values=range_values[-length_out:].copy()
+						theta_values=theta_values[-length_out:].copy()
+						phi1_values=phi1_values[-length_out:].copy()
+						phi2_values=phi2_values[-length_out:].copy()
+						phi_sum_values=phi_sum_values[-length_out:].copy()
+						phi_diff_values=phi_diff_values[-length_out:].copy()
 						df_out = pd.DataFrame({
 							'pid':
-							pid + 0 * t_values.astype('int'),
+							pid_values,
 							'pid_deathmate':
-							pid_deathmate + 0 * t_values.astype('int'),
+							pid_deathmate_values,
 							'tdeath':
-							np.around(t_values,round_t_to_n_digits),
-							'phi1':
-							np.abs(phi1_values)[1:-1],
-							'phi2':
-							np.abs(phi2_values)[1:-1],
-							'phi_sum':
-							np.abs(phi_sum_values)[1:-1],
-							'phi_diff':
-							np.abs(phi_diff_values)[1:-1],
+							tdeath_values,
 							'r':
-							range_values[1:-1],
+							range_values,
 							'theta':
 							theta_values,
+							'phi1':
+							phi1_values,
+							'phi2':
+							phi2_values,
+							'phi_sum':
+							phi_sum_values,
+							'phi_diff':
+							phi_diff_values
 						})
 					else:
+						#determine the shortest length of all output sources
+						length_out=np.min((
+							tdeath_values.shape[0],
+							theta_values.shape[0],
+							range_values.shape[0],
+							pid_values.shape[0],
+							pid_deathmate_values.shape[0]
+						))
+						#set the length of each output array to length_out
+						pid_values=pid_values[-length_out:].copy()
+						pid_deathmate_values=pid_deathmate_values[-length_out:].copy()
+						tdeath_values=tdeath_values[-length_out:].copy()
+						range_values=range_values[-length_out:].copy()
+						theta_values=theta_values[-length_out:].copy()
 						df_out = pd.DataFrame({
 							'pid':
-							pid + 0 * t_values.astype('int'),
+							pid_values,
 							'pid_deathmate':
-							pid_deathmate + 0 * t_values.astype('int'),
+							pid_deathmate_values,
 							'tdeath':
-							np.around(t_values,round_t_to_n_digits),
+							tdeath_values,
 							'r':
-							range_values[1:-1],
+							range_values,
 							'theta':
 							theta_values,
 						})
 
 					#append x,y values to list
-					df_out_lst.append(df_out)
+					boo= df_out['tdeath'] <= max_dur
+					df_out_lst.append(df_out[boo].copy())
 		except ValueError as e:  #for catching ValueError: list.remove(x): x not in list
 			pass
 	if printing:
@@ -258,7 +318,7 @@ def save_annihilation_events(input_fn,
 	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
 	save_fn=save_annihilation_events(input_fn,width,height,ds,save_folder=None,save_fn=None)#,**kwargs)
 	'''
-	df_phases = compute_annihilation_events(input_fn, width, height, ds, pid_col=pid_col, **kwargs)
+	df_phases = compute_annihilation_events(input_fn, width=width, height=height, ds=ds, pid_col=pid_col, **kwargs)
 	if df_phases is None:
 		return f"Warning: no annihilation events considered valid for trial located at \n\t {input_fn}"
 	if type(df_phases)!=type(pd.DataFrame()):
@@ -274,6 +334,7 @@ def save_annihilation_events(input_fn,
 	if save_fn is None:
 		save_fn = os.path.basename(input_fn).replace('.csv',
 													 '_annihilations.csv')
+	df_phases.sort_values(['pid','tdeath'],inplace=True,ascending=False)
 	df_phases.to_csv(save_fn, index=False)
 	return os.path.abspath(save_fn)
 
@@ -293,7 +354,7 @@ def get_routine_traj_to_annihilation(width=200,height=200,ds=5.,
 		# input_file_name=traj_fn
 		# output_file_name=input_file_name.replace('.csv',"_unwrap.csv")
 		# retval_ignore= unwrap_trajectories(input_file_name, output_file_name)
-		output_file_name=save_annihilation_events(input_file_name,width,height,ds,
+		output_file_name=save_annihilation_events(input_fn=input_file_name,width=width,height=height,ds=ds,
 			save_folder=save_folder,save_fn=save_fn,**kwargs)#,**kwargs)
 		return output_file_name
 	return routine_traj_to_annihilation
@@ -390,7 +451,7 @@ def compute_creation_events(input_fn,
 	#     use_grad_voltage=False
 	df=pd.read_csv(input_fn)
 	DT = get_DT(df, pid_col=pid_col)
-    # DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
+	# DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
 	if printing:
 		print(f"the time resolution is {DT} ms.")
 

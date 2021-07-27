@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.markers
-from utils_DataPlotterClass import cbind
+from .utils_DataPlotterClass import cbind
 # DataPlotterClass.py was forked from https://www.programcreek.com/python/?code=shubhomoydas
 # Date: 7.23.2021
 class DataPlotter(object):

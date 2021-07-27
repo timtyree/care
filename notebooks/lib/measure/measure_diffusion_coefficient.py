@@ -2,6 +2,47 @@ import pandas as pd, numpy as np, trackpy
 from scipy import stats
 from .compute_slope import *
 
+################################################################################
+# compute_D_OLS_2D Reproduced Diffusion Coefficients of Wiener Processes
+################################################################################
+def compute_D_OLS_2D(lagt_values,msd_values,
+                tmin=300,
+                tmax=3000,
+                tscale=0.001,
+                DS=1.):
+    '''
+    supposes lagt values are in units of ms and msd_values are in
+    units of pixels/length units of the computational domain'''
+    xmin=tmin*tscale
+    xmax=tmax*tscale
+    x_values=lagt_values*tscale
+    y_values=msd_values*DS**2
+    # x_err_values=df['Delta_lagt'].values
+    # y_err_values=df['Delta_msd'].values
+    # counts=df['counts'].values
+
+    #fit drdt_values to F0+F1/r with OLS fit for LR model where 1/r is greater than some 1/cm
+    boo=(x_values>xmin)&(x_values<xmax)
+    x=x_values[boo]
+    y=y_values[boo]
+    dict_force_fit=compute_95CI_ols(x,y)
+    y_hat_values=dict_force_fit['b']+dict_force_fit['m']*x_values
+
+    #(optional) rename specific values
+    dict_force_fit=dict_force_fit
+    y_hat_values=y_hat_values
+    D=dict_force_fit['m']/4
+    Delta_D=dict_force_fit['Delta_m']/4
+    dict_out={
+        'D':D,
+        'Delta_D':Delta_D,
+        'Rsquared':dict_force_fit['Rsquared']
+    }
+    return dict_out
+
+################################
+# Trackpy is Deprecated
+################################
 def compute_emsd(traj,DT,omit_time=0,printing=False,DS=0.025):
     '''traj is a pandas.DataFrame instance with columns "frame", "particle", "x" and "y" containing the results of unwrapped trajectories.
     returns a pandas.DataFrane instance containing the ensemble mean squared displacement.'''

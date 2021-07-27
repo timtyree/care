@@ -6,7 +6,7 @@ import random
 #####################################################
 # Methods conditioned on data from topological events
 #####################################################
-def comp_mean_radial_velocities(df,t_col='tdeath',bins='auto',min_numobs=None,num_samples=1000):
+def comp_mean_radial_velocities(df,t_col='tdeath',bins='auto',min_numobs=None,num_samples=1000,flip_time=False,**kwargs):
     '''computes the mean radial velocities, binning by radius.
     supposes df is from a .csv file containing annihilation or creation results,
     where rows are presorted according to event and then by t_col.
@@ -15,11 +15,19 @@ def comp_mean_radial_velocities(df,t_col='tdeath',bins='auto',min_numobs=None,nu
     Example Usage:
     dict_out=compute_mean_radial_velocities(df,t_col='tdeath')
     '''
-    DT=sorted(set(df[t_col].values))[0]
+    if flip_time:
+        df[t_col]=-1*df[t_col]
+    # DT=sorted(set(df[t_col].values))[0]
+    tvals=sorted(set(df[t_col].values))
+    DT=tvals[1]-tvals[0]
     assert(DT>0)#if DT<0, then a factor of -1 is needed in a few places...
     df['drdt']=df['r'].diff()/DT
     #set drdt to zero where pid changes or where tdeath jumps by more than dt
     boo=df[t_col].diff()!=-DT
+    # df.loc[boo,'drdt']=np.nan
+
+    #filter outliers of drdt that are strongly repulsive at small radii
+    boo&=df['drdt']>0
     df.loc[boo,'drdt']=np.nan
     df.dropna(inplace=True)
 
@@ -71,12 +79,12 @@ def comp_mean_radial_velocities(df,t_col='tdeath',bins='auto',min_numobs=None,nu
     }
     return dict_out
 
-def save_mean_radial_velocities(input_fn,t_col='tdeath',output_fn=None,bins='auto'):
+def save_mean_radial_velocities(input_fn,t_col='tdeath',output_fn=None,bins='auto',flip_time=False,**kwargs):
     if output_fn is None:
         output_fn=input_fn.replace('.csv',f'_mean_radial_velocities_bins_{bins}.csv')
 
     df=pd.read_csv(input_fn)
-    dict_out=comp_mean_radial_velocities(df,t_col=t_col,bins=bins)
+    dict_out=comp_mean_radial_velocities(df,t_col=t_col,bins=bins,flip_time=flip_time,**kwargs)
     df_drdt=pd.DataFrame(dict_out)
     df_drdt.to_csv(output_fn,index=False)
     return output_fn

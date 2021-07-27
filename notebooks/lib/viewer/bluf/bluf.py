@@ -6,8 +6,8 @@
 # # Programmer: Tim Tyree
 # # Date: 7.23.2021
 # from lib.viewer import *
-from DataPlotterClass import *
-from pdf_utils import *
+from .DataPlotterClass import *
+from .pdf_utils import *
 import matplotlib.backends.backend_pdf, matplotlib.pyplot as plt,random, os
 # from ...lib import *
 # from core.viewer import *

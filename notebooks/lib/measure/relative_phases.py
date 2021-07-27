@@ -20,14 +20,14 @@ from ..utils.projection_func import get_subtract_pbc
 #######
 def get_compute_displacements_between(width,height):
     subtract_pbc=get_subtract_pbc(width=width,height=height)
-    def compute_displacements_between(d1,d2):
+    def compute_displacements_between(d1,d2,t_col='t',**kwargs):
         '''computes the displacements between particle 1 and particle 2 in units of pixels.
         supposes the index indexes time.'''
         #align locations by index
-        dd=d1[['x','y']].copy()
-        dd[['xx','yy']]=d2[['x','y']]
+        dd=d1.set_index(t_col)[['x','y']].copy()
+        dd[['xx','yy']]=d2.set_index(t_col)[['x','y']]
         dd.dropna(inplace=True)
-
+        t_values=dd.index.values
         # compute displacement unit vector from tip 1 to tip 2
         xy1_values=np.array(list(zip(dd['x'],dd['y'])))
         xy2_values=np.array(list(zip(dd['xx'],dd['yy'])))
@@ -40,21 +40,21 @@ def get_compute_displacements_between(width,height):
         #compute displacements between
         for j in range(xy2_minus_xy1_values.shape[0]):
             xy2_minus_xy1_values[j]=subtract_pbc(xy2_values[j],xy1_values[j])
-        return xy2_minus_xy1_values
+        return xy2_minus_xy1_values,t_values
     return compute_displacements_between
 
 def get_compute_ranges_between(width,height):
     '''Example Usage:
     compute_ranges_between=get_compute_ranges_between(width=width,height=height)
-    range_values=compute_ranges_between(d1,d2)
+    range_values,t_values=compute_ranges_between(d1,d2,t_col='t',**kwargs)
     '''
     compute_displacements_between=get_compute_displacements_between(width=width,height=height)
-    def compute_ranges_between(d1,d2):
+    def compute_ranges_between(d1,d2,t_col='t',**kwargs):
         '''computes the phases between particle 1 and particle 2 in units of radians.
         returns range between particles in units of pixels'''
-        xy2_minus_xy1_values=compute_displacements_between(d1,d2)
+        xy2_minus_xy1_values,t_values=compute_displacements_between(d1,d2,t_col=t_col,**kwargs)
         range_values=np.linalg.norm(xy2_minus_xy1_values, axis=1)
-        return range_values
+        return range_values,t_values
     return compute_ranges_between
 
 def compute_phases_between(d1,d2,dict_activation_front,field='lesser_xy_values'):

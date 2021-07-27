@@ -5,7 +5,7 @@ from ..measure.compute_msd_simple import msd_fft
 #simple routine for computation of individual mean squared displacements
 # Programmer: Tim Tyree
 # 7.20.2021
-def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='particle',t_col='t',max_lagtime=None,**kwargs):
+def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col,t_col='t',max_lagtime=None,**kwargs):
     '''
     Example Usage:
     lagt_values,msd_values=compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pid_explicit')
@@ -44,9 +44,10 @@ def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pa
 
 def comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
                          minimum_lifetime,crop_start_by,crop_end_by,
-                         pid_col,t_col,max_lagtime=None,
+                         pid_col,t_col,max_lagtime=None,use_unwrap=False,
                          **kwargs):
     '''
+    output is in length units of ds/width and duration units of DT.
     computes the mean squared displacements for each trajectory listed in input_fn
     input_fn gives the location of a trajectory file with columns x,y,frames, and some pid_col.
     trajectory that may have periodic periodic boundary conditions on a square domain.
@@ -62,11 +63,12 @@ def comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
     height=width
     DS=ds/width
 
-    #unwrap trajectories
-    pid_lst = sorted(set(df[pid_col].values))
-    #(duplicates filtered earlier in full model pipeline.  Unnecessary in particle model with explicit tracking... filter_duplicate_trajectory_indices is slow (and can probably be accelerated with a sexy pandas one liner)
-    # pid_lst = filter_duplicate_trajectory_indices(pid_lst,df)
-    df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width, height, DS, **kwargs) for pid in pid_lst])
+    if use_unwrap:
+        #unwrap trajectories
+        pid_lst = sorted(set(df[pid_col].values))
+        #(duplicates filtered earlier in full model pipeline.  Unnecessary in particle model with explicit tracking... filter_duplicate_trajectory_indices is slow (and can probably be accelerated with a sexy pandas one liner)
+        # pid_lst = filter_duplicate_trajectory_indices(pid_lst,df)
+        df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width=width, height=height, **kwargs) for pid in pid_lst])
 
     #compute t0 and tf for each particle
     dft=df.groupby(pid_col)[t_col].describe()
@@ -90,7 +92,7 @@ def comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
     lagt_out_lst=[];msd_out_lst=[];pid_out_lst=[]
     for pid in pid_values_to_consider:
         #compute output
-        lagt_values,msd_values=compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col='pid_explicit')
+        lagt_values,msd_values=compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col=pid_col)
         pid_values=np.zeros_like(msd_values,dtype='int')
         #record output
         pid_out_lst.extend(pid_values)       #indices that identify the particles
@@ -103,7 +105,7 @@ def comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
 
 def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
                          minimum_lifetime,crop_start_by,crop_end_by,
-                         pid_col,t_col,max_lagtime=None,
+                         pid_col,t_col,max_lagtime=None,use_unwrap=False,
                          **kwargs):
     '''
     computes the mean squared displacements for each trajectory listed in input_fn
@@ -113,12 +115,12 @@ def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
     df=pd.read_csv(input_fn)
     return comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
                          minimum_lifetime,crop_start_by,crop_end_by,
-                         pid_col,t_col,max_lagtime=None,
+                         pid_col,t_col,max_lagtime=max_lagtime,use_unwrap=use_unwrap,
                          **kwargs)
 
-def routine_compute_imsd(input_fn,save_folder=None,**kwargs):
+def routine_compute_imsd(input_fn,save_folder=None,use_unwrap=False,**kwargs):
     #compute results
-    df_msd=compute_each_mean_squared_displacement(input_fn,**kwargs)
+    df_msd=compute_each_mean_squared_displacement(input_fn,use_unwrap=use_unwrap,**kwargs)
     #save results
     folder_name=os.path.dirname(input_fn)
     dirname = folder_name.split('/')[-1]
