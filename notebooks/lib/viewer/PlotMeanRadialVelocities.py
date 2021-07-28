@@ -14,12 +14,10 @@ def PlotMeanRadialVelocities(axs,
                              capsize=3,
                              xlim0=[0, 4],
                              xlim1=[0, 4],
+                             x1_label=r'R (cm)',
+                             x2_label=r'1/R (cm$^{-1}$)',
+                             y_label=r'dR/dt (cm/s)',
                              **kwargs):
-
-    x1_label=r'R (cm)'
-    x2_label=r'1/R (cm$^{-1}$)'
-    y_label=r'dR/dt (cm/ms)'
-
     ax = axs[0]
     # ax.scatter(x_values,y_values,c=c,s=20,alpha=alpha)
     #plot error bars

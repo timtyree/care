@@ -8,6 +8,29 @@ import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
 from glob import glob
 from tkinter import Tk,filedialog
 
+def compute_event_id(df,input_fn,pid_col='pid'):
+    '''computes a unique float that is unique for each event identified here by pid_col and is unique across files.
+    fn = os.path.basename(input_fn)
+    event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
+    df['event_id']=event_id_int+df['pid']/df['pid'].max()
+    '''
+    #compute event_id
+    fn = os.path.basename(input_fn)
+    event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
+    df['event_id']=event_id_int+df['pid']/df['pid'].max()
+    return df
+
+def produce_one_csv(list_of_files, file_out, encoding="utf-8",provide_event_id=True,pid_col='pid',**kwargs):
+   '''Consolidate all csv files into one object.
+   if provide_event_id is true, then a unique event_id
+   is provided for each event using compute_event_id.'''
+   if provide_event_id:
+       df = pd.concat([compute_event_id(pd.read_csv(file).reset_index(),input_fn=file,pid_col=pid_col) for file in list_of_files])
+   else:
+       df = pd.concat([pd.read_csv(file).reset_index() for file in list_of_files])
+   df.to_csv(file_out, index=False, encoding=encoding)
+   return os.path.abspath(file_out)
+
 def print_dict(input_dict):
     for key in input_dict.keys():
         print(f"{key}={input_dict[key]}")

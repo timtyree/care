@@ -9,15 +9,15 @@ from ..routines.compute_interactions import compute_df_interactions
 from .compute_phase_angles import *
 from ..utils.utils_traj import get_DT
 
-def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
-   # Consolidate all csv files into one object
-   df = pd.concat([pd.read_csv(file).reset_index() for file in list_of_files])
-   # df = pd.concat([pd.read_csv(file) for file in list_of_files])
-   # Convert the above object into a csv file and export
-   # if df.columns[0]=='Unnamed: 0':
-	#    df.drop(columns=['Unnamed: 0'])
-   df.to_csv(file_out, index=False, encoding=encoding)
-   return os.path.abspath(file_out)
+# def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
+#    # Consolidate all csv files into one object
+#    df = pd.concat([pd.read_csv(file).reset_index() for file in list_of_files])
+#    # df = pd.concat([pd.read_csv(file) for file in list_of_files])
+#    # Convert the above object into a csv file and export
+#    # if df.columns[0]=='Unnamed: 0':
+# 	#    df.drop(columns=['Unnamed: 0'])
+#    df.to_csv(file_out, index=False, encoding=encoding)
+#    return os.path.abspath(file_out)
 
 def filter_before(df,tmin=100,t_column='t'):
 	'''filter all time earlier than tmin'''
@@ -107,7 +107,9 @@ def compute_annihilation_events(input_fn,
 	'''input_fn is a string locating the directory of a _trajectories .csv file.
 	min_range must be smaller than the max range between a pair of spiral tips for them to be considered
 	Returns pandas.Dataframe instance.
-	max_dur is the maximum amount of time before annihilation that will be considered
+	max_dur is the maximum amount of time before annihilation that will be considered.
+	- input length units is in pixels / the original raw length units
+	- output length units is in cm
 	Example Usage:
 	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
 	df_phases=compute_annihilation_events(input_fn,width,height,ds)#,**kwargs)
@@ -311,14 +313,14 @@ def save_annihilation_events(input_fn,
 							 height,
 							 ds,pid_col,
 							 save_folder=None,
-							 save_fn=None,
+							 save_fn=None,folder_out_name='annihilations',
 							 **kwargs):
 	'''
 	Example Usage:
 	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
 	save_fn=save_annihilation_events(input_fn,width,height,ds,save_folder=None,save_fn=None)#,**kwargs)
 	'''
-	df_phases = compute_annihilation_events(input_fn, width=width, height=height, ds=ds, pid_col=pid_col, **kwargs)
+	df_phases = compute_annihilation_events(input_fn, width=width, height=height, ds=ds, pid_col=pid_col, folder_out_name=folder_out_name, **kwargs)
 	if df_phases is None:
 		return f"Warning: no annihilation events considered valid for trial located at \n\t {input_fn}"
 	if type(df_phases)!=type(pd.DataFrame()):
@@ -327,7 +329,7 @@ def save_annihilation_events(input_fn,
 	if save_folder is None:
 		#save df_phases as csv
 		save_folder = os.path.dirname(
-			os.path.dirname(input_fn)) + '/annihilations'
+			os.path.dirname(input_fn)) + '/' + folder_out_name
 	if not os.path.exists(save_folder):
 		os.mkdir(save_folder)
 	os.chdir(save_folder)

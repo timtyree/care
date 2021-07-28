@@ -12,6 +12,8 @@ def comp_mean_radial_velocities(df,t_col='tdeath',bins='auto',min_numobs=None,nu
     where rows are presorted according to event and then by t_col.
     returns a dict containing results for mean radial velocities.
     if min_numobs is None, then min_numobs is determined from the mean counts in each bin.
+    - output time units is in milliseconds
+    - output length units is the same as input length units
     Example Usage:
     dict_out=compute_mean_radial_velocities(df,t_col='tdeath')
     '''
