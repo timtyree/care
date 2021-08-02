@@ -8,29 +8,6 @@ import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
 from glob import glob
 from tkinter import Tk,filedialog
 
-def compute_event_id(df,input_fn,pid_col='pid'):
-    '''computes a unique float that is unique for each event identified here by pid_col and is unique across files.
-    fn = os.path.basename(input_fn)
-    event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
-    df['event_id']=event_id_int+df['pid']/df['pid'].max()
-    '''
-    #compute event_id
-    fn = os.path.basename(input_fn)
-    event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
-    df['event_id']=event_id_int+df['pid']/df['pid'].max()
-    return df
-
-def produce_one_csv(list_of_files, file_out, encoding="utf-8",provide_event_id=True,pid_col='pid',**kwargs):
-   '''Consolidate all csv files into one object.
-   if provide_event_id is true, then a unique event_id
-   is provided for each event using compute_event_id.'''
-   if provide_event_id:
-       df = pd.concat([compute_event_id(pd.read_csv(file).reset_index(),input_fn=file,pid_col=pid_col) for file in list_of_files])
-   else:
-       df = pd.concat([pd.read_csv(file).reset_index() for file in list_of_files])
-   df.to_csv(file_out, index=False, encoding=encoding)
-   return os.path.abspath(file_out)
-
 def print_dict(input_dict):
     for key in input_dict.keys():
         print(f"{key}={input_dict[key]}")
@@ -40,7 +17,7 @@ def get_log_files(trial_folder_name, extension='/Log/', trgt='.csv'):
     #Example Usage:
     input_fn="/Users/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_1500_varkappa_0/trajectories/pbc_particle_log144_traj_sr_30_mem_0.csv"
     trial_folder_name=os.path.dirname(os.path.dirname(input_fn))
-    input_fn_lst=get_unwrapped_Log_files(trial_folder_name)
+    input_fn_lst=get_unwrapped_log_files(trial_folder_name)
 
     '''
     os.chdir(trial_folder_name+extension)
@@ -99,8 +76,6 @@ def init_filesystem_bd(base_folder, results_folder = 'ds_5_param_set_8', subfold
 		os.mkdir(folder)
 	os.chdir(base_folder)
 	return True
-
-
 
 def get_trailing_number(search_text):
 	search_obj = re.search(r"([0-9]+)$", search_text)
@@ -321,24 +296,64 @@ def remove_log_folder(folder_name='Data/log-tmp/'):
 def is_csv(file_name):
 	return file_name[-4:]=='.csv'
 
-def produce_one_csv(list_of_files, file_out):
-   # Consolidate all csv files into one object
-   result_obj = pd.concat([pd.read_csv(file) for file in list_of_files])
-   # Convert the above object into a csv file and export
-   result_obj.to_csv(file_out, index=False, encoding="utf-8")
-   return True
+#simple version deprecated by more flexible version
+# def produce_one_csv(list_of_files, file_out):
+#    # Consolidate all csv files into one object
+#    result_obj = pd.concat([pd.read_csv(file) for file in list_of_files])
+#    # Convert the above object into a csv file and export
+#    result_obj.to_csv(file_out, index=False, encoding="utf-8")
+#    return True
+
+def produce_one_csv(list_of_files, file_out, encoding="utf-8",provide_event_id=True,pid_col='pid',**kwargs):
+    '''Consolidate all csv files into one object.
+    if provide_event_id is true, then a unique event_id
+    is provided for each event using compute_event_id.
+
+    Example Usage:
+    #merge all csv files into one big-ol' csv file
+    save_fn=f'annihilations_minr_{min_range}_mindur_{min_duration}.csv'
+    file_out=os.path.join(os.path.dirname(os.path.dirname(list_of_files[0])),save_fn)
+    reval=produce_one_csv(list_of_files, file_out)#, encoding="utf-8")
+    print('results saved in:')
+    print(file_out)
+    '''
+    #assert (len(list_of_files)>0)
+    if provide_event_id:
+        df = pd.concat([compute_event_id(pd.read_csv(file).reset_index(),input_fn=file,pid_col=pid_col) for file in list_of_files])
+    else:
+        df = pd.concat([pd.read_csv(file).reset_index() for file in list_of_files])
+    df.to_csv(file_out, index=False, encoding=encoding)
+    return os.path.abspath(file_out)
 
 def combine_csv_in_folder_to_one(folder_name, file_out = "../consolidated_rates.csv"):
+    return produe_one_csv_from_trgt_folder(folder_name=folder_name, file_out=file_out,trgt='.csv')
+
+def produe_one_csv_from_trgt_folder(folder_name, file_out,trgt='.csv'):
 	os.chdir(folder_name)
 	# get all .csv files in the current working directory
 	retval = os.system('ls')
 	file_name_list = list(retval)
 	# check each file if it ends in .csv before merging it
 	def is_csv(file_name):
-		return file_name[-4:]=='.csv'
+		return file_name[-4:]==trgt
 	file_name_list = [f for f in file_name_list if is_csv(f)]
 	produce_one_csv(list_of_files=file_name_list, file_out=file_out)
 	return True
+
+def compute_event_id(df,input_fn,pid_col='pid'):
+    '''computes a unique float that is unique for each event identified here by pid_col and is unique across files.
+    fn = os.path.basename(input_fn)
+    event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
+    df['event_id']=event_id_int+df['pid']/df['pid'].max()
+    '''
+    #compute event_id
+    import re
+    fn = os.path.basename(input_fn)
+    event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
+    df['event_id']=event_id_int+df['pid']/df['pid'].max()
+    return df
+
+
 # def compress_log_folder_to(folder_name='Data/log-tmp/'):
 #     print("DONE(see combine_csv_in_folder_to_one): make compress_log_folder_to(folder_name='Data/log-tmp/')")
 #     return False
