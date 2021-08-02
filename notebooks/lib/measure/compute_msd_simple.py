@@ -32,7 +32,7 @@ def return_msd_particle_average(input_fn,ds,width,height,use_unwrap,pid_col='pid
         # pid_lst_filtered = filter_duplicate_trajectory_indices(pid_lst,df)
         df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width=width, height=height, **kwargs) for pid in pid_lst])
     DT=get_DT(df,pid_col=pid_col) #ms
-    df[df.frame==2].describe()
+    # df[df.frame==2].describe()
     df['sd']=df['x']**2+df['y']**2
     d_msd=df.groupby('t')['sd'].mean()
     lagt_values=d_msd.index.values
