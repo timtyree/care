@@ -1,0 +1,9 @@
+TODO: share outlook calendar zoom link with WJ and PM
+TODO: double check the OLS fits for the FK model's MSD
+TODO: what happens if I condition dRdt on opposite chiralities but not annihilation
+TODO: measure dRdt in the full model when conditioning on annihilation not occuring
+TODO: root cause analysis of why old dRdt versus R (LR) is smooth/nice while new is not smooth/nice
+TODO: double check the units of dRdt and R using back of envelop estimate from a video of spiral tips
+TODO: clearly understand the force of the full model
+TODO: determine whether 1/R attraction is valid for the full model is a constant repulsive force needed
+TODO: 
