@@ -8,6 +8,7 @@ from .compute_relative_velocities import *
 from ..routines.compute_interactions import compute_df_interactions
 from .compute_phase_angles import *
 from ..utils.utils_traj import get_DT
+from ..utils.dist_func import get_distance_L2_pbc
 
 # def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
 #    # Consolidate all csv files into one object
@@ -92,221 +93,245 @@ def get_compute_final_inout_angles(width,height):
 	return compute_final_inout_angles
 
 def compute_annihilation_events(input_fn,
-								width,
-								height,
-								ds,pid_col,
-								range_threshold=1.,
-								min_duration=20.,max_dur=150,
-								min_range=1.,
-								round_t_to_n_digits=5,
-								use_min_duration=True,
-								use_grad_voltage=True,
-								printing=False,
-								tmin=100.,
-								**kwargs):
-	'''input_fn is a string locating the directory of a _trajectories .csv file.
-	min_range must be smaller than the max range between a pair of spiral tips for them to be considered
-	Returns pandas.Dataframe instance.
-	max_dur is the maximum amount of time before annihilation that will be considered.
-	- input length units is in pixels / the original raw length units
-	- output length units is in cm
-	Example Usage:
-	input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
-	df_phases=compute_annihilation_events(input_fn,width,height,ds)#,**kwargs)
-	'''
-	# # original default values that worked for the Fenton-Karma model...
-	#     range_threshold=1.#cm
-	#     #compute measures near annihilation
-	#     #input: df_ordered_interactions
-	#     min_duration=20#150 #ms
-	#     min_range=1. #cm
-	#     use_min_duration=True#broken for false
-	#     use_grad_voltage=False
-	df=pd.read_csv(input_fn)
-	try:
-		DT = get_DT(df, pid_col=pid_col)
-		# DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
-		if printing:
-			print(f"the time resolution is {DT} ms.")
+                                width,
+                                height,
+                                ds,pid_col,t_col='t',
+                                range_threshold=1.,
+                                min_duration=20.,max_dur=150,
+                                min_range=1.,
+                                round_t_to_n_digits=5,
+                                use_min_duration=True,
+                                use_grad_voltage=True,
+                                printing=False,
+                                tmin=100.,
+                                **kwargs):
+    '''input_fn is a string locating the directory of a _trajectories .csv file.
+    min_range must be smaller than the max range between a pair of spiral tips for them to be considered
+    Returns pandas.Dataframe instance.
+    max_dur is the maximum amount of time before annihilation that will be considered.
+    - input length units is in pixels / the original raw length units
+    - output length units is in cm
+    Example Usage:
+    input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
+    df_phases=compute_annihilation_events(input_fn,width,height,ds)#,**kwargs)
+    '''
+    df=pd.read_csv(input_fn)
+    try:
+        DT = np.around(get_DT(df, pid_col=pid_col), round_t_to_n_digits)
+        # # DT = compute_DT(df, round_t_to_n_digits=round_t_to_n_digits)
+        if printing:
+            print(f"the time resolution is {DT} ms.")
+    except AttributeError as e:
+        return f'Warning: AttributeError raise for {input_fn}.  "frame" is probably missing from the input DataFrame instance...'
 
-	except AttributeError as e:
-		return f'Warning: AttributeError raise for {input_fn}.  "frame" is probably missing from the input DataFrame instance...'
+    dsdpixel = ds / width  #cm per pixel
+    DS = dsdpixel
+    #compile jit
+    compute_final_inout_angles=get_compute_final_inout_angles(width,height)
+    # compute_angle_between_final_velocities = get_compute_angle_between_final_velocities(width, height)
+    compute_ranges_between = get_compute_ranges_between(width=width,height=height)
 
-	dsdpixel = ds / width  #cm per pixel
-	DS = dsdpixel
-	#compile jit
-	compute_final_inout_angles=get_compute_final_inout_angles(width,height)
-	# compute_angle_between_final_velocities = get_compute_angle_between_final_velocities(width, height)
-	compute_ranges_between = get_compute_ranges_between(width=width,height=height)
 
-	# death_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
-	#compute interactions
-	df_interactions = compute_df_interactions(input_fn, DS=DS,width=width,height=height,tmin=tmin,pid_col=pid_col)
-	df_interactions.dropna(inplace=True)
-	death_ranges = DS * df_interactions.rT.values
-	birth_ranges = DS * df_interactions.r0.values
+    # death_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
+    #compute interactions
+    df_interactions = compute_df_interactions(input_fn, DS=DS,width=width,height=height,tmin=tmin,pid_col=pid_col)
+    df_interactions.dropna(inplace=True)
+    death_ranges = DS * df_interactions.rT.values
+    birth_ranges = DS * df_interactions.r0.values
 
-	#filter any deaths that occur at ranges exceeding range_threshold
-	boo = df_interactions.rT * DS < range_threshold
-	df_ordered_interactions = df_interactions[boo].sort_values('Tavg',
-															   ascending=False)
+    #filter any deaths that occur at ranges exceeding range_threshold
+    boo = df_interactions.rT * DS < range_threshold
+    df_ordered_interactions = df_interactions[boo].sort_values('Tavg',
+                                                               ascending=False)
 
-	#compute the phase time series between pid and pid_deathmate
-	#find last zero for when phi1==0
-	#compute phi2 at that time using linear interpolation
-	#append phi2 to dphi_lst... proceed to the next particle
-	pid_queue = list(df_ordered_interactions.pid.values)
-	pid_deathmate_dict = dict(
-		zip(pid_queue, list(df_ordered_interactions.pid_deathmate.values)))
-	df_out_lst = []
-	while len(pid_queue) > 0:
-		pid = pid_queue.pop(0)
-		pid_deathmate = pid_deathmate_dict[pid]
-		try:
-			pid_queue.remove(pid_deathmate)
-			#extract d1,d2
-			d1 = df[df[pid_col] == pid].copy()
-			d2 = df[df[pid_col] == pid_deathmate].copy()
-			d1.index = d1.frame
-			d2.index = d2.frame
-			#compute ranges between
-			range_values,t_values=compute_ranges_between(d1,d2,t_col='t',**kwargs)
-			boo=t_values > -max_dur
-			t_values=t_values[boo]
-			range_values=range_values[boo]* dsdpixel
+    # def compute_df_interactions
+    distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
+    #list of length sorted trajectories
+    df = pd.read_csv(input_fn)
+    using_particle=True
+    if using_particle:
+        df['cid']=df[pid_col]
+    df = df[df.t>tmin].copy()
+    df.reset_index(inplace=True)
+    s = df.groupby(pid_col).t.count()
+    s = s.sort_values(ascending=False)
+    pid_longest_lst = list(s.index.values)#[:n_tips])
 
-			# range_values = compute_ranges_between(d1, d2) * dsdpixel
-			length = range_values.shape[0]
-			#compute x,y values and time values
-			if use_grad_voltage:
-				t_to_death_values, phi1_values, phi2_values, phi_sum_values, phi_diff_values = compute_phase_angles_from_grad_voltage(
-					d1, d2)
-				boo=t_to_death_values>-max_dur
-				t_to_death_values=t_to_death_values[boo]
-				phi1_values=phi1_values[boo]
-				phi2_values=phi2_values[boo]
-				phi_sum_values=phi_sum_values[boo]
-				phi_diff_values=phi_diff_values[boo]
-			else:
-				t_vals = d1['t'].values[-length:]
-				t_to_death_values = np.max(t_vals) - t_vals
-				boo=t_to_death_values>-max_dur
-				t_to_death_values=t_to_death_values[boo]
+    #TODO: add minimum duration filtering here
+    #print summary stats on particle lifetimes for one input folder
+    dft=df.groupby(pid_col)[t_col].describe()
+    df_lifetimes=-dft[['max','min']].T.diff().loc['min']
+    if printing:
+        print(f"termination time was {df[t_col].max():.2f} ms")
+    boo=df_lifetimes>=min_duration
+    pid_longest_lst=sorted(boo[boo].index.values)
 
-			nobs = range_values.shape[0]#   is the following needed? #[1:-1].shape[0]
-			if nobs > 1:
-				#compute angle between velocities
-				# tdeath_values, theta_values = compute_angle_between_final_velocities(d1, d2)
-				tdeath_values, theta_values = compute_final_inout_angles(d1, d2)
-				boo=tdeath_values>-max_dur
-				tdeath_values=tdeath_values[boo]
-				theta_values=theta_values[boo]
-				# #align range_values and theta_values
-				# boo = ~np.isnan(theta_values)
-				# theta_values = theta_values[boo]
-				# assert (range_values.shape[0] == t_to_death_values.shape[0])
-				# t_values = t_to_death_values[1:-1]
-				if use_min_duration:
-					#filter by min_duration
-					boo_keep = min_duration <= np.max(t_values) - np.min(t_values)
-					#filter by min_range
-					boo_keep &= min_range <= np.max(range_values)
-				else:
-					boo_keep = min_range <= np.max(range_values)
+    #compute the phase time series between pid and pid_deathmate
+    #find last zero for when phi1==0
+    #compute phi2 at that time using linear interpolation
+    #append phi2 to dphi_lst... proceed to the next particle
+    # pid_queue = list(df_ordered_interactions.pid.values)
+    pid_queue=list(pid_longest_lst)
+    pid_deathmate_dict = dict(
+        zip(df_ordered_interactions.pid.values, list(df_ordered_interactions.pid_deathmate.values)))
+    df_out_lst = []
+    while len(pid_queue) > 0:
+        pid = pid_queue.pop(0)
+        pid_deathmate = pid_deathmate_dict[pid]
+    #     try:
+        deathmate_is_present=set(pid_queue).issuperset({pid_deathmate})
+        if deathmate_is_present:
+            pid_queue.remove(pid_deathmate)
+        #extract d1,d2
+        d1 = df[df[pid_col] == pid].copy()
+        d2 = df[df[pid_col] == pid_deathmate].copy()
+        d1.index = d1.frame
+        d2.index = d2.frame
+        #compute ranges between
+        range_values,t_values=compute_ranges_between(d1,d2,t_col='t',**kwargs)
 
-				if boo_keep:
-					pid_values=pid + 0 * t_values.astype('int')
-					pid_deathmate_values=pid_deathmate + 0 * t_values.astype('int')
-					tdeath_values=np.around(tdeath_values,round_t_to_n_digits)
+        #i don't think this boo does anything
+        boo=t_values > -max_dur
+        t_values=t_values[boo]
+        range_values=range_values[boo]* dsdpixel #cm
 
-					if use_grad_voltage:
-						# phi1_values=phi1_values#[1:-1]np.abs(phi1_values)[1:-1]
-						# phi2_values=phi2_values#[1:-1]np.abs(phi2_values)[1:-1]
-						#determine the shortest length of all output sources
-						length_out=np.min((
-							tdeath_values.shape[0],
-							theta_values.shape[0],
-							range_values.shape[0],
-							pid_values.shape[0],
-							pid_deathmate_values.shape[0],
-							phi1_values.shape[0],
-							phi2_values.shape[0],
-							phi_sum_values.shape[0],
-							phi_diff_values.shape[0]
-						))
-						#set the length of each output array to length_out
-						pid_values=pid_values[-length_out:].copy()
-						pid_deathmate_values=pid_deathmate_values[-length_out:].copy()
-						tdeath_values=tdeath_values[-length_out:].copy()
-						range_values=range_values[-length_out:].copy()
-						theta_values=theta_values[-length_out:].copy()
-						phi1_values=phi1_values[-length_out:].copy()
-						phi2_values=phi2_values[-length_out:].copy()
-						phi_sum_values=phi_sum_values[-length_out:].copy()
-						phi_diff_values=phi_diff_values[-length_out:].copy()
-						df_out = pd.DataFrame({
-							'pid':
-							pid_values,
-							'pid_deathmate':
-							pid_deathmate_values,
-							'tdeath':
-							tdeath_values,
-							'r':
-							range_values,
-							'theta':
-							theta_values,
-							'phi1':
-							phi1_values,
-							'phi2':
-							phi2_values,
-							'phi_sum':
-							phi_sum_values,
-							'phi_diff':
-							phi_diff_values
-						})
-					else:
-						#determine the shortest length of all output sources
-						length_out=np.min((
-							tdeath_values.shape[0],
-							theta_values.shape[0],
-							range_values.shape[0],
-							pid_values.shape[0],
-							pid_deathmate_values.shape[0]
-						))
-						#set the length of each output array to length_out
-						pid_values=pid_values[-length_out:].copy()
-						pid_deathmate_values=pid_deathmate_values[-length_out:].copy()
-						tdeath_values=tdeath_values[-length_out:].copy()
-						range_values=range_values[-length_out:].copy()
-						theta_values=theta_values[-length_out:].copy()
-						df_out = pd.DataFrame({
-							'pid':
-							pid_values,
-							'pid_deathmate':
-							pid_deathmate_values,
-							'tdeath':
-							tdeath_values,
-							'r':
-							range_values,
-							'theta':
-							theta_values,
-						})
+        # range_values = compute_ranges_between(d1, d2) * dsdpixel
+        length = range_values.shape[0]
+        #compute x,y values and time values
+        if use_grad_voltage:
+            t_to_death_values, phi1_values, phi2_values, phi_sum_values, phi_diff_values = compute_phase_angles_from_grad_voltage(
+                d1, d2)
+            boo=t_to_death_values>-max_dur
+            t_to_death_values=t_to_death_values[boo]
+            phi1_values=phi1_values[boo]
+            phi2_values=phi2_values[boo]
+            phi_sum_values=phi_sum_values[boo]
+            phi_diff_values=phi_diff_values[boo]
+        else:
+            t_vals = d1['t'].values[-length:]
+            t_to_death_values = np.max(t_vals) - t_vals
+            boo=t_to_death_values>-max_dur
+            t_to_death_values=t_to_death_values[boo]
 
-					#append x,y values to list
-					boo= df_out['tdeath'] <= max_dur
-					df_out_lst.append(df_out[boo].copy())
-		except ValueError as e:  #for catching ValueError: list.remove(x): x not in list
-			pass
-	if printing:
-		print(f"the number of trials appended to df_out_lst is {len(df_out_lst)}")
-		assert (len(df_out_lst) > 0)
-	if not (len(df_out_lst) > 0):
-		return None
-	# t_to_death_values.shape, range_values.shape, theta_values.shape, d1[
-	#     't'].values.shape, d2['t'].values.shape
-	df_phases = pd.concat(df_out_lst)
-	return df_phases
+        nobs = range_values.shape[0]#   is the following needed? #[1:-1].shape[0]
+        if printing:
+            print(f"nobs={nobs}")
+        if nobs > 1:
+            #compute angle between velocities
+            # tdeath_values, theta_values = compute_angle_between_final_velocities(d1, d2)
+            tdeath_values, theta_values = compute_final_inout_angles(d1, d2)
+            boo=tdeath_values>-max_dur
+            tdeath_values=tdeath_values[boo]
+            theta_values=theta_values[boo]
+            # #align range_values and theta_values
+            # boo = ~np.isnan(theta_values)
+            # theta_values = theta_values[boo]
+            # assert (range_values.shape[0] == t_to_death_values.shape[0])
+            # t_values = t_to_death_values[1:-1]
+            if use_min_duration:
+                #filter by min_duration
+                if printing:
+                    print(f"duration was {np.max(t_values) - np.min(t_values)} ms.")
+                boo_keep = min_duration <= np.max(t_values) - np.min(t_values)
+                #filter by min_range
+                boo_keep &= min_range <= np.max(range_values)
+            else:
+                boo_keep = min_range <= np.max(range_values)
 
+            if boo_keep:
+                pid_values=pid + 0 * t_values.astype('int')
+                pid_deathmate_values=pid_deathmate + 0 * t_values.astype('int')
+                tdeath_values=np.around(tdeath_values,round_t_to_n_digits)
+
+                if use_grad_voltage:
+                    # phi1_values=phi1_values#[1:-1]np.abs(phi1_values)[1:-1]
+                    # phi2_values=phi2_values#[1:-1]np.abs(phi2_values)[1:-1]
+                    #determine the shortest length of all output sources
+                    length_out=np.min((
+                        tdeath_values.shape[0],
+                        theta_values.shape[0],
+                        range_values.shape[0],
+                        pid_values.shape[0],
+                        pid_deathmate_values.shape[0],
+                        phi1_values.shape[0],
+                        phi2_values.shape[0],
+                        phi_sum_values.shape[0],
+                        phi_diff_values.shape[0]
+                    ))
+                    #set the length of each output array to length_out
+                    pid_values=pid_values[-length_out:].copy()
+                    pid_deathmate_values=pid_deathmate_values[-length_out:].copy()
+                    tdeath_values=tdeath_values[-length_out:].copy()
+                    range_values=range_values[-length_out:].copy()
+                    theta_values=theta_values[-length_out:].copy()
+                    phi1_values=phi1_values[-length_out:].copy()
+                    phi2_values=phi2_values[-length_out:].copy()
+                    phi_sum_values=phi_sum_values[-length_out:].copy()
+                    phi_diff_values=phi_diff_values[-length_out:].copy()
+                    df_out = pd.DataFrame({
+                        'pid':
+                        pid_values,
+                        'pid_deathmate':
+                        pid_deathmate_values,
+                        'tdeath':
+                        tdeath_values,
+                        'r':
+                        range_values,
+                        'theta':
+                        theta_values,
+                        'phi1':
+                        phi1_values,
+                        'phi2':
+                        phi2_values,
+                        'phi_sum':
+                        phi_sum_values,
+                        'phi_diff':
+                        phi_diff_values
+                    })
+                else:
+                    #determine the shortest length of all output sources
+                    length_out=np.min((
+                        tdeath_values.shape[0],
+                        theta_values.shape[0],
+                        range_values.shape[0],
+                        pid_values.shape[0],
+                        pid_deathmate_values.shape[0]
+                    ))
+                    #set the length of each output array to length_out
+                    pid_values=pid_values[-length_out:].copy()
+                    pid_deathmate_values=pid_deathmate_values[-length_out:].copy()
+                    tdeath_values=tdeath_values[-length_out:].copy()
+                    range_values=range_values[-length_out:].copy()
+                    theta_values=theta_values[-length_out:].copy()
+                    df_out = pd.DataFrame({
+                        'pid':
+                        pid_values,
+                        'pid_deathmate':
+                        pid_deathmate_values,
+                        'tdeath':
+                        tdeath_values,
+                        'r':
+                        range_values,
+                        'theta':
+                        theta_values,
+                    })
+
+                #append x,y values to list
+                boo= df_out['tdeath'] <= max_dur
+                df_out_lst.append(df_out[boo].copy())
+    #     except ValueError as e:  #for catching ValueError: list.remove(x): x not in list
+    #         pass
+    if printing:
+        print(f"the number of trials appended to df_out_lst is {len(df_out_lst)}")
+        assert (len(df_out_lst) > 0)
+    if not (len(df_out_lst) > 0):
+        return None
+    # t_to_death_values.shape, range_values.shape, theta_values.shape, d1[
+    #     't'].values.shape, d2['t'].values.shape
+
+    df_phases = pd.concat(df_out_lst)
+    return df_phases
+    #DONE: add the right filtering at the beginning of routine_traj_to_annihilation
 
 def save_annihilation_events(input_fn,
 							 width,
@@ -430,7 +455,7 @@ def compute_creation_events(input_fn,
 								height,
 								ds,pid_col,
 								range_threshold=1.,
-								min_duration=20.,
+								min_duration=150.,
 								min_range=1.,
 								round_t_to_n_digits=3,
 								use_min_duration=True,
@@ -465,7 +490,15 @@ def compute_creation_events(input_fn,
 	compute_ranges_between = get_compute_ranges_between(width=width,height=height)
 	# birth_ranges,birth_ranges,DT=return_bd_ranges(input_fn,DS,round_t_to_n_digits=3)
 	#compute interactions
-	df_interactions = compute_df_interactions(input_fn, DS=DS,pid_col=pid_col)
+	df_interactions = compute_df_interactions(input_fn=input_fn,
+						DS=DS,
+						width=width,
+						height=height,
+						tmin=tmin,
+						pid_col=pid_col,
+						min_duration=min_duration,
+						**kwargs)
+
 	df_interactions.dropna(inplace=True)
 	birth_ranges = DS * df_interactions.rT.values
 	birth_ranges = DS * df_interactions.r0.values

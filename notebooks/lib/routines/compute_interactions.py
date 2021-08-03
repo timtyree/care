@@ -4,12 +4,12 @@ from ..utils.utils_traj import *
 
 
 
-def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200,tmin=100,pid_col='particle'):
+def compute_df_interactions(input_fn,DS=5./200.,width=200,height=200,tmin=100,pid_col='particle',t_col='t',min_duration=150,**kwargs):
     '''input_file_name is a .csv of spiral tip trajecotries.
     filters time before tmin'''
     distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
     #list of length sorted trajectories
-    df = pd.read_csv(input_file_name)
+    df = pd.read_csv(input_fn)
     using_particle=True
     if using_particle:
         df['cid']=df[pid_col]
@@ -18,6 +18,17 @@ def compute_df_interactions(input_file_name,DS=5./200.,width=200,height=200,tmin
     s = df.groupby(pid_col).t.count()
     s = s.sort_values(ascending=False)
     pid_longest_lst = list(s.index.values)#[:n_tips])
+
+    #TODO: add minimum duration filtering here
+    #TODO: add minimum duration filtering here
+    #print summary stats on particle lifetimes for one input folder
+    dft=df.groupby(pid_col)[t_col].describe()
+    df_lifetimes=-dft[['max','min']].T.diff().loc['min']
+    # if printing:
+    #     print(f"termination time was {df[t_col].max():.2f} ms")
+    boo=df_lifetimes>=min_duration
+    pid_longest_lst=sorted(boo[boo].index.values)
+
     #compute lifetime_of_sibling
     r0_lst = []; rT_lst=[]; Tdiff_lst = []; Tavg_lst = []; pid_lst = []; pid_other_lst = []; pid_death_lst=[]
     for pid in pid_longest_lst:

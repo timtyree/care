@@ -349,7 +349,8 @@ def compute_event_id(df,input_fn,pid_col='pid'):
     #compute event_id
     import re
     fn = os.path.basename(input_fn)
-    event_id_int = int(float(100.*sum([float(s)*(len(str(s)+1.)) for s in re.findall(r'-?\d+\.?\d*', fn)])))
+    # event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
+    event_id_int=int(''.join(re.findall(r'-?\d+\.?\d*', fn)))
     df['event_id']=event_id_int+(1.+df[pid_col])/(1.+df[pid_col].max()) -1.
     return df
 
