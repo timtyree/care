@@ -20,7 +20,7 @@ def get_log_files(trial_folder_name, extension='/Log/', trgt='.csv'):
     input_fn_lst=get_unwrapped_log_files(trial_folder_name)
 
     '''
-    os.chdir(trial_folder_name+extension)
+    os.chdir(os.path.join(trial_folder_name,extension))
     input_fn_lst=[os.path.abspath(fn) for fn in os.listdir() if fn[-len(trgt):]==trgt]
     return input_fn_lst
 
@@ -319,9 +319,9 @@ def produce_one_csv(list_of_files, file_out, encoding="utf-8",provide_event_id=T
     '''
     #assert (len(list_of_files)>0)
     if provide_event_id:
-        df = pd.concat([compute_event_id(pd.read_csv(file).reset_index(),input_fn=file,pid_col=pid_col) for file in list_of_files])
+        df = pd.concat([compute_event_id(pd.read_csv(file).reset_index(drop=True),input_fn=file,pid_col=pid_col,**kwargs) for file in list_of_files])
     else:
-        df = pd.concat([pd.read_csv(file).reset_index() for file in list_of_files])
+        df = pd.concat([pd.read_csv(file).reset_index(drop=True) for file in list_of_files])
     df.to_csv(file_out, index=False, encoding=encoding)
     return os.path.abspath(file_out)
 
@@ -340,18 +340,17 @@ def produe_one_csv_from_trgt_folder(folder_name, file_out,trgt='.csv'):
 	produce_one_csv(list_of_files=file_name_list, file_out=file_out)
 	return True
 
-def compute_event_id(df,input_fn,pid_col='pid'):
+def compute_event_id(df,input_fn,pid_col='pid',**kwargs):
     '''computes a unique float that is unique for each event identified here by pid_col and is unique across files.
-    fn = os.path.basename(input_fn)
-    event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
-    df['event_id']=event_id_int+df['pid']/df['pid'].max()
     '''
     #compute event_id
-    import re
+    # import re
     fn = os.path.basename(input_fn)
     # event_id_int = int(float(100*sum([float(s) for s in re.findall(r'-?\d+\.?\d*', fn)])))
-    event_id_int=int(''.join(re.findall(r'-?\d+\.?\d*', fn)))
-    df['event_id']=event_id_int+(1.+df[pid_col])/(1.+df[pid_col].max()) -1.
+    # event_id_int=float(''.join(re.findall(r'-?\d+\.?\d*', fn)))
+    # event_id_int=float(''.join(re.findall(r'-?\d+\d*', fn)))
+    event_id_int=float('1'+(''.join(re.findall(r'-?\d+\d*',fn))))
+    df['event_id']= event_id_int + df[pid_col] / (1.+df[pid_col].max())
     return df
 
 

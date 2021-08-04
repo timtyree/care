@@ -1,0 +1,6 @@
+GOAL(by 2pm): have reasonable MSD and dRdt slides made for both full models
+TODO: sanity check of dRdt magnitudes by plotting the speed for 1 trajectory versus time.  compute vrms.  you may simply refer to old vrms measurements
+TODO: automate making MSD slide
+TODO: compare MSD slides for various unwrapped trajectory folders... Do any old ones track long enough to show diffusion at long time scales?
+TODO: dev filtering method for dRdt data before bootstrapping
+TODO: automate making dRdt slide
