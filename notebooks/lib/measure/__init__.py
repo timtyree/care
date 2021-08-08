@@ -23,6 +23,9 @@ from .compute_topological_events import *
 from .bootstrap import *
 from .powerlaw import *
 from .compute_msd_simple import *
+from .filter_topological_events import *
+from .compute_forces_at_annihilation import *
+
 
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *

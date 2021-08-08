@@ -42,6 +42,7 @@ def gener_bluf(task_lst,
         set_size(w, h, ax)
         #plot the next data
         plotter(ax, plotter_function, arg)
+        plt.close()
     #saves pdf
     pdf.close()
     return True

@@ -1,27 +1,15 @@
 import numpy as np, pandas as pd, os
 from ..measure.bootstrap import *
+from ..measure.filter_topological_events import *
+from ..measure.compute_forces_at_annihilation import *
 # from ..utils.utils_traj import get_tips_in_range
 import random
-
-#TODO: move these functions to lib.measure
-def moving_average(x, w):
-    return np.convolve(x, np.ones(w), 'valid') / w
-
-def moving_average_of_events(df,navg=20,id_col='event_id',t_col='tdeath'):
-    df.sort_values([id_col,t_col],ascending=False,inplace=True)
-    #moving average of df for each event_id
-    event_id_lst=sorted(set(df[id_col].values))
-    for event_id in event_id_lst:
-        bo=df[id_col]==event_id
-        df.loc[bo]=df[bo].rolling(navg).mean()
-    df.dropna(inplace=True)
-    return df
 
 #####################################################
 # Methods conditioned on data from topological events
 #####################################################
-def comp_mean_radial_velocities(df,remove_before_jump,minR_thresh,max_speed_thresh,t_col='tdeath',id_col='event_id',
-    bins='auto',min_numobs=None,num_samples=1000,flip_time=False,navg=20,**kwargs):
+def comp_mean_radial_velocities(df,input_fn,remove_before_jump,minR_thresh,max_speed_thresh,t_col='tdeath',id_col='event_id',
+    bins='auto',min_numobs=None,num_samples=1000,flip_time=False,navg=20,use_smoothing=True,tavg1=1.5,tavg2=2.5,printing=False,**kwargs):
     '''returns a dict containing results for mean radial velocities.
 
     computes the mean radial velocities, binning by radius.
@@ -38,48 +26,53 @@ def comp_mean_radial_velocities(df,remove_before_jump,minR_thresh,max_speed_thre
     '''
     df.sort_values([id_col,t_col],ascending=False,inplace=True)
     event_id_lst=sorted(set(df[id_col].values))
+
     if flip_time:
         df[t_col]=-1*df[t_col]
     tvals=sorted(set(df[t_col].values))
     DT=tvals[1]-tvals[0]
     assert(DT>0)#if DT<0, then a factor of -1 is needed in a few places...
 
-    df['drdt']=df['r'].diff()/DT
-    #set drdt to zero where pid changes or where tdeath jumps by more than dt
-    # boo=df[t_col].diff()!=-DT
-    boo=~np.isclose(df[t_col].diff(),-DT,5)
+    if not use_smoothing:
+        df['drdt']=df['r'].diff()/DT
+        #set drdt to zero where pid changes or where tdeath jumps by more than dt
+        # boo=df[t_col].diff()!=-DT
+        boo=~np.isclose(df[t_col].diff(),-DT,5)
 
-    #remove any observations occuring before a jump
-    book =(df['r']>=minR_thresh)&(np.abs(df['drdt'])>=max_speed_thresh)
-    for event_id in event_id_lst:
-        #identify any jumps in this event
-        booki =book&(df[id_col]==event_id)
-        if remove_before_jump and booki[booki].any(): #if there are any jumps
-            #identify the earliest time where a jump occurs
-            max_time=df[booki][t_col].min()
-            # filters all positions occuring before the final jump for a single annihilation event.
-            bookie=(df[id_col]==event_id)&(df[t_col]>=max_time) #True if a row should be dropped
-            #mark all data for this event to be dropped if it occurs earlier than this time (tdeath is larger than the earliest time)
-            boo |= bookie
+        if remove_before_jump:
+            #remove any observations occuring before a jump
+            book =(df['r']>=minR_thresh)&(np.abs(df['drdt'])>=max_speed_thresh)
+            for event_id in event_id_lst:
+                #identify any jumps in this event
+                booki =book&(df[id_col]==event_id)
+                if booki[booki].any(): #if there are any jumps
+                    #identify the earliest time where a jump occurs
+                    max_time=df[booki][t_col].min()
+                    # filters all positions occuring before the final jump for a single annihilation event.
+                    bookie=(df[id_col]==event_id)&(df[t_col]>=max_time) #True if a row should be dropped
+                    #mark all data for this event to be dropped if it occurs earlier than this time (tdeath is larger than the earliest time)
+                    boo |= bookie
 
-    # boo&=df['drdt']>0  #when this is uncommented, the data looks good.  when it is commented, too much is filtered :(
-    df.loc[boo,'drdt']=np.nan
-    df.dropna(inplace=True)
-
-    #perform moving average of r values for each event_id
-    df=moving_average_of_events(df,navg=navg,id_col=id_col,t_col=t_col)
-    df.sort_values([id_col,t_col],ascending=False,inplace=True)
-    #set drdt to zero where pid changes or where tdeath jumps by more than dt
-    boo=~np.isclose(df[t_col].diff(),-DT,5)
-    # tvals=sorted(set(df[t_col].values))
-    # DT=tvals[1]-tvals[0]
-    assert(DT>0)#if DT<0, then a factor of -1 is needed in a few places...
-    df['drdt']=df['r'].diff()/DT
-    boo=~np.isclose(df[t_col].diff(),DT,5)
-    df.loc[boo,'drdt']=np.nan
-    df.dropna(inplace=True)
-
-    #TODO: perform smoothed differentiation for each event_id
+        # boo&=df['drdt']>0  #when this is uncommented, the data looks good.  when it is commented, too much is filtered :(
+        df.loc[boo,'drdt']=np.nan
+        df.dropna(inplace=True)
+    else:
+        #perform smoothed differentiation for each event_id
+        navg1=int(tavg1/DT)
+        navg2=int(tavg2/DT)
+        if navg2%2==0:
+            navg2=navg2+1 #second window must be an odd integer
+        if printing:
+            print(f"using smoothing windows navg1,navg2={navg1,navg2}, corresponding to tavg1,tavg2=({navg1*DT:.3f},{navg2*DT:.3f}) ms...")
+        df,valid_event_id_lst=get_annihilation_df(input_fn,navg1,navg2,
+                        t_col = t_col,id_col = id_col,DT = DT,DT_sec=DT*0.001,printing = printing,**kwargs)
+        #drop invalid events inplace
+        event_id_lst=sorted(set(df[id_col].values))
+        invalid_event_id_lst=list(set(event_id_lst).difference(set(valid_event_id_lst)))
+        for event_id in invalid_event_id_lst:
+            boo=df[id_col]==event_id
+            df.loc[boo,'drdt']=np.nan
+        df.dropna(inplace=True)
 
     #implement measure of dRdt that explicitely bins by radius
     counts,r_edges=np.histogram(df.r.values,bins=bins)
@@ -136,7 +129,7 @@ def save_mean_radial_velocities(input_fn,remove_before_jump,minR_thresh,max_spee
         output_fn=input_fn.replace('.csv',f'_mean_radial_velocities_bins_{bins}_minRthresh_{minR_thresh}_maxspeedthresh_{max_speed_thresh}.csv')
 
     df=pd.read_csv(input_fn)
-    dict_out=comp_mean_radial_velocities(df,t_col=t_col,bins=bins,
+    dict_out=comp_mean_radial_velocities(df=df,input_fn=input_fn,t_col=t_col,bins=bins,
         flip_time=flip_time,minR_thresh=minR_thresh,
         remove_before_jump=remove_before_jump,
         max_speed_thresh=max_speed_thresh,**kwargs)

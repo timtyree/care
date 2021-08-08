@@ -8,3 +8,5 @@ from .AngularHistogram import *
 from .PlotMeanRadialVelocities import *
 from .PlotMeanSquaredDisplacements import *
 from .bluf import *
+from .plot_kde_histogram import *
+from .AnnihilationPlotters import *

@@ -9,7 +9,7 @@ from ..routines.compute_interactions import compute_df_interactions
 from .compute_phase_angles import *
 from ..utils.utils_traj import get_DT
 from ..utils.dist_func import get_distance_L2_pbc
-
+from . import *
 # def produce_one_csv(list_of_files, file_out, encoding="utf-8"):
 #    # Consolidate all csv files into one object
 #    df = pd.concat([pd.read_csv(file).reset_index() for file in list_of_files])
@@ -150,7 +150,7 @@ def compute_annihilation_events(input_fn,
 	df = pd.read_csv(input_fn)
 	dft=df.groupby(pid_col)[t_col].describe()
 	df_lifetimes=-dft[['max','min']].T.diff().loc['min']
-	
+
 	using_particle=True
 	if using_particle:
 		df['cid']=df[pid_col]
