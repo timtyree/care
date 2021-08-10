@@ -9,7 +9,7 @@ import random
 # Methods conditioned on data from topological events
 #####################################################
 def comp_mean_radial_velocities(df,input_fn,remove_before_jump,minR_thresh,max_speed_thresh,t_col='tdeath',id_col='event_id',
-    bins='auto',min_numobs=None,num_samples=1000,flip_time=False,navg=20,use_smoothing=True,tavg1=1.5,tavg2=2.5,printing=False,**kwargs):
+    bins='auto',min_numobs=None,num_samples=1000,flip_time=False,use_smoothing=True,tavg1=1.5,tavg2=2.5,printing=False,**kwargs):
     '''returns a dict containing results for mean radial velocities.
 
     computes the mean radial velocities, binning by radius.
