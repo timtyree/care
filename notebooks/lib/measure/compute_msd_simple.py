@@ -1,9 +1,9 @@
 import numpy as np, pandas as pd,os
-
+from ..utils.utils_traj import unwrap_traj_and_center
 ########################################################
 # Compute Mean Squared Displacements via particle averaging
 ########################################################
-def return_msd_particle_average(input_fn,ds,width,height,use_unwrap,pid_col='pid_explicit',t_col='t',
+def return_msd_particle_average(input_fn,ds,width,height,use_unwrap,DT,pid_col='pid_explicit',t_col='t',
                                 **kwargs):
     '''
     input_fn is a .csv locating a trajectory file with particles identified by pid_col
@@ -31,12 +31,12 @@ def return_msd_particle_average(input_fn,ds,width,height,use_unwrap,pid_col='pid
         #(duplicates filtered earlier in full model pipeline.  Unnecessary in particle model with explicit tracking_ _  _ _ ) filter_duplicate_trajectory_indices is slow (and can probs be accelerated with a sexy pandas one liner)
         # pid_lst_filtered = filter_duplicate_trajectory_indices(pid_lst,df)
         df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width=width, height=height, **kwargs) for pid in pid_lst])
-    DT=get_DT(df,pid_col=pid_col) #ms
+    # DT=get_DT(df,pid_col=pid_col) #ms
     # df[df.frame==2].describe()
     df['sd']=df['x']**2+df['y']**2
     d_msd=df.groupby('t')['sd'].mean()
     lagt_values=d_msd.index.values
-    msd_values=d_msd.values
+    msd_values=d_msd.values*DS**2
     return lagt_values,msd_values
 
 ########################################################

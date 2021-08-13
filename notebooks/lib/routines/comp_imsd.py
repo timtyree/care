@@ -41,6 +41,57 @@ def compute_individual_mean_squared_displacement(df,dft1,dft2,DT,pid,pid_col,t_c
 # )
 # lagt_values,msd_values=df_out[['lagt','msd']].values.T
 # return lagt_values,msd_values
+def comp_each_mean_squared_displacement_particle(df,input_fn,DT,ds,width,
+                 minimum_lifetime,crop_start_by,crop_end_by,
+                 pid_col,t_col,max_lagtime=None,use_unwrap=False,
+                 **kwargs):
+    DS = ds / width
+    height=width
+    # df = pd.read_csv(input_fn)
+    # DT = get_DT(df, t_col=t_col, pid_col=pid_col)
+    if use_unwrap is True:
+        #unwrap trajectories
+        pid_lst = sorted(set(df[pid_col].values))
+        #(duplicates filtered earlier in full model pipeline.  Unnecessary in particle model with explicit tracking_ _  _ _ ) filter_duplicate_trajectory_indices is slow (and can probs be accelerated with a sexy pandas one liner)
+        # pid_lst_filtered = filter_duplicate_trajectory_indices(pid_lst,df)
+        df = pd.concat([
+            unwrap_traj_and_center(df[df[pid_col] == pid],
+                                   width=width,
+                                   height=height,
+                                   **kwargs) for pid in pid_lst
+        ])
+
+    #compute t0 and tf for each particle
+    dft = df.groupby(pid_col)[t_col].describe()
+    dft0 = dft['min']
+    dftf = dft['max']
+
+    #compute t1 and t2 for each particle
+    dft1 = dft0 + crop_start_by
+    dft2 = dftf - crop_end_by
+
+    #get the list of particles dft2-dft1 \ge minimum_lifetime
+    dflifetime_considered = dft2 - dft1
+    pid_values_to_consider = dflifetime_considered[
+        dflifetime_considered >= minimum_lifetime].index.values
+
+    #compute number of num_individuals
+    # pid_lst=sorted(set(df[pid_col].values))
+    num_individuals = len(list(pid_values_to_consider))
+    # print(f'Computing msd values for {num_individuals} particles...')
+
+    #for each particle, set lagt equal to the zero'd time
+    event_id_lst = sorted(set(df[pid_col].values))
+    for pid in pid_values_to_consider:
+        boo = df[pid_col] == pid
+        tbirth = df.loc[boo, 't'].min()
+        df.loc[boo, 'lagt'] = df.loc[boo, 't'] - tbirth
+
+    df['msd'] = (df['x']**2 + df['y']**2) * DS**2
+    df['pid'] = df[pid_col]
+    df_msd = df[['pid', 'lagt', 'msd']].copy()
+    df_msd.dropna(inplace=True)
+    return df_msd
 
 def comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
                          minimum_lifetime,crop_start_by,crop_end_by,
@@ -105,7 +156,7 @@ def comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
 
 def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
                          minimum_lifetime,crop_start_by,crop_end_by,
-                         pid_col,t_col,max_lagtime=None,use_unwrap=False,
+                         pid_col,t_col,max_lagtime=None,use_unwrap=False,use_particle_avg=True,
                          **kwargs):
     '''
     computes the mean squared displacements for each trajectory listed in input_fn
@@ -113,9 +164,15 @@ def compute_each_mean_squared_displacement(input_fn,DT,ds,width,
     trajectory that may have periodic periodic boundary conditions on a square domain.
     '''
     df=pd.read_csv(input_fn)
-    return comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
+    if not use_particle_avg:
+        return comp_each_mean_squared_displacement(df,input_fn,DT,ds,width,
                          minimum_lifetime,crop_start_by,crop_end_by,
-                         pid_col,t_col,max_lagtime=max_lagtime,use_unwrap=use_unwrap,
+                         pid_col=pid_col,t_col=t_col,max_lagtime=max_lagtime,use_unwrap=use_unwrap,
+                         **kwargs)
+    else:
+        return comp_each_mean_squared_displacement_particle(df,input_fn,DT,ds,width,
+                         minimum_lifetime,crop_start_by,crop_end_by,
+                         pid_col=pid_col,t_col=t_col,use_unwrap=use_unwrap,#max_lagtime=max_lagtime,
                          **kwargs)
 
 def routine_compute_imsd(input_fn,save_folder=None,use_unwrap=False,**kwargs):
