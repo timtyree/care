@@ -5,7 +5,7 @@ __pycache__/
 *.so
 
 # Figures and bulk output
-
+notebooks/archived/
 notebooks/Figures/
 notebooks/Data/
 doc/diffusion/

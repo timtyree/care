@@ -15,3 +15,4 @@ from .compute_mean_radial_velocities import *
 from .comp_imsd import *
 from .dag_log_to_msd import *
 from .compute_dRdt_in_bulk import *
+from .interp_txt_from_scatter_data import *
