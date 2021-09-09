@@ -8,9 +8,69 @@ import os, re, sys, matplotlib.pyplot as plt, numpy as np, pandas as pd
 from glob import glob
 from tkinter import Tk,filedialog
 
-def print_dict(input_dict):
+# def print_dict(input_dict,str_btwn="\n",*argv):
+def print_dict(input_dict,*argv):
     for key in input_dict.keys():
         print(f"{key}={input_dict[key]}")
+    # args=sorted(argv)
+    # if len(args)>0:
+    #     print(str_btwn)
+    # type_dict=type(dict())
+    for arg in sorted(argv):
+        print(f'\n#{arg}')
+        obj=input_dict[arg]
+        if type(obj) is type(dict()):
+            print_dict (obj)
+
+        else:
+            print(arg)
+
+def print_the_dict(input_dict):
+    '''prints the dict
+    Example Usage:
+    wjr=recall_powerlaw_fits_to_full_models()
+    print_the_dict(wjr)
+    '''
+    print(*input_dict,end=f"\r#\n",sep=', ')
+    print_dict(input_dict,*input_dict)
+
+def howdo_update_locals_with_dict():
+    """Example Usage:
+howdo_update_locals_with_dict()
+def test_update_locals_with_dict():
+    input_dict={'b':1}
+    loc=locals()
+    for key in input_dict:
+        loc[key]=input_dict[key]
+    assert(b==1)
+test_update_locals_with_dict()"""
+    print("""loc=locals()
+for key in input_dict:
+    loc[key]=input_dict[key]""")
+
+def get_path(foo):
+    #!/usr/bin/python
+    import os
+    import inspect
+    path=os.path.abspath(inspect.getfile(foo))
+    return path
+
+def print_path(foo):
+    path=get_path(foo)
+    print(path)
+
+def get_external_path(fn):
+    #!/usr/bin/python
+    import os
+    import inspect
+    import external_def
+    path=os.path.abspath(inspect.getfile(external_def.bar))
+    return path
+
+def print_external_path(fn):
+    path=get_external_path(fn)
+    print(path)
+
 
 def get_log_files(trial_folder_name, extension='/Log/', trgt='.csv'):
     '''
@@ -60,7 +120,7 @@ def get_all_files_matching_pattern(file,trgt):
 	# def is_csv(file_name):
 	#     return file_name[-4:]=='_unwrap.csv'
 	file_name_list = [os.path.abspath(f) for f in file_name_list if is_trgt(f,trgt)]
-	return file_name_list 
+	return file_name_list
 
 def init_filesystem_bd(base_folder, results_folder = 'ds_5_param_set_8', subfolder_list = None):
 	if subfolder_list is None:

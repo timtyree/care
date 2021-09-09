@@ -1,8 +1,14 @@
 import numpy as np, pandas as pd
 from sklearn import linear_model
 from scipy.interpolate import LinearNDInterpolator
+from scipy.interpolate import CloughTocher2DInterpolator
+
 # try:
+from .smooth_array import *
+from .interpolate import interpolate_txt_to_contour
+from .intersection import intersection
 from ._find_contours import find_contours
+from ..routines.interp_texture_from_scatter_data import interp_txt_from_scatter
 # except ModuleNotFoundError or ImportError as e:
 #     try:
 #         from ...lib_care.measure._find_contours import find_contours
