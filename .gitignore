@@ -36,6 +36,7 @@ notebooks/lib/measure/archive/
 # # notebooks/Data/initial-conditions-suite-2/ds_5_param_set_8/
 
 # Distribution / packaging
+.DS_Store
 .Python
 build/
 develop-eggs/
