@@ -29,7 +29,10 @@ ffmpeg -i ../../notebooks/Figures/mov/img%07d.png \
 # ffmpeg -i $TMP -y -q 0 -vf lutyuv=y='((val - minval)*255)/(maxval - minval)' -vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:-1:-1:color=black" $OUTFN
 cd ../mov
 #make text frames
-source text.txt
+# source text.txt
+TEXT='Spiral Tip Motion'
+# from the
+# Luo-Rudy Model'
 # TEXT=$'Synchronous Variational Integrator\nDamped Neohookean Model\n(inward squish)'
 # 1920x1080
 ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
