@@ -20,7 +20,7 @@ def ShowDomain(img1,img2,x_values,y_values,c_values,V_threshold,t,inch=6,fontsiz
     # ax.imshow(dimgdt, cmap=plt.cm.gray,vmin=vmin_img,vmax=vmax_img)
     # ax.imshow(dimgdt*img, cmap=plt.cm.gray,vmin=vmin_img,vmax=vmax_img)
     if show_contour1:
-        plot_contours_pbc(contours1, ax, linewidth=3, min_num_vertices=6, linestyle='--', alpha=0.7, color='C0')#'red')#'blue')
+        plot_contours_pbc(contours1, ax, linewidth=3, min_num_vertices=6, linestyle='--', alpha=0.7, color='C3')#'red')#'blue')
     if show_contour2:
         # plot_contours_pbc(contours2, ax, linewidth=2, min_num_vertices=6, linestyle='--', alpha=0.5, color='C1')#'green')
         plot_contours_pbc(contours3, ax, linewidth=3, min_num_vertices=6, linestyle='-', alpha=0.5, color='C1')
