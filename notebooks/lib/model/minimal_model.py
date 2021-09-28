@@ -158,7 +158,7 @@ def fetch_get_time_step(width,height,DX=0.025,DY=0.025, **param_dict):
             for y in range(height):
                 out[x,y] = time_step_at_pixel(texture,x,y)
     return get_time_step
-
+ 
 def fetch_time_step(width,height,DX=0.025,DY=0.025, **param_dict):
     #time_step_at_pixel=get_time_step_at_pixel(width,height,DX=DX,DY=DY)
     get_time_step=fetch_get_time_step(width,height,DX=DX,DY=DY, **param_dict)

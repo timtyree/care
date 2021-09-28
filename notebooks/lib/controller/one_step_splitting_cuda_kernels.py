@@ -109,6 +109,7 @@ def _get_lookup_params(v_values,arr39, stream):
 	arr39shape=arr39.shape
 	chnlno=arr39shape[-1]
 	d_arr39 = cuda.to_device(arr39, stream)
+	# d_arr39 = cuda.device_array_like(arr39, stream)
 	# d_arr39 = cuda.const.array_like(arr39)
 #     d_zero = np.zeros(chnlno,dtype=np.float64)
 #     d_zero = cuda.to_device(np.zeros(chnlno,dtype='float64'))
@@ -118,16 +119,31 @@ def _get_lookup_params(v_values,arr39, stream):
 		M = int((V-v0)/dv) #comp_row
 		if M>ndimv-1:
 			M=ndimv-1
-		arr=d_arr39[M:M+2]
-#         arr=arr39[M:M+2]
-		Vlo=arr[0,0]
+# 		arr=d_arr39[M:M+2]
+# #         arr=arr39[M:M+2]
+# 		Vlo=arr[0,0]
+# 		a1= arr[1,:];a0= arr[0,:];
+
+		# a1=d_arr39[M+1,:]
+		# a0=d_arr39[M,:]
+		# Vlo=d_arr39[M,0]
+
 		#linear interpolation
-		frac=float((V-Vlo)/dv)
+		frac=float((V-d_arr39[M,0])/dv)
 		crac=1.-frac
-		a1= arr[1,:];a0= arr[0,:];
 		for chnl in range(chnlno):
-			arr_interp[chnl]=frac*a1[chnl]+crac*a0[chnl]
+			arr_interp[chnl]=frac*d_arr39[M+1,chnl]+crac*d_arr39[M,chnl]
 	return lookup_params
+
+		# a1=d_arr39[M+1,:]
+		# a0=d_arr39[M,:]
+		# Vlo=d_arr39[M,0]
+		#
+		# #linear interpolation
+		# frac=(V-Vlo)/dv
+		# crac=1.-frac
+		# for chnl in range(chnlno):
+		# 	arr_interp[chnl]=frac*a1[chnl]+crac*a0[chnl]
 
 
 #TODO: optimize by making a cuda.jit compiled _... for each function called in the kernels

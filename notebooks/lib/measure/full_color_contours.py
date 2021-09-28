@@ -239,21 +239,17 @@ def get_comp_dict_topo_full_color(width,height,level1=-50,level2=0.,jump_thresho
 	update_with_full_color_observations=get_update_with_full_color_observations(width,height,**kwargs)
 	compute_colored_arclength_values_for_tips=get_compute_colored_arclength_values_for_tips(width,height,**kwargs)
 	scale=ds/width  #cm per pixel
-	def comp_dict_topo_full_color(img,dimgdt,t,txt,**kwargs):
+	def comp_dict_topo_full_color(img,img_prev,t,txt,**kwargs):
 		'''
 		Example Usage:
-		dict_topo=comp_dict_topo_simple(img,dimgdt,t)
-
-		TODO(later):njit this whole function... or just translate to c++
+		dict_topo=comp_dict_topo_simple(img,img_prev,t)
+		#TODO(later):rewrite this whole function cupy after !conda activate pyenv_ub
 		'''
 		#compute spiral tip location and topological number
 		contours_a = find_contours(img,        level = level1)
-		contours_b = find_contours(dimgdt,     level = level2)
+		contours_b = find_contours(img_prev,     level = level2)
 		s1_lst, s2_lst, x_lst, y_lst = contours_to_simple_tips_pbc(contours_a,contours_b,width,height,jump_threshold,size_threshold)
-	#     print((s1_lst, s2_lst, x_lst, y_lst))
 		dict_topo={'x':x_lst,'y':y_lst,'s1':s1_lst,'s2':s2_lst, 't':t}
-
-
 
 		#extract values for each arclength measurement
 		contours1=[np.vstack([c[:,1],c[:,0]]).T for c in contours_a]

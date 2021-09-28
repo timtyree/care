@@ -15,30 +15,31 @@ def unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height,
     Example Usage:
     ux,yv = unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height)
     '''
+    if jump_thresh is None:
+        jump_thresh=float(width/2)
     yv = y_values.copy()
     xv = x_values.copy()
     for j in  sorted(jump_index_array):
         DX = xv[j]-xv[j+1]
         DY = yv[j]-yv[j+1]
-        # BX = True
-        # BY = True
-        if np.abs(DY)>jump_thresh:
-            #a jump happened over the y boundary
-            if DY>0:
-                #the jump happend from bottom to top
-                yv[j+1:] = yv[j+1:]+height
-            else:
-                #the jump happened from top to bottom
-                yv[j+1:] = yv[j+1:]-height
+        if (DY is not None) and (DX is not None):
+            if np.abs(DY)>jump_thresh:
+                #a jump happened over the y boundary
+                if DY>0:
+                    #the jump happend from bottom to top
+                    yv[j+1:] = yv[j+1:]+height
+                else:
+                    #the jump happened from top to bottom
+                    yv[j+1:] = yv[j+1:]-height
 
-        if np.abs(DX)>jump_thresh:
-            #a jump happened over the x boundary
-            if DX>0:
-                #the jump happend from left to right
-                xv[j+1:] = xv[j+1:]+width
-            else:
-                #the jump happened from right to left
-                xv[j+1:] = xv[j+1:]-width
+            if np.abs(DX)>jump_thresh:
+                #a jump happened over the x boundary
+                if DX>0:
+                    #the jump happend from left to right
+                    xv[j+1:] = xv[j+1:]+width
+                else:
+                    #the jump happened from right to left
+                    xv[j+1:] = xv[j+1:]-width
     return xv,yv
 
 def get_DT(df,t_col='t',pid_col='particle'):
