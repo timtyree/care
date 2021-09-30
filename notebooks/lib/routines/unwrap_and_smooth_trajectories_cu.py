@@ -1,9 +1,9 @@
 #unwraps and smooths trajectories on the gpu
 #Programmer: Tim Tyree
 #Date: 9.29.2021
-import numpy as np, cupy as cp, numba.cuda as cuda, cudf, os, re#, pandas as pd
+import numpy as np, cupy as cp, numba.cuda as cuda, cudf, os, re, dask.bag as db, time
 from ..measure.unwrap_and_smooth_cu import *
-
+from ..utils.operari import get_all_files_matching_pattern
 def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, DT,
                                               width=200,
                                               height=200,
@@ -146,3 +146,35 @@ def load_smoothed_trajectories(input_fn,pid_col,t_col):
     df=cudf.read_csv(input_fn)
     update_smoothed_trajectories(df,pid_col,t_col)
     return df
+
+def routine_postprocess_trajectory_folder(input_fn,DT,tavg1=2, npartitions=None,
+                                        width=200,
+                                        height=200,
+                                        use_drop_shorter_than=True,
+                                        drop_shorter_than=50, #ms
+                                        tmin=100., #ms
+                                        pid_col='particle',
+                                        t_col='t',
+                                        printing=False,**kwargs):
+    if npartitions is None:
+        npartitions=os.cpu_count()
+    input_fn_lst=get_all_files_matching_pattern(input_fn,trgt='.csv')
+    print(f"running return_moving_average_of_pbc_trajectories_and_save on {len(input_fn_lst)} files...")
+
+    def routine(input_fn):
+        try:
+            return return_moving_average_of_pbc_trajectories_and_save(
+                input_fn, tavg1, pid_col, t_col, DT, width, height,
+                use_drop_shorter_than, drop_shorter_than, tmin, printing)
+        except Exception as e:
+            return None
+
+    bag = db.from_sequence(input_fn_lst, npartitions=npartitions).map(routine)
+    start = time.time()
+    retval_lst = list(bag)
+    print(f"the run time was {(time.time()-start)/60:.2f} minutes.")
+    print(f"the number of successful files was {len(retval_lst)}")
+    return retval_lst
+
+#for loop implementation has an expected run time of ~4 minutes for LR data with DT=0.5
+#for loop implementation has an expected run time of ~4 minutes for FK data with DT=0.4
