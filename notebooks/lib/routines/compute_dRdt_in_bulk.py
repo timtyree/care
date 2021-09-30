@@ -1,5 +1,5 @@
 from .. import *
-import pandas as pd, numpy as np
+import pandas as pd, numpy as np, os
 from ..utils.dist_func import get_distance_L2_pbc
 from .compute_mean_radial_velocities import comp_neighboring_radial_velocities_between_frames
 from ..utils.utils_traj import get_all_longer_than
@@ -11,7 +11,7 @@ def get_routine_for_computing_dRdt_in_bulk(width,ds,DT,
                                        num_frames_between=1,
                                        use_random_frames=False,
                                        num_random_frames=500,
-                                       max_dist_thresh=5,**kwargs):
+                                       max_dist_thresh=500,printing=False,**kwargs):
     '''
     Example Usage:
     routine_for_computing_dRdt_in_bulk=routine_for_computing_dRdt_in_bulk(width)
@@ -26,18 +26,22 @@ def get_routine_for_computing_dRdt_in_bulk(width,ds,DT,
         # print(f"time between two observations is {DT} milliseconds.")
         if use_drop_shorter_than:
             #drop any trajectories don't last longer than T_min
-            df_raw=get_all_longer_than(df_raw.copy(),DT,T_min=drop_shorter_than)
-        #     print(f"percent of observations not filtered by minimum duration of {drop_shorter_than} ms was {100*df.size/df_raw.size:.2f}%.")
+            df_raw2=get_all_longer_than(df_raw.copy(),DT,T_min=drop_shorter_than)
+            if printing:
+                print(f"percent of observations not filtered by minimum duration of {drop_shorter_than} ms was {100*df_raw2.size/df_raw.size:.2f}%.")
+            df_raw=df_raw2.copy()
 
         frame_values=np.array(sorted(set(df_raw.frame.values)))#[:-num_frames_between]#not sure if needed, bc
         boo=frame_values>=frame_min
         frame_values=frame_values[boo]
         #randomly select some frames to sample
         if use_random_frames:
-            random_frames=np.random.choice(frame_values[boo],size=num_random_frames,replace=False)
+            random_frames=np.random.choice(frame_values,size=num_random_frames,replace=False)
             frames_input=random_frames
         else:
             frames_input=frame_values
+
+        #TODO: smooth xy trajectories of all particles in df_raw
 
         #for each frame considered, measure dRdt and R
         R_out_lst=[];dRdt_out_lst=[]
