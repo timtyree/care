@@ -4,6 +4,14 @@
 import numpy as np, cupy as cp, numba.cuda as cuda, cudf, os, re, dask.bag as db, time
 from ..measure.unwrap_and_smooth_cu import *
 from ..utils.operari import get_all_files_matching_pattern
+
+#DONE(dev smoothing with pbc): dev method that unwraps, keeps track of the unwrapping map, smooths the unwrapped by moving average, and then rewraps
+#DONE: unwrap each trajectory
+#DONE: compute simple moving average of the x and y coordinates
+#DONE: rewrap to smoothed coordinates to the original coordinate system
+#DONE: clean one example input_fn
+#DONE: smooth one example input_fn with pbc
+
 def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, DT,
                                               width=200,
                                               height=200,
