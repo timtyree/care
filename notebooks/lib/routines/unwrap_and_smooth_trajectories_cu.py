@@ -101,7 +101,7 @@ def return_moving_average_of_pbc_trajectories_and_save(
 
     #save as csv in new folder
     navg1=int(tavg1/DT)
-    save_folder_ext = f'smoothed_trajectories_navg_{navg1}'
+    save_folder_ext = f'smoothed_trajectories_tavg_{tavg1}'
     save_folder = os.path.join(os.path.dirname(os.path.dirname(input_fn)),
                                save_folder_ext)
     if not os.path.exists(save_folder):
