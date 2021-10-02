@@ -2,7 +2,7 @@
 #Programmer: Tim Tyree
 #Date: 9.29.2021
 import numpy as np, cupy as cp, numba.cuda as cuda, cudf, os, re, dask.bag as db, time
-from ..measure.unwrap_and_smooth_cu import *
+from ..routines.unwrap_and_smooth_trajectories_cu import *
 from ..utils.operari import get_all_files_matching_pattern
 
 #DONE(dev smoothing with pbc): dev method that unwraps, keeps track of the unwrapping map, smooths the unwrapped by moving average, and then rewraps
@@ -12,7 +12,7 @@ from ..utils.operari import get_all_files_matching_pattern
 #DONE: clean one example input_fn
 #DONE: smooth one example input_fn with pbc
 
-def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, DT,
+def return_moving_average_of_trajectories(input_fn, tavg1, pid_col, t_col, DT,
                                               width=200,
                                               height=200,
                                               use_drop_shorter_than=True,
@@ -56,12 +56,12 @@ def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, D
         del dfq_lst, pid_keep_values, dfkeep, grouped
 
     #the majority of the routine
-    apply_unwrap_xy_trajectories_pbc(df,t_col,pid_col,width,height)
-    apply_moving_avg_xy_trajectories(df,t_col,pid_col,navg1,x_col='x_unwrap',y_col='y_unwrap')
+    # apply_unwrap_xy_trajectories_pbc(df,t_col,pid_col,width,height)
+    apply_moving_avg_xy_trajectories(df,t_col,pid_col,navg1,x_col='x',y_col='y')
 
-    #compute rewrapped coordinates
-    df['x']=df['x_unwrap']-df['dx_unwrap']
-    df['y']=df['y_unwrap']-df['dy_unwrap']
+    # #compute rewrapped coordinates
+    # df['x']=df['x_unwrap']-df['dx_unwrap']
+    # df['y']=df['y_unwrap']-df['dy_unwrap']
     #CONFIRMED: by increasing navg1, I can decrease the max displacement for all particles.
 
     #add unique identifier for whole trial that is unique accross different csv files
@@ -71,7 +71,7 @@ def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, D
     df['event_id_int']= int(event_id_int)
     df['event_id']= event_id_int + df[pid_col] / (1.+df[pid_col].max())
 
-    col_keep_lst=['x','y',t_col,pid_col,'event_id_int',"dx_unwrap","dy_unwrap"]
+    col_keep_lst=['x','y',t_col,pid_col,'event_id_int']#,"dx_unwrap","dy_unwrap"]
     dff=df[col_keep_lst].copy()
 
     #DONE: drop anycolumns that are recomputed with a one liner, such as x_unwrap and diffx_unwrap, and speed
