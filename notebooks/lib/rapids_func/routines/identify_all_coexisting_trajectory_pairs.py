@@ -21,7 +21,7 @@ def identify_all_coexisting_pairs(df,pid_col='particle',t_col='t',trial_col='eve
     #define cpu resource allocation
     if npartitions is None:
         npartitions=np.max((int(os.cpu_count()/2),1))
-        if npartitions/2<num_trials:
+        if npartitions/2>num_trials:
             npartitions=1
     if use_dask is None:
         use_dask=npartitions>1
@@ -45,7 +45,7 @@ def identify_all_coexisting_pairs(df,pid_col='particle',t_col='t',trial_col='eve
         def routine(event_id_int):
             try:
                 dfff=dff[dff[trial_col]==event_id_int]
-                df_intersecting_pairs=comp_intersecting_pairs_cu(df=dfff,pid_col=pid_col,t_col=t_col)
+                df_intersecting_pairs=comp_intersecting_pairs_cu(df=dfff,pid_col=pid_col)
                 #augment df_intersecting_pairs with any columns desired
                 df_intersecting_pairs[trial_col]=event_id_int
                 return df_intersecting_pairs

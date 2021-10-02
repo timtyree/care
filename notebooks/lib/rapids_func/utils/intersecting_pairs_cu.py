@@ -4,6 +4,7 @@ def comp_intersecting_pairs_cu(df,pid_col='particle',**kwargs):
     '''returns a cudf.DataFrame instance that identifies pairs of particles that coexist along with their start and end times.
     df is s cudf.DataFrame instance with columns tmin and tmax along with a unique index for each row and a particle id recorded in the column indicated by pid_col'''
     dfff=df
+    #itertools appears to need to be run on cpu only...
     index_values=dfff.index.values.get()
     index_pair_values=cp.array(list(itertools.combinations(index_values, 2)))
     tmin_self_values=dfff.loc[index_pair_values[:,0],'tmin'].values
@@ -13,7 +14,7 @@ def comp_intersecting_pairs_cu(df,pid_col='particle',**kwargs):
 
     boo_intersecting=(tmin_other_values<tmax_self_values) & (tmax_other_values>tmin_self_values)
     intersecting_index_pair_values=index_pair_values[boo_intersecting]
-    intersecting_index_pair_values.shape
+    # intersecting_index_pair_values.shape
 
     col_lst=[pid_col,'tmin','tmax']
     df_self=dfff.loc[intersecting_index_pair_values[:,0],col_lst]
