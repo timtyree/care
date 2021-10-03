@@ -2,6 +2,52 @@ import dask.bag as db, time
 import numpy as np, cudf, cupy as cp, dask_cudf
 from .. import *
 
+
+def extract_trajectory_pairs_cu(df,df_pairs,pid_col,t_col,trial_col,DT,col_lst=['index','x','y']):
+    '''supposes df contains trajectories with fields, col_lst, taken at time points, t_col, that are evently spaced by an amount that is inferred.
+    returns a cudf.DataFrame instance that has a column (for each col in col_lst) both for the self particle, indicated by pid_self, and for the other particle, indicated by pid_other.
+    Example Usage:
+    df_traj=extract_trajectory_pairs_cu(df,df_pairs,pid_col,t_col,trial_col)
+    '''
+    get_DT_cu(df,pid_col=pid_col,t_col=t_col)
+    df_pairs['num_rows']=((df_pairs['tmax']-df_pairs['tmin'])/DT).astype(cp.int32)
+
+    # df_pairs.reset_index(inplace=True)
+    super_index_values=np.repeat(df_pairs.index.values.get(),df_pairs['num_rows'].values.get())
+    df_traj=df_pairs.loc[super_index_values,[trial_col,'pid_self','pid_other']]
+    df_traj.reset_index(inplace=True)
+    df_traj.rename(columns={'index':'index_pairs'},inplace=True)
+
+    #compute time values for df_traj
+    num_row_values=df_pairs['num_rows'].values.get()
+    step_number_lsts=[list(range(num_rows)) for num_rows in num_row_values]
+    step_number_values=cp.hstack(step_number_lsts)
+    tmin_values=df_pairs.loc[super_index_values,'tmin']
+    t_values=cp.array(step_number_values*DT)+tmin_values
+    df_traj['t']=t_values.get()
+
+    #fill df_traj with the essential columns and an index pointing a particular row in df
+    index_col_lst=[trial_col,pid_col,t_col]
+    dff=df.set_index(index_col_lst)
+
+    #fill with self trajectories
+    df_traj.rename(columns={'pid_self':pid_col},inplace=True)
+    df_traj.set_index(index_col_lst,inplace=True)
+
+    dfff=dff.loc[df_traj.index]
+    for x in col_lst:
+        df_traj[x+'_self']=dfff[x]
+    df_traj=df_traj.reset_index().rename(columns={pid_col:'pid_self'}).rename(columns={'pid_other':pid_col})
+
+    #fill with other trajectories
+    df_traj.set_index(index_col_lst,inplace=True)
+    dfff=dff.loc[df_traj.index]
+    for x in col_lst:
+        df_traj[x+'_other']=dfff[x]
+    df_traj=df_traj.reset_index().rename(columns={pid_col:'pid_other'})
+    return df_traj
+
+
 #DONE: computes the dataframe identifying the largest start/end times for all pairs of particles
 #TODO: wrap all this into a function
 #TODO(later): add support to parallelize this over dask with npartitions determined locally.  measure any performance boost
@@ -10,10 +56,12 @@ def extract_all_trajectory_pairs_cu(df,df_pairs,pid_col='particle',t_col='t',tri
     returns a cudf.DataFrame instance that identifies pairs of particles that coexist along with their start and end times, for all rows uniquely identified by trial_col
     df is a cudf.DataFrame instance with a unique index for each row and a particle id recorded in the column indicated by pid_col
     option to parallelize this gpu accelerated task via dask with npartitions determined locally.
+    Method includes making a list of particle indicies where pid_self is repeated the number of times it appears in df_pairs; by reindexing on the basis of paricles, individual trajectory data was recovered.  This process was repeated with pid_other.
     Example Usage:
     df_traj=extract_all_xy_trajectory_pairs_cu(df,df_pairs,pid_col=pid_col,t_col=t_col, trial_col=trial_col)
     '''
     dff=df
+    #TODO: figure out where extract_all_trajectory_pairs_cu is including values for df_traj.query('pid_self==25 and pid_other==25')
     #TODO: test whether .sort_values is needed here.  if not, remove it
     df_pairs=df_pairs.sort_values([trial_col,'pid_self'], ascending=True).copy()
     #iterate over all events and compute the dataframe identifying the largest start/end times for all pairs of particles
@@ -36,7 +84,7 @@ def extract_all_trajectory_pairs_cu(df,df_pairs,pid_col='particle',t_col='t',tri
         df_traj_lst=[]
         for event_id_int in event_id_int_values.get():
             dfff=df[df[trial_col]==event_id_int]
-            df_traj=extract_xy_trajectory_pairs_cu(dfff,df_pairs,pid_col=pid_col,t_col=t_col)
+            df_traj=extract_trajectory_pairs_cu(dfff,df_pairs,pid_col=pid_col,t_col=t_col)
             #augment df_intersecting_pairs with any columns desired
             df_traj[trial_col]=event_id_int
             #record
