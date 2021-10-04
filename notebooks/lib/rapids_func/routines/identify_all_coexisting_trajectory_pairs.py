@@ -62,6 +62,29 @@ def identify_all_coexisting_pairs(df,pid_col='particle',t_col='t',trial_col='eve
     df_intersecting_pairs_all=cudf.concat(df_intersecting_pairs_lst)
     return df_intersecting_pairs_all
 
+# #####################
+# # test that "parallelizing" the generation of a large pairs of indicies provides an uninspiring speedup
+# ####################
+# %%time
+# arr=cp.arange(11851)
+#
+# #: parallelize identify_all_coexisting_pairs using cudf.MultiIndex.from_product()
+# multiindex_pairs_values=cudf.MultiIndex.from_product([arr.get(),arr.get()]).values
+# #: drop self references in multiindex_pairs
+# pairs_values=multiindex_pairs_values[multiindex_pairs_values[:,0]!=multiindex_pairs_values[:,1]].T
+# #generate index of self and other
+# index_self=pairs_values[0]
+# index_other=pairs_values[0]
+#
+# %%time
+# ret_lst=list(itertools.combinations(list(range(11851)),2))
+# #: parallelize identify_all_coexisting_pairs using cudf.MultiIndex.from_product()
+# multiindex_pairs_values=cudf.MultiIndex.from_product([arr.get(),arr.get()]).values
+# #: drop self references in multiindex_pairs
+# pairs_values=multiindex_pairs_values[multiindex_pairs_values[:,0]!=multiindex_pairs_values[:,1]].T
+# #generate index of self and other
+# index_self=pairs_values[0]
+# index_other=pairs_values[0]
 #
 # ###############
 # # Example Usage

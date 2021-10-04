@@ -1,4 +1,5 @@
 # import cudf
+import cupy as cp
 def comp_xy_distance_L2_pbc_cu(d,width,height):
     '''comp_xy_distance_L2_pbc_cu is a pure cudf function that
     returns for the euclidean (L2) distance between
@@ -20,6 +21,7 @@ def comp_xy_distance_L2_pbc_cu(d,width,height):
     #choose the minimum of each class of option
     d['minsdx']=d[['sdx','sdxp','sdxm']].min(axis=1)
     d['minsdy']=d[['sdy','sdyp','sdym']].min(axis=1)
-    d['dist']=(d['minsdx'] + d['minsdy'])**0.5
+    d['dist']=cp.sqrt(d['minsdx'] + d['minsdy'])
+    # d['dist']=(d['minsdx'] + d['minsdy'])**0.5
     d['R']=d['dist']
     return d

@@ -174,6 +174,20 @@ def bin_and_bootstrap_xy_values_parallel(x,
     A bin is ignored if it contains no more than min_numobs
     observations.  If min_numobs=None, then min_numobs=np.mean(counts)/8, where counts is the array of
     counts in each bin.
+
+    Example Usage: compute the bootstrapped mean dRdt (y_values) binning by one_over_R (x_values)
+boo=x_values>0
+df_out=bin_and_bootstrap_xy_values_parallel(x=x_values[boo],
+                               y=y_values[boo],
+                               xlabel='one_over_R',
+                               ylabel='dRdt',
+                               bins='auto',
+                               min_numobs=None,
+                               num_bootstrap_samples=1000,
+                               npartitions=os.cpu_count(),#full cylinders
+                               use_test=False,
+                               test_val=0,printing=False)#,**kwargs)
+
     '''
     x_values=x
     y_values=y
