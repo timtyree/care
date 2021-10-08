@@ -2,6 +2,7 @@
 #Programmer: Tim Tyree
 #Date: 9.29.2021
 import numpy as np, cupy as cp, numba.cuda as cuda, cudf, os, re, dask.bag as db, time
+from .. import *
 from ..routines.unwrap_and_smooth_trajectories_cu import *
 from ..utils.operari import get_all_files_matching_pattern
 
@@ -155,7 +156,7 @@ def load_smoothed_trajectories(input_fn,pid_col,t_col):
     update_smoothed_trajectories(df,pid_col,t_col)
     return df
 
-def routine_postprocess_trajectory_folder(input_fn,DT,tavg1=2, npartitions=None,
+def routine_unwrap_and_smooth_trajectory_folder(input_fn,DT,tavg1=2, npartitions=None,
                                         width=200,
                                         height=200,
                                         use_drop_shorter_than=True,

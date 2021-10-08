@@ -155,7 +155,7 @@ def load_smoothed_trajectories(input_fn,pid_col,t_col):
     update_smoothed_trajectories(df,pid_col,t_col)
     return df
 
-def routine_postprocess_trajectory_folder(input_fn,DT,tavg1=2, npartitions=None,
+def routine_smooth_trajectory_folder(input_fn,DT,tavg1=2, npartitions=None,
                                         width=200,
                                         height=200,
                                         use_drop_shorter_than=True,

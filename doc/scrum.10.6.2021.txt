@@ -1,0 +1,10 @@
+GOAL: identify annihilations with a high degree of confidence
+TODO: ensure each trajectory has only one annihilation considered, and that only the nearest pid_other is considered
+TODO: compare apparent a using (I) nearest neighbors only and (II) all-to-all
+TODO(later, long time to develop): develop method to extract trajectory of individual tips when the chirality is present...
+TODO(later, long time to develop): extract chirality of individual tips and use this to filter pairs of tips
+
+GOAL: generate a a table of estimates for a with different parameter settings
+
+
+GOAL: generate a bluf that contains estimates for a for various parameter settings
