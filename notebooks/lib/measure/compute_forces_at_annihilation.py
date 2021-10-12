@@ -27,7 +27,7 @@ def moving_average_of_events(df,
 
 def smooth_derivative_filter_of_events(df,
                                        valid_event_id_lst=None,
-                                       DT_sec=0.000025,
+                                       DT_sec=0,
                                        x_col='r',
                                        dxdt_col='drdt',
                                        id_col='event_id',
@@ -51,13 +51,16 @@ def smooth_derivative_filter_of_events(df,
     for event_id in valid_event_id_lst:
         bo = df[id_col] == event_id
         R_values = df[x_col][bo].values
-        dRdt_values = savgol_filter(x=R_values,
-                                    window_length=navg,
-                                    polyorder=polyorder,
-                                    deriv=1,
-                                    delta=1.0,
-                                    axis=-1,
-                                    mode='interp')
+        if R_values.shape[0]>=navg:
+            dRdt_values = savgol_filter(x=R_values,
+                                        window_length=navg,
+                                        polyorder=polyorder,
+                                        deriv=1,
+                                        delta=1.0,
+                                        axis=-1,
+                                        mode='interp')
+        else:
+            dRdt_values=np.nan+0.*R_values
         df.loc[bo, dxdt_col] = dRdt_values/DT_sec
     return df
 
@@ -69,8 +72,8 @@ def get_annihilation_df(input_fn,navg1,navg2,
                         pid_col = 'pid',
                         x_col = 'r',
                         dxdt_col = 'drdt',
-                        DT = 0.025,
-                        DT_sec=0.000025,
+                        DT = 0,
+                        DT_sec=0,
                         size_thresh=200,
                         printing = False,**kwargs):
     '''first, get_annihilation_df removes any event_id's that end (t_col takes minimum absolute value) at a range of more than 0.5 cm (r > rdeath_thresh)
@@ -85,7 +88,8 @@ def get_annihilation_df(input_fn,navg1,navg2,
     df = pd.read_csv(input_fn)
     df.sort_values([id_col, t_col], ascending=False, inplace=True)
     tvals = sorted(set(df[t_col].values))
-    DT = tvals[1] - tvals[0]
+    DT = tvals[1] - tvals[0] #ms
+    DT_sec=DT*0.001 #seconds
     event_id_lst = sorted(set(df[id_col].values))
     valid_event_id_lst=filter_events_ending_at_large_range(df,rdeath_thresh=rdeath_thresh)
     invalid_event_id_lst=find_events_insufficient_size(df,size_thresh=size_thresh)
@@ -99,7 +103,7 @@ def get_annihilation_df(input_fn,navg1,navg2,
     valid_event_id_lst=filter_events_ending_at_large_range(df,rdeath_thresh=rdeath_thresh)
     invalid_event_id_lst=find_events_insufficient_size(df,size_thresh=size_thresh)
     valid_event_id_lst=list(set(valid_event_id_lst).difference(set(invalid_event_id_lst)))
-    df = smooth_derivative_filter_of_events(df,DT=DT_sec,valid_event_id_lst=valid_event_id_lst,
+    df = smooth_derivative_filter_of_events(df,DT_sec=DT_sec,valid_event_id_lst=valid_event_id_lst,
                                             x_col=x_col,
                                             dxdt_col=dxdt_col,
                                             id_col=id_col,
@@ -108,6 +112,7 @@ def get_annihilation_df(input_fn,navg1,navg2,
                                             navg=navg2,
                                             polyorder=3,
                                             mode='interp')
+    df.dropna(inplace=True)#filters any events that had DT be too small
     valid_event_id_lst = filter_events_ending_at_large_range(df, rdeath_thresh=rdeath_thresh)
     return df,valid_event_id_lst
 
@@ -125,8 +130,8 @@ def get_annihilation_df_naive(input_fn,
                             t_col='tdeath',
                             id_col='event_id',
                             pid_col='pid',
-                            DT=0.025,
-                            DT_sec=0.000025,
+                            DT=0,
+                            DT_sec=0,
                             size_thresh=200,
                             printing=False,**kwargs
                              ):

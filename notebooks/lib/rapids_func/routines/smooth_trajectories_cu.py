@@ -23,7 +23,10 @@ def return_moving_average_of_trajectories(input_fn, tavg1, pid_col, t_col, DT,
     '''returns cudf dataframe that results from the routine.
     routine reads input_fn, reversably unwraps trajectories, computes the moving average of x and y, rewraps smoothed coordinates to original coordinates (might not still obey explicit pbc of shape (0,width,0,height))
     tavg1 is the moving average window, and drop_shorter_than is the minimum duration of trajectories to consider in the same units as the time column, t_col.  dt is the time between two frames.  '''
-    navg1=int(tavg1/DT)
+    if tavg1>0:
+        navg1=int(tavg1/DT)
+    else:
+        navg1=0
     height=width
     df=cudf.read_csv(input_fn)
     col_keep_lst=['x','y',pid_col,t_col]
@@ -62,7 +65,6 @@ def return_moving_average_of_trajectories(input_fn, tavg1, pid_col, t_col, DT,
     # #compute rewrapped coordinates
     # df['x']=df['x_unwrap']-df['dx_unwrap']
     # df['y']=df['y_unwrap']-df['dy_unwrap']
-    #CONFIRMED: by increasing navg1, I can decrease the max displacement for all particles.
 
     #add unique identifier for whole trial that is unique accross different csv files
     #add unique identifier for each particle that is unique accross different csv files
@@ -83,43 +85,43 @@ def return_moving_average_of_trajectories(input_fn, tavg1, pid_col, t_col, DT,
     # assert((np.sort(df.columns.values)==np.sort(df_recalled.columns.values)).all())
     return dff
 
-def return_moving_average_of_pbc_trajectories_and_save(
-        input_fn, tavg1, pid_col, t_col, DT, width, height,
-        use_drop_shorter_than, drop_shorter_than, tmin, printing):
-    dff = return_moving_average_of_pbc_trajectories(
-        input_fn,
-        tavg1,
-        pid_col,
-        t_col,
-        DT,
-        width=width,
-        height=height,
-        use_drop_shorter_than=use_drop_shorter_than,
-        drop_shorter_than=drop_shorter_than,
-        tmin=tmin,
-        printing=printing)
-
-    #save as csv in new folder
-    navg1=int(tavg1/DT)
-    save_folder_ext = f'smoothed_trajectories_tavg_{tavg1}'
-    save_folder = os.path.join(os.path.dirname(os.path.dirname(input_fn)),
-                               save_folder_ext)
-    if not os.path.exists(save_folder):
-        os.mkdir(save_folder)
-
-    ext_str = f'_smoothed'
-    save_fn = os.path.basename(input_fn).replace('.csv', ext_str + '.csv')
-
-    save_dir = os.path.join(save_folder, save_fn)
-
-    dff.reset_index(inplace=True)
-    dff.to_csv(save_dir,index=False)
-    if printing:
-        if os.path.exists(save_dir):
-            print(f"the results were successfully saved to {save_folder}")
-        else:
-            print(f"the results were unsuccessfully saved to {save_folder}")
-    return save_dir
+# def return_moving_average_of_pbc_trajectories_and_save(
+#         input_fn, tavg1, pid_col, t_col, DT, width, height,
+#         use_drop_shorter_than, drop_shorter_than, tmin, printing):
+#     dff = return_moving_average_of_pbc_trajectories(
+#         input_fn,
+#         tavg1,
+#         pid_col,
+#         t_col,
+#         DT,
+#         width=width,
+#         height=height,
+#         use_drop_shorter_than=use_drop_shorter_than,
+#         drop_shorter_than=drop_shorter_than,
+#         tmin=tmin,
+#         printing=printing)
+#
+#     #save as csv in new folder
+#     navg1=int(tavg1/DT)
+#     save_folder_ext = f'smoothed_trajectories_tavg_{tavg1}'
+#     save_folder = os.path.join(os.path.dirname(os.path.dirname(input_fn)),
+#                                save_folder_ext)
+#     if not os.path.exists(save_folder):
+#         os.mkdir(save_folder)
+#
+#     ext_str = f'_smoothed'
+#     save_fn = os.path.basename(input_fn).replace('.csv', ext_str + '.csv')
+#
+#     save_dir = os.path.join(save_folder, save_fn)
+#
+#     dff.reset_index(inplace=True)
+#     dff.to_csv(save_dir,index=False)
+#     if printing:
+#         if os.path.exists(save_dir):
+#             print(f"the results were successfully saved to {save_folder}")
+#         else:
+#             print(f"the results were unsuccessfully saved to {save_folder}")
+#     return save_dir
 
 def update_smoothed_trajectories(df,pid_col,t_col):
     event_id_int=df['event_id_int']

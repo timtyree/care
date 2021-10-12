@@ -59,18 +59,36 @@ def drop_any_duplicate_pairs(df_pairs, testing=True, trial_col='event_id_int', *
         trial_lst = sorted(set(piv[:, 0].get()))
         for trial in trial_lst:
             iv = piv[piv[:, 0] == trial][:, 1:]
-            #TODO: ensure that no particle appears twice in iv
-            no_duplicates_exist = total_num_pairs = iv.flatten(
-            ).shape[0] == len(list(set(iv.flatten().get())))
+            #ensure that no particle appears twice in iv
+            total_num_pair_members = iv.flatten().shape[0]
+            unique_member_lst=list(set(iv.flatten().get()))
+            no_duplicates_exist = total_num_pair_members == len(unique_member_lst)
+
             if not no_duplicates_exist:
-                #TODO: identify the duplicated particle
-                #TODO: select all entries in df_pairs that involve the duplicated particle
-                #TODO: select the particle pair that is nearest
-                print(
-                    "Warning: duplicate particles detected but not removed!  TODO: Implement the 3 comments above!"
-                )
-            assert (no_duplicates_exist)
+                Rfinal_is_in_col_lst={'Rfinal'}.issubset(set(df_pairs.columns))
+                if not Rfinal_is_in_col_lst:
+                    raise("Warning: Rfinal missing from column list!")
+                #build a new df_pairs from the ground up by selecting the minimum final range indicies
+                dfp=df_pairs.reset_index()
+                id_keep_lst=[]
+                for member_id in unique_member_lst:
+                    boo=(dfp['pid_self']==member_id)|(dfp['pid_other']==member_id)
+                    id_keep=int(dfp[boo].sort_values(by='Rfinal').head(1).index.values.get())
+                    id_keep_lst.append(id_keep)
+
+                df_pairs=dfp.iloc[id_keep_lst].copy()
+
+        #         #TODO: identify the duplicated particle
+        #         #TODO: select all entries in df_pairs that involve the duplicated particle
+        #         #TODO: select the particle pair that is nearest
+        #         print(
+        #             "Warning: duplicate particles detected but not removed!  TODO: Implement the 3 comments above!"
+        #         )
+
+        #     assert (no_duplicates_exist)
     return df_pairs
+
+
 
 def comp_time_to_end_cu(dfr,df_pairs, trial_col='event_id_int', t_col='t', round_t_to_n_digits=7, **kwargs):
     event_col_lst=[trial_col,'pid_self','pid_other']
@@ -173,8 +191,8 @@ def compute_radial_velocities_of_annihilations_cu(df,
         'index_self', 'index_other', 'x_self', 'y_self', 'x_other', 'y_other'
     ]]
 
+    dfr['R_nosavgol'] = dfr['R']
     if use_tavg2:
-        dfr['R_nosavgol'] = dfr['R']
         grouped = dfr.to_pandas().groupby([trial_col, 'pid_self', 'pid_other'])
         #compute the savgol_filtered as R
         savgol0_kwargs = dict(window_length=navg2,
@@ -187,6 +205,8 @@ def compute_radial_velocities_of_annihilations_cu(df,
         result = grouped['R'].apply(savgol_filter, **savgol0_kwargs)
         R_values = cp.array(np.concatenate(result.values))
         dfr['R'] = R_values
+
+
 
     #compute time until death
     dfr = comp_time_to_end_cu(dfr=dfr,

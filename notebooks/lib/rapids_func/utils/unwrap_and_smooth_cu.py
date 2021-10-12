@@ -111,21 +111,24 @@ def apply_moving_avg_xy_trajectories(df,t_col,pid_col,navg1,x_col='x_unwrap',y_c
     #apply smoothing to x and y after unwrapping
     df['incol']=df[x_col]
     grouped = df.groupby(pid_col)
-    mawargs={'win_size':navg1}
-    df = grouped.apply_grouped(rolling_avg,
-                                   incols=['incol'],
-                                   outcols=dict(outcol=np.float64), kwargs=
-                               mawargs)
-    df[x_col]=df['outcol']
+    if navg1>0:
+        mawargs={'win_size':navg1}
+        df = grouped.apply_grouped(rolling_avg,
+                                       incols=['incol'],
+                                       outcols=dict(outcol=np.float64), kwargs=
+                                   mawargs)
+        df[x_col]=df['outcol']
 
-    df['incol']=df[y_col]
-    grouped = df.groupby(pid_col)
-    df = grouped.apply_grouped(rolling_avg,
-                                   incols=['incol'],
-                                   outcols=dict(outcol=np.float64), kwargs=
-                               mawargs)
-    df[y_col]=df['outcol']
-
+        df['incol']=df[y_col]
+        grouped = df.groupby(pid_col)
+        df = grouped.apply_grouped(rolling_avg,
+                                       incols=['incol'],
+                                       outcols=dict(outcol=np.float64), kwargs=
+                                   mawargs)
+        df[y_col]=df['outcol']
+    # else:
+    #     #perform no moving average if the window is of size zero
+    #     pass
     # #drop data that isn't needed anymore
     #DONE: verified that dropping data here doesn't affect the number of final nonnan values
     # df.drop(columns=['incol','outcol'],inplace=True)

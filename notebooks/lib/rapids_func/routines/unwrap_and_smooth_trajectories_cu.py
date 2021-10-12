@@ -28,7 +28,7 @@ def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, D
     height=width
     df=cudf.read_csv(input_fn)
     col_keep_lst=['x','y',pid_col,t_col]
-    #(optional) drop all columns that are not immediately relevant
+    #(optional) drop all feature columns that are not relevant here
     col_drop_lst=set(df.columns).difference(col_keep_lst)
     df.drop(columns=col_drop_lst,inplace=True)
     if printing:
@@ -57,8 +57,8 @@ def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, D
         del dfq_lst, pid_keep_values, dfkeep, grouped
 
     #the majority of the routine
-    apply_unwrap_xy_trajectories_pbc(df,t_col,pid_col,width,height)
-    apply_moving_avg_xy_trajectories(df,t_col,pid_col,navg1,x_col='x_unwrap',y_col='y_unwrap')
+    df=apply_unwrap_xy_trajectories_pbc(df,t_col,pid_col,width,height)
+    df=apply_moving_avg_xy_trajectories(df,t_col,pid_col,navg1,x_col='x_unwrap',y_col='y_unwrap')
 
     #compute rewrapped coordinates
     df['x']=df['x_unwrap']-df['dx_unwrap']
@@ -86,13 +86,13 @@ def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, D
 
 def return_moving_average_of_pbc_trajectories_and_save(
         input_fn, tavg1, pid_col, t_col, DT, width, height,
-        use_drop_shorter_than, drop_shorter_than, tmin, printing):
+        use_drop_shorter_than, drop_shorter_than, tmin, printing,**kwargs):
     dff = return_moving_average_of_pbc_trajectories(
-        input_fn,
-        tavg1,
-        pid_col,
-        t_col,
-        DT,
+        input_fn=input_fn,
+        tavg1=tavg1,
+        pid_col=pid_col,
+        t_col=t_col,
+        DT=DT,
         width=width,
         height=height,
         use_drop_shorter_than=use_drop_shorter_than,
@@ -156,7 +156,7 @@ def load_smoothed_trajectories(input_fn,pid_col,t_col):
     update_smoothed_trajectories(df,pid_col,t_col)
     return df
 
-def routine_unwrap_and_smooth_trajectory_folder(input_fn,DT,tavg1=2, npartitions=None,
+def routine_unwrap_and_smooth_trajectory_folder(input_fn,DT,tavg1, npartitions=None,
                                         width=200,
                                         height=200,
                                         use_drop_shorter_than=True,
