@@ -23,7 +23,7 @@ def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,
     e1=xinf1.copy();ej=xinf1.copy()
     em=xinf1.copy();ed=xinf1.copy()
     eh=xinf1.copy();ef=xinf1.copy()
-    v_values = xinf1.copy()
+    #v_values = xinf1.copy()
     # write(6,*)'input xspeed,backcon,  dt'
     # read(5,*)xspeed,backcon, dt
     #other parameters

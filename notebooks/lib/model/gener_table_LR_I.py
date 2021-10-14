@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 #Programmer: Tim Tyree
 #Date: 10.13.2021
+#Forked from original fortran implementation by Wouter-Jan Rappel
 import numpy as np
 
 def generate_lookup_table_LR_I(
-        ndim=2500,
         dt=0.01,
+        vmin=-100.,
+        vmax=150.,
         dv=0.1,
         K_o=5.4,
         dtype=np.float64,
@@ -20,18 +22,20 @@ def generate_lookup_table_LR_I(
 
     Parameters
     ----------
-    ndim : int
-        number of rows in the lookup table
     dt   : float
         the size of the timestep in milliseconds
+    vmin : float
+        the minimum transmembrane voltage in the lookup table in millivolts
+    vmax   : float
+        the maximum transmembrane voltage in the lookup table in millivolts
     dv   : float
-        the voltage between two rows in the lookup table in millivolts
+        the transmembrane voltage difference between two rows in the lookup table in millivolts
     K_o  : float
         the potassium concentration outside of the myocardial tissue in millimolar
     dtype: numpy type, optional
         the data type of the output lookup table.  default is double floating point precision.
     order: str, optional
-        the ordering of the output array. F is for Fortran.  C is for C programming.
+        the ordering of the output array.  F is for Fortran.  C is for C programming.
     **kwargs
         arbitrary optional keyword arguments
 
@@ -49,8 +53,10 @@ def generate_lookup_table_LR_I(
         return (arr10,arr11,arr12,arr13,arr39)
 
     """
+    v_values = np.arange(vmin,vmax,dv)
+    nrows=len(list(v_values))
     #preallocate memory, enforce ordering, and enforce data type
-    xinf1=np.zeros(ndim, dtype=dtype, order=order)
+    xinf1=np.zeros(nrows, dtype=dtype, order=order)
     xtau1=xinf1.copy()
     xinfm=xinf1.copy();xtaum=xinf1.copy()
     xinfh=xinf1.copy();xtauh=xinf1.copy()
@@ -61,7 +67,7 @@ def generate_lookup_table_LR_I(
     e1=xinf1.copy();ej=xinf1.copy()
     em=xinf1.copy();ed=xinf1.copy()
     eh=xinf1.copy();ef=xinf1.copy()
-    v_values = xinf1.copy()
+
     #define physical parameters
     R = 8.3145  # J/(mol * °K) universal gas constant
     T = 273.15+37#°K physiologically normal body temperature 37°C
@@ -81,9 +87,7 @@ def generate_lookup_table_LR_I(
     # vx1=-87.94#in LuoRudy1990.pdf
     # vx1=-77.62#from wj's original table#### EK1 = -87.94mv in LuoRudy1990.pdf
     vk1=1000.*rtoverf*np.log(xk0/145.)
-    v0=-100.
-    v_values = np.arange(v0,v0+dv*(ndim),dv)
-    for m in range(ndim-1):
+    for m in range(nrows):
         v=v_values[m]
         #compute values independent of gating variables using the functions defined postscript.
         xinf1[m]=a1(v)/(a1(v)+b1(v))
