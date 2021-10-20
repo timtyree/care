@@ -14,7 +14,8 @@ def generate_lookup_table_LR_I(
         order='F',
         **kwargs):
     r"""generate_lookup_table_LR_I determines the look-up table for the LR-I model
-    to generate lookup tables for a time step of dt=0.01 ms from terminal, run
+    to generate lookup tables for a time step of dt=0.01 ms, simply run in terminal
+
     python3 gener_table_LR_I.py 0.01
 
     generate_lookup_table_LR_I returns a list of a lookup-tables that map a voltage in the first column to precomputed values in the following columns.

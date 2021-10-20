@@ -129,7 +129,8 @@ def compute_radial_velocities_of_annihilations_cu(df,
                                                   t_col='t',
                                                   round_t_to_n_digits=7,
                                                   printing=False,
-                                                  testing=True, **kwargs):
+                                                  testing=True,
+                                                  **kwargs):
     '''df is a cudf.DataFrame instance
     Example Usage:
     navg2=int(tavg2/DT)

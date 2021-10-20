@@ -20,11 +20,14 @@ def routine_postprocess_trajectory_folder(input_fn,DT,tavg1, tavg2=24,
                                         tmin=100., #ms
                                         pid_col='particle',
                                         t_col='t',
-                                        printing=False,**kwargs):
+                                        printing=False,
+                                        max_num_trials=None,**kwargs):
     if npartitions is None:
         npartitions=os.cpu_count()
     input_fn_lst=get_all_files_matching_pattern(input_fn,trgt='.csv')
     input_fn_lst=[fn for fn in input_fn_lst if fn.find('_unwrap.csv')==-1]
+    if max_num_trials is not None:
+        input_fn_lst=sorted(input_fn_lst)[:max_num_trials]
     if printing:
         print(f"running return_moving_average_of_pbc_trajectories_and_save on {len(input_fn_lst)} files...")
 
