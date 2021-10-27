@@ -410,6 +410,8 @@ def compute_event_id(df,input_fn,pid_col='pid',**kwargs):
     # event_id_int=float(''.join(re.findall(r'-?\d+\.?\d*', fn)))
     # event_id_int=float(''.join(re.findall(r'-?\d+\d*', fn)))
     event_id_int=float('1'+(''.join(re.findall(r'-?\d+\d*',fn))))
+    df['event_id_int']= int(event_id_int)
+    df['event_id_int']=df['event_id_int'].astype('int')
     df['event_id']= event_id_int + df[pid_col] / (1.+df[pid_col].max())
     return df
 

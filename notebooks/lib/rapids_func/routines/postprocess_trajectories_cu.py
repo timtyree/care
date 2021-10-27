@@ -21,6 +21,9 @@ def routine_postprocess_trajectory_folder(input_fn,DT,tavg1, tavg2=24,
                                         pid_col='particle',
                                         t_col='t',
                                         printing=False,
+                                        printing_routine=False,
+                                        printing_routine2=False,
+                                        npartitions2=None,
                                         max_num_trials=None,**kwargs):
     if npartitions is None:
         npartitions=os.cpu_count()
@@ -35,7 +38,7 @@ def routine_postprocess_trajectory_folder(input_fn,DT,tavg1, tavg2=24,
         try:
             return return_moving_average_of_pbc_trajectories_and_save(
                 input_fn, tavg1, pid_col, t_col, DT, width, height,
-                use_drop_shorter_than, drop_shorter_than, tmin, printing)
+                use_drop_shorter_than, drop_shorter_than, tmin, printing=printing_routine)
         except Exception as e:
             return None
 
@@ -65,15 +68,22 @@ def routine_postprocess_trajectory_folder(input_fn,DT,tavg1, tavg2=24,
                                                          t_col=t_col,
                                                          use_tavg2=True,
                                                          save_df_pairs=True,
-                                                         printing=False,
+                                                         printing=printing_routine2,
                                                          testing=True)#,**kwargs)
         except Exception as e:
-            return e
+            return None
 
-    #perform annihilation identification and smoothing via a savitzky-golay filtration on all files in list
-    bag = db.from_sequence(fn_lst, npartitions=npartitions).map(routine2)
-    start = time.time()
-    retval_lst = list(bag)
+    if npartitions2 is None:
+        npartitions2=npartitions
+    if npartitions2>1:
+        #perform annihilation identification and smoothing via a savitzky-golay filtration on all files in list
+        bag = db.from_sequence(fn_lst, npartitions=npartitions2).map(routine2)
+        start = time.time()
+        retval_lst = list(bag)
+    else:
+        retval_lst=[]
+        for fn in fn_lst:
+            retval_lst.append(routine2(fn))
     if printing:
         print(f"the run time was {(time.time()-start)/60:.2f} minutes.")
     fn_lst2=[fn for fn in retval_lst if fn is not None]

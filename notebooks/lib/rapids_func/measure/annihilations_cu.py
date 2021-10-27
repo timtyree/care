@@ -261,6 +261,16 @@ def routine_compute_radial_velocities_pbc_cu(input_fn,
     # df=dask_cudf.read_csv(input_fn_lst).compute()
     df = cudf.read_csv(input_fn)
     DT = get_DT_cu(df, t_col, pid_col, round_digits=round_t_to_n_digits)
+
+    #compute the trial column if it is not already present
+    has_trial_col={trial_col}.issubset(ss)
+    if not has_trial_col:
+        compute_event_id(df,input_fn,pid_col=pid_col)
+        trial_col='event_id_int'
+        if printing:
+            print(f"trial_col missing... resetting trial_col to default value {trial_col}")
+
+
     # DT=np.around(get_DT(df, t_col=t_col, pid_col=pid_col),5)
     DS = ds / width  #cm per pixel lengthscale
     if printing:

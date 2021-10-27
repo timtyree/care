@@ -19,7 +19,10 @@ def comp_intersecting_pairs_cu(df,pid_col='particle',trial_col='event_id_int',**
     tmin_other_values=dfff.loc[index_pair_values[:,1],'tmin'].values
     tmax_other_values=dfff.loc[index_pair_values[:,1],'tmax'].values
     boo_intersecting=(tmin_other_values<tmax_self_values) & (tmax_other_values>tmin_self_values)
-    intersecting_index_pair_values=index_pair_values[boo_intersecting]
+    try:
+        intersecting_index_pair_values=index_pair_values[boo_intersecting]
+    except IndexError:
+        intersecting_index_pair_values=index_pair_values[boo_intersecting.flatten()]
     #query and record results
     col_lst=[pid_col,'tmin','tmax']
     df_self=dfff.loc[intersecting_index_pair_values[:,0],col_lst]
