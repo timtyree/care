@@ -263,6 +263,7 @@ def routine_compute_radial_velocities_pbc_cu(input_fn,
     DT = get_DT_cu(df, t_col, pid_col, round_digits=round_t_to_n_digits)
 
     #compute the trial column if it is not already present
+    ss=set(df.columns.values)
     has_trial_col={trial_col}.issubset(ss)
     if not has_trial_col:
         compute_event_id(df,input_fn,pid_col=pid_col)
