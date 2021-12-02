@@ -4,25 +4,36 @@
 import dask.bag as db, time
 from scipy.stats import normaltest
 import cupy as cp, cudf
+
+def bootstrap_mean_95CI_and_print_cu(values,seed=42,printing=True,num_samples=1000, include_normaltest_slowly=True,use_seed=True,**kwargs):
+    """
+    Example Usage:
+    mean_value,Delta_mean,p=bootstrap_mean_95CI_and_print_cu(values)
+    """
+    if use_seed:
+        cp.random.seed(seed)
+    Delta_mean,p=bootstrap_95CI_Delta_mean_cu(cp.array(values),num_samples=num_samples, include_normaltest_slowly=include_normaltest_slowly)
+    mean_value=np.mean(values)
+    if printing:
+        print(f"the mean value is {mean_value:.4f}+/-{Delta_mean:.4f}, with test for normality (p={p:.4f})")
+    return mean_value,Delta_mean,p
+
 def bootstrap_mean_cu(x,num_samples):
     sizex=x.shape[0]
-    # randint_values_array=cp.random.randint(low=0, high=sizex, size=sizex*num_samples, dtype=int)
-    # bootstrap_indices=cp.random.randint(low=0, high=sizex, size=sizex*num_samples, dtype=int).reshape((sizex,num_samples))
-    # mean_values=cp.mean(x[cp.random.randint(low=0, high=sizex, size=sizex*num_samples, dtype=int).reshape((sizex,num_samples))][...,0],axis=1)
-    return cp.mean(x[cp.random.randint(low=0, high=sizex, size=sizex*num_samples, dtype=int).reshape((sizex,num_samples))][...,0])
+    return cp.mean(x[cp.random.randint(low=0, high=sizex, size=sizex*num_samples, dtype=int).reshape((sizex,num_samples))],axis=0)
 
-#TODO: use the same randint array for all iterations
-#TODO: compute the max number of samples over all bins
-#TODO: feed that ^ max int to generate an array of random indicies as randint_array
-#TODO: in bootstrap_95CI_Delta_mean_cu, use the first n values of randint_array for each num_sample
-def bootstrap_95CI_Delta_mean_cu(x,num_samples=1000):#, include_normaltest_slowly=False):
+def bootstrap_95CI_Delta_mean_cu(x,num_samples=1000, include_normaltest_slowly=False):
+    '''
+    Example Usage:
+    Delta_mean,p=bootstrap_95CI_Delta_mean_cu(values,num_samples=1000)
+    '''
     mean_values=bootstrap_mean_cu(x,num_samples=num_samples)
     sig=cp.std(mean_values)
-    # if include_normaltest_slowly:
-    #     p = normaltest(mean_values)
-    # else:
-    p=-9999.+0.*mean_values#floating point rep of nan that won't raise exceptions
-    Delta_mean=1.96*sig
+    if include_normaltest_slowly:
+        stat,p = normaltest(mean_values.get())
+    else:
+        p=-9999.#+0.*mean_values#floating point rep of nan that won't raise exceptions
+    Delta_mean=1.96*float(sig)
     return Delta_mean,p
 
 def bootstrap_95CI_Delta_mean_cudf(df,incol,num_samples=1000, include_normaltest_slowly=False):
