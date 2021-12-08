@@ -17,6 +17,9 @@ def comp_power_scale(B,Delta_B,m,Delta_m):
     return M,Delta_M
 
 def fit_power_law(x,y):
+    '''
+    Example Usage:
+    B,Delta_B,m,Delta_m,Rsq=fit_power_law(x,y)'''
     dict_loglog=compute_95CI_ols(np.log(x),np.log(y))
     m=dict_loglog['m']
     Delta_m=dict_loglog['Delta_m']
@@ -39,6 +42,7 @@ def print_fit_power_law(x,y):
     rmse=compute_power_rmse(x,y,m,B)
     M, Delta_M= comp_power_scale(B,Delta_B,m,Delta_m)
 
+    print(f"y=M*(x)**m")
     print(f"m={m:.6f}+-{Delta_m:.6f}; B={B:.6f}+-{Delta_B:.6f}")
     print(f"M= {M:.6f}+-{Delta_M:.6f} Hz*cm^{{2(m-1)}}")
     print(f"RMSE={rmse:.4f} Hz/cm^2")
