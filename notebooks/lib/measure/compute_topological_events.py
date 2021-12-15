@@ -20,6 +20,36 @@ from . import *
 #    df.to_csv(file_out, index=False, encoding=encoding)
 #    return os.path.abspath(file_out)
 
+
+def comp_lifetimes(input_fn,event_index_values):
+    fn = os.path.basename(input_fn)
+    event_id_int=int(float('1'+(''.join(re.findall(r'-?\d+\d*',fn)))))
+    event_id_int
+
+    #get a unique list of all particles involved in an annihilation event for this event_id_int
+    pid_lst=[]
+    for x in event_index_values:
+        if int(x[0])==event_id_int:
+            pid_lst.append(int(x[1]))
+            pid_lst.append(int(x[2]))
+
+    pid_values=np.unique(np.array(pid_lst))
+    # assert len(pid_lst)==pid_values.shape[0]
+
+    #for each pid, compute v_rms and the lifetime
+    df=pd.read_csv(input_fn)
+
+    lifetime_lst=[]
+    for pid in pid_values:
+        #compute time series data
+        txy_values=df.loc[df['particle']==pid,['t','x','y']].values
+        t_values=txy_values[:,0]-np.min(txy_values[:,0])
+        #compute particle averaged values
+        lifetime=np.max(t_values)-np.min(t_values)*1e-3 #seconds
+        #record
+        lifetime_lst.append(lifetime)
+    return lifetime_lst
+
 def filter_before(df,tmin=100,t_column='t'):
 	'''filter all time earlier than tmin'''
 	boo=df[t_column]<tmin

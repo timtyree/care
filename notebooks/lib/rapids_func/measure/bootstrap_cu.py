@@ -1,6 +1,7 @@
 #gpu accelerated bootstrapping. it is no longer the current time (and thus attention) bottleneck...
 # programmer: Tim Tyree
 # date: 10.3.2021
+import numpy as np, pandas as pd, os
 import dask.bag as db, time
 from scipy.stats import normaltest
 import cupy as cp, cudf
