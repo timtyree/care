@@ -33,6 +33,10 @@ def bootstrap_stdev_of_mean(x,num_samples=1000):
     return sig
 
 def bootstrap_95CI_Delta_mean(x,num_samples=1000):
+    """
+    Example Usage:
+    Delta_mean,p=bootstrap_95CI_Delta_mean(x,num_samples=1000)
+    """
     mean_values=bootstrap_mean(x,num_samples=num_samples)
     sig=np.std(mean_values)
     _, p = normaltest(mean_values)
