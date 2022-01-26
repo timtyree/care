@@ -45,7 +45,7 @@ def comp_lifetimes(input_fn,event_index_values):
         txy_values=df.loc[df['particle']==pid,['t','x','y']].values
         t_values=txy_values[:,0]-np.min(txy_values[:,0])
         #compute particle averaged values
-        lifetime=np.max(t_values)-np.min(t_values)*1e-3 #seconds
+        lifetime=(np.max(t_values)-np.min(t_values))*1e-3 #seconds
         #record
         lifetime_lst.append(lifetime)
     return lifetime_lst
