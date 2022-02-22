@@ -141,3 +141,34 @@ def PlotMyDomain(img,dimgdt,Delta_t,x_values,y_values,c_values,V_threshold,t,inc
 #         print ( save_fn )
 #         return frameno
     return fig
+
+
+
+def save_system_as_png(img,dimgdt,x_values,y_values,c_values,V_threshold,
+            frameno,t,
+            save_folder,
+            save_fn,inch=6,fontsize=16,vmin_img=-85.,vmax_img=35.,area=25,
+             save_folder=save_folder,
+             save=True,
+             annotating=True,
+             axis=[0,img.shape[0],0,img.shape[1]],cmap='bone',**kwargs):
+    """
+    Example Usage:
+#visually verify system
+compute_all_spiral_tips= get_compute_all_spiral_tips(mode='simp',width=width,height=height)
+dict_out=compute_all_spiral_tips(t,img,dimgdt,level1=V_threshold,level2=0.)#,width=width,height=height)
+print(f"{ntips} tips are present at time t={int(t_prev)}.")
+save_fn=save_system_as_png(img,dimgdt,x_values,y_values,c_values,V_threshold,
+            frameno,t,
+            save_folder,
+            save_fn)
+    """
+    fig = ShowDomain(img,dimgdt,x_values,y_values,c_values,V_threshold,t,inch=inch,
+                     fontsize=fontsize,vmin_img=vmin_img,vmax_img=vmax_img,area=area,
+                     frameno=frameno,
+                     save_fn=save_fn,
+                     save_folder=save_folder,
+                     save=save,
+                     annotating=annotating,
+                     axis=[0,img.shape[0],0,img.shape[1]],cmap='bone',**kwargs)
+    return save_fn
