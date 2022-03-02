@@ -1,5 +1,6 @@
 import numpy as np, pandas as pd
 from ..utils.projection_func import get_subtract_pbc
+from ..measure.full_color_contours import get_comp_dict_topo_full_color
 #Programmer: Tim Tyree
 #Date: 5.10.2021
 #Group: Rappel
@@ -178,7 +179,7 @@ def compute_phases_between_kernel(xy1_value,xy2_value,xy_values_activation_front
 ##############
 #Example Usage
 ##############
-def simulate_pdict_example(dt=0.001,V_threshold=-50.):
+def simulate_pdict_example(nb_dir,dt=0.001,V_threshold=-50.):
     txt_fn=f'{nb_dir}/Data/test_data/ic008.33_t_218.8.npz'
     t=218.8;ds=5.;
     txt=load_buffer(txt_fn)

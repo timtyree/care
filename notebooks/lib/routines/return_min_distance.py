@@ -1,6 +1,8 @@
 from .. import *
 import numpy as np
 from ..controller.controller_LR import get_one_step_explicit_synchronous_splitting
+from ..measure.full_color_contours import get_comp_dict_topo_full_color
+from ..utils.dist_func import get_distance_L2_pbc
 
 def init_methods(width,height,ds,dt,nb_dir,V_threshold=-50,jump_threshold=40,**kwargs):
     '''

@@ -1,0 +1,8 @@
+DONE: update dict_topo to also record data for the null lines
+TODO: rotate and visualize the final null line rotated s.t. the activation front is projected onto the positive x-axis
+TODO: rotate and visualize the null lines versus time
+TODO: indicate the direction of the spiral tip at the final time
+TODO: plot the local field potential
+TODO: abstract the field plotted
+TODO: plt.imshow scalar fields of interest
+TODO: plt.quiver vector fields of interest

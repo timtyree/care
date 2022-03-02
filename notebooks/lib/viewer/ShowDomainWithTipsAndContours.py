@@ -148,10 +148,9 @@ def save_system_as_png(img,dimgdt,x_values,y_values,c_values,V_threshold,
             frameno,t,
             save_folder,
             save_fn,inch=6,fontsize=16,vmin_img=-85.,vmax_img=35.,area=25,
-             save_folder=save_folder,
              save=True,
              annotating=True,
-             axis=[0,img.shape[0],0,img.shape[1]],cmap='bone',**kwargs):
+             axis=None,cmap='bone',**kwargs):
     """
     Example Usage:
 #visually verify system
@@ -163,6 +162,8 @@ save_fn=save_system_as_png(img,dimgdt,x_values,y_values,c_values,V_threshold,
             save_folder,
             save_fn)
     """
+    if axis is None:
+        axis=[0,img.shape[0],0,img.shape[1]]
     fig = ShowDomain(img,dimgdt,x_values,y_values,c_values,V_threshold,t,inch=inch,
                      fontsize=fontsize,vmin_img=vmin_img,vmax_img=vmax_img,area=area,
                      frameno=frameno,
