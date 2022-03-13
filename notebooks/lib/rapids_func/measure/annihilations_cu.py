@@ -236,6 +236,7 @@ def routine_compute_radial_velocities_pbc_cu(input_fn,
                                              save_df_pairs=True,
                                              printing=True,
                                              testing=True,
+                                             save_dir=None,
                                              **kwargs):
     '''loads an input_fn, uses compute_radial_velocities_of_annihilations_cu, and saves as ...+'_annihilations_denoised.csv' with index=False
     Example Usage:
