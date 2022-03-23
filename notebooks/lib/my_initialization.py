@@ -1,8 +1,4 @@
 #my_initialization.py
-import pandas as pd, numpy as np, matplotlib.pyplot as plt
-
-#load the libraries
-from . import *
 # from .utils.operari import *
 #automate the boring stuff
 # from IPython import utils
@@ -14,15 +10,23 @@ if not 'nb_dir' in globals():
     nb_dir = os.getcwd()
 
 from numba import njit
+import pandas as pd, numpy as np, matplotlib.pyplot as plt, json
 
+# ignore user warnings
+import warnings
+warnings.simplefilter('ignore', UserWarning)
 
+#load the libraries
+from . import *
 
-darkmode=False
+if not 'darkmode' in globals():
+    darkmode=False
 if darkmode:
 	# For darkmode plots
 	from jupyterthemes import jtplot
 	jtplot.style(theme='monokai', context='notebook', ticks=True, grid=False)
 
-gpumode=False
+if not 'gpumode' in globals():
+    gpumode=False
 if gpumode:
-    import cudf
+    import cudf,pycuda

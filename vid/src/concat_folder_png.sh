@@ -1,6 +1,4 @@
-
-
-
+#!/usr/bin/env bash
 #concat a folder of pngs to a *.MTS
 # ffmpeg -i tmp/img%09d.png \
 # 	-y -c:v libx264 -filter:v fps=fps=60 \
@@ -30,11 +28,12 @@ ffmpeg -i ../../notebooks/Figures/mov/img%07d.png \
 cd ../mov
 #make text frames
 # source text.txt
-TEXT='Spiral Tip Motion'
+TEXT='Spiral Tip Motion
+from the
+Fenton-Karma Model'
 # from the
 # Luo-Rudy Model'
-# TEXT=$'Synchronous Variational Integrator\nDamped Neohookean Model\n(inward squish)'
-# 1920x1080
+# ffmpeg -f lavfi -y -i color=black:1920x1080 -f lavfi -i anullsrc  \ #widescreen
 ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
 	-q 0 -vf drawtext="
 	arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,
@@ -43,19 +42,16 @@ ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
 	" -c:v libx264 -b:v 1000k -s hd720 \
 	-video_track_timescale 2000 -y -c:a aac -ar 0 \
 	-ac 0 -sample_fmt fltp -t 4 tmp/intro.mp4
-	#
-	# ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
-	# 	-q 0 -vf drawtext="
-	# 	arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,
-	# 	fade=t=in:st=0:d=1.0,
-	# 	fade=t=out:st=1:d=0.1,fps=fps=40
-	# 	" -c:v libx264 -b:v 1000k -s hd720 \
-	# 	-video_track_timescale 5000 -y -c:a aac -ar 0 \
-	# 	-ac 0 -sample_fmt fltp -t 4 tmp/intro.mp4
 
-
+# ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
+# 	-q 0 -vf drawtext="
+# 	arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,
+# 	fade=t=in:st=0:d=1.0,
+# 	fade=t=out:st=1:d=0.1,fps=fps=40
+# 	" -c:v libx264 -b:v 1000k -s hd720 \
+# 	-video_track_timescale 5000 -y -c:a aac -ar 0 \
+# 	-ac 0 -sample_fmt fltp -t 4 tmp/intro.mp4
 # ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc -q 0 -vf drawtext="arial.ttf:fontcolor=FFFFFF:fontsize=50:text=$TEXT:x=(main_w-text_w)/2:y=(main_h-text_h)/2,fade=t=in:st=0:d=0,fade=t=out:st=2:d=1" -c:v libx264 -b:v 1000k -pix_fmt yuv420p -video_track_timescale 5000 -y -c:a aac -ar 0 -ac 0 -filter:v fps=fps=90 -sample_fmt fltp -t 4 intro.mp4
-
 ffmpeg -i tmp/intro.mp4 -y -q 0 tmp/clip-1.MTS
 ffmpeg -i tmp/tmp.MTS -y -q 0 tmp/clip-2.MTS
 # ffmpeg -i intro.mp4 -y -q 0 clip-1.MTS

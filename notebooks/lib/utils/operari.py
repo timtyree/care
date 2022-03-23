@@ -200,6 +200,12 @@ def search_for_file (currdir = os.getcwd()):
 	return tempdir
 
 def load_buffer(data_dir,**kwargs):
+    """loads numpy array from data_dir, which locates a .npz or .npy file.
+    if .npz, then only the first array file is returned.
+    kwargs are passed to numpy.load
+    Example Usage:
+txt=load_buffer(data_dir)
+    """
 	if data_dir[-4:]=='.npy':
 		txt = np.load(data_dir)
 		return txt

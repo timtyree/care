@@ -1,6 +1,6 @@
 #!/bin/bash/env python3
 from numba import njit, jit
-import numpy as np
+import numpy as np,json,os
 
 # @njit
 # def Tanh(x):
@@ -158,7 +158,7 @@ def fetch_get_time_step(width,height,DX=0.025,DY=0.025, **param_dict):
             for y in range(height):
                 out[x,y] = time_step_at_pixel(texture,x,y)
     return get_time_step
- 
+
 def fetch_time_step(width,height,DX=0.025,DY=0.025, **param_dict):
     #time_step_at_pixel=get_time_step_at_pixel(width,height,DX=DX,DY=DY)
     get_time_step=fetch_get_time_step(width,height,DX=DX,DY=DY, **param_dict)
@@ -299,3 +299,18 @@ def get_inc(texture,out):
 # assert(time_step(gimage ,0.1) is None)
 # assert(gimage.any())
 # assert(gimage[0,0].dtype    is not None)
+
+def recall_flow_map_fk(nb_dir,diffCoef=0.0005,width=200,height=200,dsdpixel=0.025,param_fn = 'param_set_8.json'):
+    """recalls parameter set 8 by default for the fenton-karma model.
+    Example Usage:
+get_time_step_fk,one_step_fk=recall_flow_map_fk(diffCoef=0.0005,width=200,height=200,dsdpixel=0.025)
+    """
+    #recall the flow map for the fenton-karma model
+    print(f"param_fn is {param_fn}.")
+    param_dir = os.path.join(nb_dir,'lib/model')
+    param_dict = json.load(open(os.path.join(param_dir,param_fn)))
+    param_dict['diffCoef']=diffCoef
+    #get time step with external stimulus for FK model
+    get_time_step_fk=fetch_get_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
+    one_step_fk=fetch_time_step(width,height,DX=dsdpixel,DY=dsdpixel,**param_dict)
+    return get_time_step_fk,one_step_fk
