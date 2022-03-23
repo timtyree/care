@@ -206,16 +206,16 @@ def load_buffer(data_dir,**kwargs):
     Example Usage:
 txt=load_buffer(data_dir)
     """
-	if data_dir[-4:]=='.npy':
-		txt = np.load(data_dir)
-		return txt
-	elif data_dir[-4:]=='.npz':
-		txt = np.load(data_dir,**kwargs)
-		txt = txt[txt.files[0]]  #only take the first buffer because there's typically one
-		return txt
-	else:
-		print(f"\tWarning: Failed to load {data_dir}.")
-		raise Exception(f"\tWarning: Failed to load {data_dir}.")
+    if data_dir[-4:]=='.npy':
+        txt = np.load(data_dir)
+        return txt
+    elif data_dir[-4:]=='.npz':
+        txt = np.load(data_dir,**kwargs)
+        txt = txt[txt.files[0]]  #only take the first buffer because there's typically one
+        return txt
+    else:
+        print(f"\tWarning: Failed to load {data_dir}.")
+        raise Exception(f"\tWarning: Failed to load {data_dir}.")
 
 #deprecated/broken
 # def get_incremented_output_filename(output_dir, output_fn):

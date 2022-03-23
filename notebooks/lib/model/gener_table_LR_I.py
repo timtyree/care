@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #Programmer: Tim Tyree
 #Date: 10.13.2021
-#Forked from original fortran implementation by Wouter-Jan Rappel
+#Forked from original fortran implementation by Profesor Wouter-Jan Rappel
 import numpy as np
 
 def generate_lookup_table_LR_I(
