@@ -372,6 +372,10 @@ def get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,h
 	return dt, kernelA, kernelB
 
 def get_forward_integrate_kernel(nb_dir,dt,width,height,ds,stream,diffCoef=0.001,Cm=1.):
+	"""forward_integrate_kernel may raise numba jit compilation errors...
+	Example Usage:
+forward_integrate_kernel=get_forward_integrate_kernel(nb_dir,dt,width,height,ds,stream,diffCoef=0.001,Cm=1.)
+	"""
 	dt, kernelA, kernelB = get_one_step_explicit_synchronous_splitting_w_Istim_kernel(nb_dir,dt,width,height,ds,stream,diffCoef=diffCoef,Cm=Cm)
 
 	@cuda.jit('void(float64[:,:,:], float64[:,:], int32)')

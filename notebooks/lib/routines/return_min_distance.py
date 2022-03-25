@@ -4,7 +4,7 @@ from ..controller.controller_LR import get_one_step_explicit_synchronous_splitti
 from ..measure.full_color_contours import get_comp_dict_topo_full_color
 from ..utils.dist_func import get_distance_L2_pbc
 
-def init_methods(width,height,ds,dt,nb_dir,V_threshold=-50,jump_threshold=40,**kwargs):
+def init_methods(width,height,ds,dt,nb_dir,V_threshold=-50,jump_threshold=40,diffCoef=0.0005,Cm=1.0,**kwargs):
     '''
     Example Usage:
     one_step,comp_distance,comp_dict_tips=init_methods(width,height,ds,dt,V_threshold=-50,jump_threshold=40)
@@ -12,7 +12,7 @@ def init_methods(width,height,ds,dt,nb_dir,V_threshold=-50,jump_threshold=40,**k
     #TODO: pass kwargs to the get_one_step in use
     # get_one_step
     __, arr39, one_step = get_one_step_explicit_synchronous_splitting(
-        nb_dir,dt,width,height,ds,diffCoef=0.0005,Cm=1.0)
+        nb_dir,dt,width,height,ds,diffCoef=diffCoef,Cm=Cm,**kwargs)
 
     #the heavyweight spiral tip measures
     comp_dict_tips=get_comp_dict_topo_full_color(width=width,height=height,level1=V_threshold,level2=0,
