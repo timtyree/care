@@ -28,11 +28,12 @@ ffmpeg -i ../../notebooks/Figures/mov/img%07d.png \
 cd ../mov
 #make text frames
 # source text.txt
+# TEXT='Spiral Tip Motion
+# from the
+# Fenton-Karma Model'
 TEXT='Spiral Tip Motion
 from the
-Fenton-Karma Model'
-# from the
-# Luo-Rudy Model'
+Luo-Rudy Model'
 # ffmpeg -f lavfi -y -i color=black:1920x1080 -f lavfi -i anullsrc  \ #widescreen
 ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
 	-q 0 -vf drawtext="
