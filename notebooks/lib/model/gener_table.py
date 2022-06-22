@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This program determines the look-up table for the LR-I model
 # to generate lookup tables for a time step of dt=0.01 ms from command line, execute
-# $ python3 gener_table.py 0.01
+# $ python3 gener_table.py 0.01 
 from numpy import sqrt, exp, log
 import numpy as np
 

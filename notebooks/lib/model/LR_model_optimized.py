@@ -2,7 +2,7 @@
 #Timothy Tyree
 #1.13.2021
 # The model from Luo-Rudy (1990) modified as described
-# in Qu et alli (2000) to exhibit spiral defect chaos
+# in Qu et al (2000) to exhibit spiral defect chaos
 # implemented on a square computational domain.
 # Uses lookup table instead of using comp_ionic_currents
 from numba import njit, jit, float64
@@ -169,7 +169,7 @@ def get_comp_ionic_flux(GNa=16.,GK1=0.6047,Gsi=0.052,EK1=-87.94,Eb=-59.87,ENa=54
 		Esi=-82.3-13.0287*np.log(Ca_i)#mV  #from lr_d0.f (WJ)
 		Isi=Gsi*d*f*(V-Esi)
 		#time dependent potassium current
-		IK=x_var*x1#GK*x_var*x1#
+		IK=x_var*x1#GK*x_var*x1 #nota bene: x1 is already multiplied by GK=0.423 in the lookup table
 		#total electric current
 		Iion=INa+IK1T+Isi+IK
 		#calcium uptake rate (dominated by activity of the sarcoplasmic reticulum)
