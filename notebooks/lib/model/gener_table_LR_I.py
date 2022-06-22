@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
 #Programmer: Tim Tyree
 #Date: 10.13.2021
+<<<<<<< Updated upstream
 #Forked from original fortran implementation by Profesor Wouter-Jan Rappel
+=======
+#Forked from original fortran implementation by Wouter-Jan Rappel
+# # Example Usage: generate lookup table with 0.01mV discretization
+# git pull https://github.com/timtyree/bgmc.git
+# cd bgmc/notebooks/lib/model
+# python3 gener_table_LR_I.py 0.01
+>>>>>>> Stashed changes
 import numpy as np
 
 def generate_lookup_table_LR_I(
@@ -110,9 +118,12 @@ def generate_lookup_table_LR_I(
         fac1=(v+77.)*np.exp(0.04*(v+35.))
         if np.isclose(v,-77.,atol=1e-6):
             x1[m]=gx1*(v-vx1)*0.04/np.exp(0.04*(v+35.))
+            # vx1 looks like a nernst potential
+            # gx1=0.423*2.837*np.sqrt(5.4/xk0)
+            # x1[m]=gx1*(v-vx1)*0.04*(v+77.)/fac1 # is visually identical to x1[m]=gx1*(v-vx1)*0.04/np.exp(0.04*(v+35.)) by mathematica
         else:
-            x1[m]=gx1*(v-vx1)*(fac-1.)/fac1
-
+            x1[m]=gx1*(v-vx1)*(fac-1.)/fac1 #this appears to equal with x1[m]=gx1*(v-vx1)*0.04/np.exp(0.04*(v+35.)) at v=-77
+            # conclusion: it is simpler to use x1[m]=gx1*(v-vx1)*(fac-1.)/fac1 only in the sm
         if (xtau1[m]<=5.e-4):
             e1[m]=0.
         else:
@@ -251,7 +262,7 @@ def aj(v):
     else:
         cj1=-127140.
         cj2=0.24444
-        cj3=-0.00003474
+        cj3=-0.00003474 #3.464e-5
         cj4=-0.04391
         cj5=37.78
         cj6=0.311
@@ -280,7 +291,7 @@ def bj(v):
 
 def xt(v,rtoverf,xk0,backcon=1.):
     '''total time independent potatassium current'''
-    vk1=1000.*rtoverf*np.log(xk0/145.)
+    #vk1=1000.*rtoverf*np.log(xk0/145.)
     vk1=-87.95
     gk1=0.6047*np.sqrt(xk0/5.4)
     ak1=1.02/(1.+np.exp(0.2385*(v-vk1-59.215)))
@@ -289,7 +300,7 @@ def xt(v,rtoverf,xk0,backcon=1.):
     xk1=gk1*ak1*(v-vk1)/(ak1+bk1)
     xkp=0.0183*(v-vk1)/(1.+np.exp((7.488-v)/5.98))
     xbac=0.03921*(v+59.87)
-    xt=xk1+xkp+backcon*xbac
+    xt=xk1+xkp+backcon*xbac#==$I_{K1T}(v,xk0)$
     return xt
 
 ################################
