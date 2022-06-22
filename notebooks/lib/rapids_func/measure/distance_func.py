@@ -6,7 +6,6 @@ def comp_xy_distance_L2_pbc_cu(d,width,height):
     point_1 and point_2, which are in a rectangular domain of shape (width,height)
     with periodic boundary conditions.
     returns d with many fields added. the distance is dist.
-    supposes each row is uniquely indexed.
 
     Example Usage:
     df_traj=comp_xy_distance_L2_pbc_cu(df_traj,width,height)

@@ -33,13 +33,13 @@ def get_compute_displacements_between(width,height):
         xy1_values=np.array(list(zip(dd['x'],dd['y'])))
         xy2_values=np.array(list(zip(dd['xx'],dd['yy'])))
 
-        #I think this length check is unnecessary
+        #preallocate memory
+        #note: uniqueness of observation times guarantees s1 = s2
         s1=xy1_values.shape[0]
         s2=xy2_values.shape[0]
         xy2_minus_xy1_values=np.zeros((np.min((s1,s2)),2))
-
         #compute displacements between
-        for j in range(xy2_minus_xy1_values.shape[0]):
+        for j in range(xy2_minus_xy1_values.shape[0]): #equivalently, range(s1):
             xy2_minus_xy1_values[j]=subtract_pbc(xy2_values[j],xy1_values[j])
         return xy2_minus_xy1_values,t_values
     return compute_displacements_between
