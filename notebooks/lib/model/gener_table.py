@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This program determines the look-up table for the LR-I model
 # to generate lookup tables for a time step of dt=0.01 ms from command line, execute
-# $ python3 gener_table.py 0.01 
+# $ python3 gener_table.py 0.01
 from numpy import sqrt, exp, log
 import numpy as np
 
@@ -47,8 +47,9 @@ def program_br(ndimtab=2500,dt=0.001,dv=0.1,xspeed=1.,backon=1.,
     xki=145.
     vx1=1000.*rtoverf*log((xk0+pr*xna0)/(xki+pr*xnai))
     # vx1=-87.94#in LuoRudy1990.pdf
-    # vx1=-77.62#from wj's original table#### EK1 = -87.94mv in LuoRudy1990.pdf
+    vx1=-77.62#from wj's original table#### EK1 = -87.94mv in LuoRudy1990.pdf
     vk1=1000.*rtoverf*log(xk0/145.)
+    vk1=-87.95#from wj's original table
     # write(6,*)'xk0,gx1,gk1,vx1,vk1'
     # write(6,*)xk0,gx1,gk1,vx1,vk1
     v0=-100.

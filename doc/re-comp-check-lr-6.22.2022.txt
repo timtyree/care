@@ -1,0 +1,37 @@
+Hi Wouter,
+
+
+- Good news:
+The cause of the disagreement between our onestep methods yesterday disagreed because the integrator was using
+
+
+- get_mycomp_ionic_flux is functionally the same as is what wj uses in lr_0d.f
+- our initial conditions match to machine precision
+-
+
+WJ's one step method:
+1. t = t + dt
+2. compute currents using current state
+3. time step current state
+  3.1 time step gating variables forward by dt using exact solution
+  3.2 time step calcium forward by dt*(dCadt)
+  3.3 add external stimulus current if t <= duration_of_stimulus
+  3.4 time step voltage forward by dt*(sum_of_currents)
+
+TT's one step method meant for comparison:
+1. compute currents using current state
+2. time step current state
+  2.1? time step gating variables forward by dt using exact solution
+  2.2? time step calcium forward by dt*(dCadt)
+  2.3? add external stimulus current if t <= duration_of_stimulus
+  2.4? time step voltage forward by dt*(sum_of_currents)
+3. t = t + dt
+
+DONE: confirmed all parameters outside of gener_table.py exactly match between implementations
+TODO: confirmed all parameters within  of gener_table.py exactly match between implementations
+- DONE: confirmed i am using gener_table.py
+- DONE: checked kwargs are consistent in gener_table.py
+- DONE: confirmed all parameters match in all helper functions
+DIFFERENCE SPOTTED: I use way more sig figs for Faradays constant (18 vs. 4 sig. figs.)
+- F was passing to vx1,vk1
+- Setting my vx1 and vk1 to equal WJ's resulted in ??
