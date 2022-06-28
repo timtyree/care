@@ -9,7 +9,12 @@ from ..utils.dist_func import *
 from ..utils.utils_traj import *
 
 def PlotFlowerTrajectories(df,col="t",width=200,height=200,fontsize=24,DS = 5/200, DT=1., jump_thresh=10., alpha=0.01,saving = False, savefig_folder=None,savefig_fn=None, chop_at_first_jump = True, ax=None,cmap="Blues", **kwargs):
-    '''plot the xy trajectory for longliving tips'''
+    '''plot the xy trajectory for longliving tips
+
+    Example Usage:
+ax=PlotFlowerTrajectories(df,col="t",width=200,height=200,fontsize=24,DS = 5/200, DT=1., jump_thresh=10., alpha=0.01,saving = False, savefig_folder=None,savefig_fn=None, chop_at_first_jump = True, ax=None,cmap="Blues")#, **kwargs)
+
+    '''
     pid_lst = sorted(set(df.particle.values))
     df_traj = df
     xmin=0; ymin=0; xmax=width; ymax=height;

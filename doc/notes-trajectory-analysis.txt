@@ -1,0 +1,7 @@
+########################################################
+# NOTES ON GATHERING THE TRAJECTORY ANALYSIS PIPELINES
+########################################################
+- note: i commented out the part that deletes trajectories if there were any jumps
+#     if len(jump_index_array)>0:
+#         ji = jump_index_array[0]
+#         d.drop(index=index_values[ji:], inplace=True)
