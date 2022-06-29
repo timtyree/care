@@ -98,7 +98,8 @@ def comp_time_to_end_cu(dfr,df_pairs, trial_col='event_id_int', t_col='t', round
     last_obs=dfr.reset_index().set_index([trial_col,'pid_self','pid_other',t_col]).loc[max_times.get().T]
     last_range=last_obs['R'].values.T
 
-    last_obs['tf']=last_obs.index.values[:,-1]
+    # last_obs['tf']=last_obs.index.values[:,-1]
+    last_obs['tf']=last_obs.index.values.T[-1]
     last_times=last_obs.reset_index().set_index(event_col_lst)['tf']
 
     df_pairs=df_pairs.reset_index().set_index(event_col_lst)
@@ -110,9 +111,22 @@ def comp_time_to_end_cu(dfr,df_pairs, trial_col='event_id_int', t_col='t', round
     # df_pairs.set_index(event_col_lst).loc[index_values.T,'tmax']
     # tmax_values=df_pairs.sort_values(event_col_lst).set_index(event_col_lst).loc[index_values,'tmax'].values
     tmax_values,num_rows_values=df_pairs.reset_index().sort_values(event_col_lst).set_index(event_col_lst)[['tf','num_rows']].values.T
-    tf_values=cp.repeat(tmax_values.get(),num_rows_values.get().astype(int))
-    dfr['tdeath']=cp.around(tf_values-dfr[t_col],round_t_to_n_digits)
+    dfr['tf']=cp.repeat(tmax_values.get(),num_rows_values.get().astype(int))
+    dfr['tdeath']=cp.around(dfr['tf']-dfr[t_col],round_t_to_n_digits)
     return dfr
+
+@np.vectorize
+def savgol_filter_try(x, window_length, polyorder, deriv=0, delta=1.0, axis=-1, mode='interp', cval=0.0):
+    """simple work-around to 'ValueError: If mode is 'interp', window_length must be less than or equal to the size of x.'"""
+    if str(type(x))=="<class 'float'>":
+        return 0.*x-9999.
+    shape=x.shape
+    if len(shape)==0:
+        return 0.*x-9999.
+    if shape[0]<window_length:
+        return 0.*x-9999.
+    return savgol_filter(x, window_length, polyorder, deriv=deriv, delta=delta, axis=axis, mode=mode, cval=cval)
+
 
 def compute_radial_velocities_of_annihilations_cu(df,
                                                   navg2, #num. frames to average over.  navg2 must be an odd, positive integer.
@@ -121,8 +135,8 @@ def compute_radial_velocities_of_annihilations_cu(df,
                                                   width, #pixels per x coord
                                                   height, #pixels per y coord
                                                   max_dtmax_thresh=0,
-                                                  max_Rfinal_thresh=0.2, #cm
-                                                  min_duration_thresh=40, #ms
+                                                  max_Rfinal_thresh=0.2, #cm # max disagreement between tmax for _self relative to _other
+                                                  min_duration_thresh=40, #ms #minimum lifetime for a spiral tip position to be considered
                                                   use_tavg2=True,
                                                   trial_col='event_id_int',
                                                   pid_col='particle',
@@ -159,19 +173,24 @@ def compute_radial_velocities_of_annihilations_cu(df,
     dfu = cudf.DataFrame({
         'tmin': dft.min(),
         'tmax': dft.max(),
+        'event_id_int': grouped[trial_col].min(),
+        trial_col: grouped[trial_col].min()
     })
-    dfu.reset_index(inplace=True)
     df_intersecting_pairs_all = identify_all_coexisting_pairs(
-        df=dfu.copy(), pid_col=pid_col, t_col=t_col, trial_col=trial_col, printing=printing)
-
-    df_pairs = select_annihilating_pairs(df, df_intersecting_pairs_all, DS,
-                                         max_dtmax_thresh, max_Rfinal_thresh,
-                                         min_duration_thresh,
-                                         width,
-                                         height,
-                                         trial_col=trial_col,
-                                         pid_col=pid_col,
-                                         t_col=t_col)
+        df=dfu.copy(), pid_col=pid_col, t_col=t_col, trial_col='event_id_int', printing=printing,**kwargs)
+        # df=dfu.copy(), pid_col=pid_col, t_col=t_col, trial_col=trial_col, printing=printing,**kwargs)
+    df_intersecting_pairs_all[trial_col]=df_intersecting_pairs_all['event_id_int']
+    #TODO(later): dive into identify_all_coexisting_pairs and look for which submethod is using 'event_id_int' instead of trial_col
+    # select the annihilating pairs
+    df_pairs = select_annihilating_pairs(df, df_intersecting_pairs_all, DS=DS,
+                                     max_dtmax_thresh=max_dtmax_thresh,
+                                     max_Rfinal_thresh=max_Rfinal_thresh,
+                                     min_duration_thresh=min_duration_thresh,
+                                     width=width,
+                                     height=height,
+                                     trial_col=trial_col,
+                                     pid_col=pid_col,
+                                     t_col=t_col)
 
     df_pairs = drop_any_duplicate_pairs(df_pairs, testing=testing)
     if printing:
@@ -195,6 +214,7 @@ def compute_radial_velocities_of_annihilations_cu(df,
     dfr['R_nosavgol'] = dfr['R']
     if use_tavg2:
         grouped = dfr.to_pandas().groupby([trial_col, 'pid_self', 'pid_other'])
+        #grouped = dfr.groupby([trial_col, 'pid_self', 'pid_other'])
         #compute the savgol_filtered as R
         savgol0_kwargs = dict(window_length=navg2,
                               polyorder=3,
@@ -203,15 +223,16 @@ def compute_radial_velocities_of_annihilations_cu(df,
                               axis=-1,
                               mode='interp')
 
-        result = grouped['R'].apply(savgol_filter, **savgol0_kwargs)
+        result = grouped['R'].apply(savgol_filter_try, **savgol0_kwargs)
         R_values = cp.array(np.concatenate(result.values))
+        # R_values = np.concatenate(result.values)
         dfr['R'] = R_values
 
 
-
+    dfr=cudf.DataFrame(dfr)
     #compute time until death
     dfr = comp_time_to_end_cu(dfr=dfr,
-                              df_pairs=df_pairs,
+                              df_pairs=df_pairs,#cudf.DataFrame(df_pairs),
                               trial_col=trial_col,
                               t_col=t_col,
                               round_t_to_n_digits=round_t_to_n_digits)

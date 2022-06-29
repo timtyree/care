@@ -5,7 +5,7 @@ import numpy as np, cupy as cp, numba.cuda as cuda, cudf#, pandas as pd
 
 def unwrapper_pbc(incol, outcol, jump_thresh, width):
     '''
-    Example Usage:
+    Example Usage: for cudf.DataFrame instance
     df['incol']=df['x']
     grouped = df.groupby(pid_col)
     df = grouped.apply_grouped(unwrapper_pbc,

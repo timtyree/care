@@ -27,14 +27,15 @@ def identify_all_coexisting_pairs(df,pid_col='particle',t_col='t',trial_col='eve
         use_dask=npartitions>1
 
     if printing:
-        print(f"using {npartitions} cores to identify pairs of particles that coexist over {event_id_int_values.shape[0]} independent trials...")
+        print(f"using {npartitions} cores to identify pairs of particles from {event_id_int_values.shape[0]}  independent trials...")
 
     #DONE:
     #TODO(later): measure any performance boost
     if not use_dask:
         df_intersecting_pairs_lst=[]
         for event_id_int in event_id_int_values.get():
-            dfff=dff[dff[trial_col]==event_id_int]
+            #dfff=dff[dff[trial_col]==event_id_int].reset_index() # caused index error
+            dfff=dff[dff[trial_col]==event_id_int].reset_index()
             df_intersecting_pairs=comp_intersecting_pairs_cu(df=dfff,pid_col=pid_col,t_col=t_col)
             #augment df_intersecting_pairs with any columns desired
             df_intersecting_pairs[trial_col]=event_id_int

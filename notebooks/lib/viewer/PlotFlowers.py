@@ -58,6 +58,46 @@ ax=PlotFlowerTrajectories(df,col="t",width=200,height=200,fontsize=24,DS = 5/200
         print(f"saved figure in \n\t{savefig_fn}.")
         return savefig_fn
 
+def FlowerPlot(df_traj,pid_lst,
+                ax=None,
+                x_col='x',
+                y_col='y',
+                c_col="t",
+                pid_col='particle',
+                width=200,
+                height=200,
+                fontsize=24,
+                DS = 0.025,
+                alpha=1,
+                cmap="Blues",
+                use_formatting=True,
+                **kwargs):
+    """pid_lst is a list of particle indices.
+    Example Usage:
+ax=FlowerPlot(df_traj,pid_lst)#,x_col='x',y_col='y',c_col="t",pid_col='particle',width=200,height=200,fontsize=24,DS = 0.025,alpha=1,cmap="Blues",use_formatting=True)
+    """
+    if ax is None:
+        ax=plt.gca()
+    for pid in  pid_lst:
+        x_values ,y_values, c_values = df_traj[(df_traj[pid_col]==pid)][[x_col,y_col, c_col]].values.T.copy()
+        #scale to real coords
+        x_values *= DS
+        y_values *= DS
+        ax.scatter(x_values,y_values, s=20,
+                    c=c_values, vmin = np.min(c_values), vmax = np.max(c_values), cmap=cmap,alpha=alpha)#, **kwargs)
+        ax.scatter([x_values[0]],[y_values[0]], s=600,color='green',marker='*',alpha=0.7)
+        ax.scatter([x_values[-1]],[y_values[-1]], s=600,color='red',marker='*',alpha=0.7)
+
+    if use_formatting:
+        # format_plot
+        ax.set_xlabel('x (cm)', fontsize=fontsize)
+        ax.set_ylabel('y (cm)', fontsize=fontsize)
+        # We change the fontsize of minor ticks label
+        ax.tick_params(axis='both', which='major', labelsize=fontsize)
+        ax.tick_params(axis='both', which='minor', labelsize=0)
+        ax.grid('on')
+        ax.set_aspect('equal')
+    return ax
 
 # def PlotFlowerTrajectories(input_file_name, n_tips=1,col="t",width=200,height=200,saving = True,fontsize=24,DS = 5/200, DT=1., jump_thresh=10., alpha=0.01):
 #     '''plot the xy trajectory for longliving tips'''

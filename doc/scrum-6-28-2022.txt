@@ -1,0 +1,154 @@
+#TODO: get R(t') alignment working, as before
+#TODO: compute msr for WJ's fortranic LR tip positions
+#TODO: wrap ^the big parts of ^that into trajectory_analysis_func.py
+#TODO: compute msr for my LR tip positions with diffCoef=0.001 instead of 0.0005 cm^2/ms
+
+
+#TODO: copute msd
+HINT: use parameters and helper functions for this routine, as before
+# MSD computation in the bulk of wrapped or unwrapped trajectories
+
+# #input_fn is any sort of trajectory .csv file.  it must have a column reffered to by pid_col that uniquely identifies each particle
+# #Load example particle Log file where I want to compute MSD and tracking has already been done
+# #(good): data that uses explicit particle tracking
+# input_fn=search_for_file()
+# input_fn="/home/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_0_varkappa_0/Log/pbc_particle_log1_log.csv"
+# # input_fn='/Users/timothytyree/Documents/GitHub/care/notebooks/Data/test_data/pbc_particle_log69_log.csv'
+
+##particle models
+# #TODO?: no attraction, no annihilation
+# input_fn="/home/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_0_varkappa_0/Log/pbc_particle_log1_log.csv"
+#TODO: no attraction with annihilation
+# input_fn="/home/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_1500_varkappa_0/Log/pbc_particle_log1_log.csv"
+#DONE: attraction with annihilation
+# input_fn="/home/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_1500_varkappa_5/Log/pbc_particle_log1_log.csv"
+# #TODO: attraction with annihilation but without diffusion
+# # input_fn="/home/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_0_L_10_kappa_1500_varkappa_5/Log/pbc_particle_log1_log.csv"
+# pid_col='pid_explicit'
+# t_col='t'
+# width=10 #width of computational domain
+# ds   =10  #cm
+
+# full models
+# LR
+input_fn="home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_5.4_diffCoef_0.0005_dt_0.5/trajectories_unwrap/ic002.31_traj_sr_600_mem_0_unwrap.csv"
+# input_fn='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_5.4_diffCoef_0.0005_dt_0.025/trajectories/ic002.23_traj_sr_600_mem_0.csv'
+# # input_fn='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_5.4_diffCoef_0.0005_dt_0.025/trajectories/ic004.13_traj_sr_600_mem_0.csv'
+
+# #TODO: compute this LR msd after recomputing the unwrapped trajectories
+# input_fn='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_5.4_diffCoef_0.0005_dt_0.5/trajectories/ic001.21_traj_sr_600_mem_0.csv'
+
+# not enough long trajectories
+# # #unwrapped LR at DT=0.025 ms at V_threshold=-40 mV
+# input_fn="/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_5.4_diffCoef_0.0005_dt_0.025_Vthresh_-40/trajectories_unwrap/ic005.32_traj_sr_600_mem_0_unwrap.csv"
+# #unwrapped LR at DT=0.025 ms at V_threshold=-50 mV
+# input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_5.4_diffCoef_0.0005_dt_0.025/trajectories_unwrap/ic002.11_traj_sr_600_mem_0_unwrap.csv"
+
+# # #FK
+# # # unwrapped FK at DT=0.025 ms
+input_fn='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_30_diffCoef_0.001_dt_0.025/trajectories_unwrap/ic200x200.0.3_traj_sr_600_mem_0_unwrap.csv'
+# # input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
+# # # input_fn=f"/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/Log/ic200x200.0.3_traj_sr_400_mem_0.csv"
+
+# UNCOMMENT HERE FOR FULL MODELS
+ds=5
+width=200
+pid_col='particle'
+id_col='event_id'
+t_col='t'
+
+trial_folder_name=os.path.dirname(os.path.dirname(input_fn))
+#(bad)particle data analyzed using full model pipeline
+# input_fn="/Users/timothytyree/Documents/GitHub/bgmc/python/data/local_results/euic_False_fc_2_r_0.1_D_2_L_10_kappa_1500_varkappa_0/trajectories_unwrap/pbc_particle_log121_traj_sr_30_mem_0_unwrap.csv"
+df=pd.read_csv(input_fn)
+#from here on, we will use units in terms of those used by the full model
+height=width
+DS=ds/width
+DT=np.around(get_DT(df, t_col=t_col, pid_col=pid_col),5);print(f"DT={DT} ms")
+kwargs={}
+df.head()
+
+print(f"are the above trajectories unwrapped and centered at zero?")
+
+use_unwrap=False
+#choose use_unwrap=True if the input trajectories are not already unwrapped
+if use_unwrap:
+    #unwrap trajectories
+    pid_lst = sorted(set(df[pid_col].values))
+    #(duplicates filtered earlier in full model pipeline.  Unnecessary in particle model with explicit tracking_ _  _ _ ) filter_duplicate_trajectory_indices is slow (and can probs be accelerated with a sexy pandas one liner)
+    # pid_lst_filtered = filter_duplicate_trajectory_indices(pid_lst,df)
+    #     df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width, height, DS, **kwargs) for pid in pid_lst])
+    df = pd.concat([unwrap_traj_and_center(df[df[pid_col]==pid], width, height, **kwargs) for pid in pid_lst])
+    DT=get_DT(df,pid_col=pid_col) #ms
+    df[df.frame==2].describe()
+
+#print summary stats on particle lifetimes for one input folder
+dft=df.groupby(pid_col)[t_col].describe()
+df_lifetimes=-dft[['max','min']].T.diff().loc['min']
+
+print(f"printing summary stats on particle lifetimes for one input file from {trial_folder_name}:")
+print(df_lifetimes.describe())
+# print(df_lifetimes.head(10))
+print("\nPlease make a manual decision about minimum_lifetime, crop_start_by, and crop_end_by")
+
+pid_col
+
+# use_particle_avg=True
+# basestr='msd_particle'
+use_particle_avg=False
+basestr='msd_time'
+
+# # particle models
+# minimum_lifetime=500. #ms
+# crop_start_by=150
+# crop_end_by=150
+#UNCOMMENT HERE FOR FULL MODELS
+# #LR model (and FK model)
+minimum_lifetime=300. #ms
+crop_start_by=0#40
+crop_end_by=150#40
+# use_unwrap=False
+
+#(deprecated) #FK model
+# minimum_lifetime=200. #ms
+# crop_start_by=40
+# crop_end_by=40
+# use_unwrap=False
+
+# width=10
+# ds   =10  #cm
+# pid_col='pid_explicit'
+# t_col='t'
+kwargs={
+    'DT':DT,
+    'ds':ds,
+    'width':width,
+    'minimum_lifetime':minimum_lifetime,
+    'crop_start_by':crop_start_by,
+    'crop_end_by':crop_end_by,
+    'pid_col':pid_col,
+    't_col':t_col,
+    'max_lagtime':None,
+    'use_unwrap':use_unwrap,
+    'use_particle_avg':use_particle_avg
+}
+kwargs
+
+def routine(input_fn):
+    try:
+        return routine_compute_imsd(input_fn,**kwargs)
+    except Exception as e:
+        return f"Warning: something went wrong, {e}"
+
+use_test=True
+#optionally test the routine
+#runtime for one file was roughly 40 seconds while sharing with 12 other python processes
+if use_test:
+    df_msd=compute_each_mean_squared_displacement(input_fn,**kwargs)
+#     routine_compute_imsd(input_fn,**kwargs)
+    print(f"Head of test df_msd:")
+    print(df_msd.head())
+    #naive estimate for a reasonable diffusion coefficient
+    D_naive_estimate=1/DT*df_msd[(df_msd['lagt']>0.)&(df_msd['lagt']<1.25*DT)]['msd'].mean()*1000/4
+    #     D_naive_estimate=DS**2/DT*df_msd[(df_msd['lagt']>0.)&(df_msd['lagt']<1.25*DT)]['msd'].mean()*1000/4
+    print(f"D_naive_estimate={D_naive_estimate:.4f} cm^2/s")

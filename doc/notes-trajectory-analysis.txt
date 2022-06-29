@@ -5,3 +5,30 @@
 #     if len(jump_index_array)>0:
 #         ji = jump_index_array[0]
 #         d.drop(index=index_values[ji:], inplace=True)
+
+- note: i lowered minimum_lifetime=40. #ms to minimum_lifetime=10. #ms
+# minimum_lifetime=40. #ms
+# crop_start_by=0#40
+# crop_end_by=150#40
+# #was changed to
+minimum_lifetime=10. #ms
+crop_start_by=0
+crop_end_by=0
+
+- note: i removed use of drop_shorter_than in the step where i compute the moving average
+- IGNORE(note): i'm not sure if i actually dropped any trajectories living less than 50ms
+#used for a test loop in src:
+# drop_shorter_than=50 #ms
+#changed to
+drop_shorter_than=10 #ms
+
+- note: i needed to change these parameters to select annihilation pairs because none were being selected
+#min_duration_thresh=40
+#max_Rfinal_thresh=0.2
+##changed to
+min_duration_thresh=0
+max_Rfinal_thresh=1.
+
+
+data_dir_fk='/home/timothytyree/Documents/GitHub/bgmc/python/data/full_results/annihilation_data_fk_tavg1_0.0_tavg2_14.00.csv'
+data_dir_lr='/home/timothytyree/Documents/GitHub/bgmc/python/data/full_results/annihilation_data_lr_tavg1_0.0_tavg2_14.00.csv'

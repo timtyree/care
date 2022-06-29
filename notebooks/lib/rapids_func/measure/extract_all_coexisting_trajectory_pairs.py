@@ -10,7 +10,7 @@ def extract_trajectory_pairs_cu(df,df_pairs,pid_col,t_col,trial_col,DT,col_lst=[
     df_traj=extract_trajectory_pairs_cu(df,df_pairs,pid_col,t_col,trial_col)
     '''
     df[t_col]=cp.around(df[t_col],round_t_to_n_digits)
-    get_DT_cu(df,pid_col=pid_col,t_col=t_col)
+    #get_DT_cu(df,pid_col=pid_col,t_col=t_col)
     df_pairs['num_rows']=((df_pairs['tmax']-df_pairs['tmin'])/DT).astype(cp.int32)
 
     # df_pairs.reset_index(inplace=True)
