@@ -13,6 +13,10 @@ def extract_trajectory_pairs_cu(df,df_pairs,pid_col,t_col,trial_col,DT,col_lst=[
     #get_DT_cu(df,pid_col=pid_col,t_col=t_col)
     df_pairs['num_rows']=((df_pairs['tmax']-df_pairs['tmin'])/DT).astype(cp.int32)
 
+    #TODO: try dropping any row in df_pairs if it contains no match pid_other or pid_self
+    # df_pairs
+
+
     # df_pairs.reset_index(inplace=True)
     super_index_values=np.repeat(df_pairs.index.values.get(),df_pairs['num_rows'].values.get())
     df_traj=df_pairs.loc[super_index_values,[trial_col,'pid_self','pid_other']]
@@ -34,11 +38,28 @@ def extract_trajectory_pairs_cu(df,df_pairs,pid_col,t_col,trial_col,DT,col_lst=[
     index_col_lst=[trial_col,pid_col,t_col]
     dff=df.set_index(index_col_lst)
 
+
+
+    #dff.drop_duplicates(inplace=True)
+    #df_traj.drop_duplicates(inplace=True)
     #fill with self trajectories
     df_traj.rename(columns={'pid_self':pid_col},inplace=True)
     df_traj.set_index(index_col_lst,inplace=True)
     # dfff=dff.loc[df_traj.index.values.get().T]
-    dfff=dff.loc[df_traj.index]
+    #df_traj.drop_duplicates(inplace=True)
+
+    # #I MISDIAGNOSED THE PROBLEM?
+    # # THE PROBLEM ISN'T DUPLICATES?
+    # # THE PROBLEM IS NULLS EXISTING IN EITHER df_traj OR dff?
+    # #AssertionError #double drop_duplicates() ###
+    # index_values=df_traj.index.values.get()
+    # assert not np.isnan(index_values[:,0]).any()
+    # assert not np.isnan(index_values[:,1]).any()
+    # assert not np.isnan(index_values[:,2]).any()
+    # #assert index_values.shape[0]==np.unique(index_values,axis=0).shape[0]
+    dfff=dff.to_pandas().loc[df_traj.to_pandas().index]
+    dfff=cudf.DataFrame(dfff)
+    #dfff=dff.loc[index_values]  #ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
     for x in col_lst:
         df_traj[x+'_self']=dfff[x]
     df_traj=df_traj.reset_index().rename(columns={pid_col:'pid_self'}).rename(columns={'pid_other':pid_col})
@@ -113,6 +134,7 @@ def extract_all_trajectory_pairs_cu(df,df_pairs,pid_col='particle',t_col='t',tri
             print(f"the run time was {(time.time()-start)/60:.2f} minutes.")
             print(f"the number of successfully processed trials was {len(df_traj_lst)}")
 
+    #df_traj_out=cudf.concat(df_traj_lst)
     df_traj_out=cudf.concat(df_traj_lst)
     return df_traj_out
 

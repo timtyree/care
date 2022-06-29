@@ -1,18 +1,69 @@
 #unwraps and smooths trajectories on the gpu
 #Programmer: Tim Tyree
 #Date: 9.29.2021
-import numpy as np, cupy as cp, numba.cuda as cuda, cudf, os, re, dask.bag as db, time
+import numpy as np, cupy as cp, numba.cuda as cuda, cudf, os, re, dask.bag as db, time, pandas as pd
 from .. import *
+from ..routines.unwrap_and_smooth_trajectories_cu import apply_unwrap_xy_trajectories_pbc,apply_moving_avg_xy_trajectories
 from ..routines.unwrap_and_smooth_trajectories_cu import *
 from ..utils.operari import get_all_files_matching_pattern
-
 #DONE(dev smoothing with pbc): dev method that unwraps, keeps track of the unwrapping map, smooths the unwrapped by moving average, and then rewraps
 #DONE: unwrap each trajectory
 #DONE: compute simple moving average of the x and y coordinates
 #DONE: rewrap to smoothed coordinates to the original coordinate system
 #DONE: clean one example input_fn
 #DONE: smooth one example input_fn with pbc
+#######################
+# Simple Version
+#######################
+def comp_moving_avg_pbc_trajectories_cu(traj,navg1,width,height,t_col='t',pid_col='particle',printing=True,**kwargs):
+    """comp_moving_avg_pbc_trajectories_cu returns a cudf.DataFrame instance that uses the gpu to smooth the trajectories using a moving average of window length, navg1, respecting pbc.
+    traj is a pandas.DataFrame or a cudf.DataFrame instance with fields 'x','y' containing location on a square grid with periodic boundary conditions (pbc).
+    t_col is the field containing time.
+    the particle is index by pid_col.
 
+    Example Usage:
+df=comp_moving_avg_pbc_trajectories_cu(traj,navg1,width,height)#,t_col='t',pid_col='particle',printing=True)#,**kwargs)
+    """
+    #GOAL: compute smoothed trajectories, as before
+    # t_col='t'
+    #     df=pd.read_csv(input_fn)
+    #     DT=np.around(get_DT(df, t_col=t_col, pid_col=pid_col),5);print(f"DT={DT}")
+    #     # ds=5 #cm
+    #     # DS=ds/width
+    # #     width=200
+    #     height=width
+    # use_drop_shorter_than=True
+    # # drop_shorter_than=50 #ms
+    # drop_shorter_than=10 #ms
+    #     tmin=100.#ms
+    #     pid_col='particle'
+    #DONE: see if the gpu-accelerated version works, as before. yes.
+    #df=cudf.read_csv(input_fn)
+    df=cudf.DataFrame(traj)
+    col_keep_lst=['x','y',pid_col,t_col]
+
+    #sort by particle and then by time
+    df=df.sort_values([pid_col, t_col], ascending=True).copy()
+    df=apply_unwrap_xy_trajectories_pbc(df,t_col=t_col,pid_col=pid_col,width=width,height=height)
+    df=apply_moving_avg_xy_trajectories(df,t_col=t_col,pid_col=pid_col,navg1=navg1,x_col='x_unwrap',y_col='y_unwrap')
+    # df=apply_unwrap_xy_trajectories_pbc_serial(df,t_col=t_col,pid_col=pid_col,width=width,height=height)
+    # df=apply_moving_avg_xy_trajectories_serial(df,t_col=t_col,pid_col=pid_col,navg1=navg1,x_col='x_unwrap',y_col='y_unwrap')
+    #compute rewrapped coordinates
+    df['x']=df['x_unwrap']-df['dx_unwrap']
+    df['y']=df['y_unwrap']-df['dy_unwrap']
+    #CONFIRMED: by increasing navg1, I can decrease the max displacement for all particles.
+    #DONE: add unique identifier for whole trial that is unique accross different csv files
+    #add unique identifier for each particle that is unique accross different csv files
+    # fn = os.path.basename(input_fn)
+    # event_id_int=float('1'+(''.join(re.findall(r'-?\d+\d*',fn))))
+#     df['event_id_int']= int(trial_num) #int(event_id_int)
+    # col_keep_lst=['x','y',t_col,pid_col,'event_id_int',"dx_unwrap","dy_unwrap"]
+    # df=df[col_keep_lst].copy()
+    return df
+
+#######################
+# Complicated Version
+#######################
 def return_moving_average_of_pbc_trajectories(input_fn, tavg1, pid_col, t_col, DT,
                                               width=200,
                                               height=200,

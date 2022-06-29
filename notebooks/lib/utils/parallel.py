@@ -16,6 +16,7 @@ retval=eval_routine_daskbag(routine,task_lst,npartitions,printing=True)
         start = time.time()
         retval = list(bag)
     else:
+        start=time.time()
         retval=[]
         for task in task_lst:
             retval.append(routine(task))

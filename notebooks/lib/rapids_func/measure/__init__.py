@@ -5,3 +5,4 @@ from .meanvar_cu import *
 from .identify_all_coexisting_trajectory_pairs import *
 from .extract_all_coexisting_trajectory_pairs import *
 from .annihilations_cu import *
+from .alignment_cu import *

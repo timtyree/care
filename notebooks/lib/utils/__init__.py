@@ -12,14 +12,14 @@ from .operari import *
 from .ParticleClasses import *
 from .parallel import *
 from .pickleio import *
-
+from .parquetio import *
 #for worker
 from .get_txt import *
 from .chunk_array import *
 from .zoom_array import *
 # from .make_directories import *
 from .make_worker_directories import *
-
+from .hide_print import *
 #these might conflict when generating LR ic, otherwise should be good with _LR first...
 from .load_buffer_LR import *
 from .operari import load_buffer
