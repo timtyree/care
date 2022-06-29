@@ -1,0 +1,5 @@
+DONE: 3-fold CV stratified=True
+DONE: use 4-input variables raw
+DONE: report importances of each variable, on average
+DONE: make histogram of AF Termination Predictor
+	- send .txt with predicted likelihood for each patient, with labels
