@@ -1,12 +1,24 @@
 import dask.bag as db
 import numpy as np, pandas as pd, sys, os, time
-from ..rapids_func.measure.annihilations_cu import savgol_filter_try
 from ..measure.compute_slope import compute_95CI_ols
 
 def moving_average(a, n=3):
     ret = np.cumsum(a, dtype=float,axis=0)
     ret[n:] = ret[n:] - ret[:-n]
     return ret[n - 1:] / n
+
+@np.vectorize
+def savgol_filter_try(x, window_length, polyorder, deriv=0, delta=1.0, axis=-1, mode='interp', cval=0.0):
+    """simple work-around to 'ValueError: If mode is 'interp', window_length must be less than or equal to the size of x.'"""
+    if str(type(x))=="<class 'float'>":
+        return 0.*x-9999.
+    shape=x.shape
+    if len(shape)==0:
+        return 0.*x-9999.
+    if shape[0]<window_length:
+        return 0.*x-9999.
+    return savgol_filter(x, window_length, polyorder, deriv=deriv, delta=delta, axis=axis, mode=mode, cval=cval)
+
 
 #TODO: port to lib:
 #this block tares ballistically annihilating particles
