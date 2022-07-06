@@ -78,10 +78,18 @@ df=load_tip_pos_from_csv(input_dir,round_t_to_n_digits=7,printing=True)
     df=pd.read_csv(input_dir)
     df[t_col]=np.around(df[t_col],round_t_to_n_digits)
     if printing:
-        print(f"{df.shape=}")
+        print(f"before drop_duplicates: {df.shape=}")
     df.drop_duplicates(inplace=True)
     if printing:
-        print(f"{df.shape=}")
+        print(f"after drop_duplicates: {df.shape=}")
     if reset_index:
         df.reset_index(inplace=True)
+    #subtract off the minimum time
+    df[t_col]-=df[t_col].min()
+    DT=sorted(df['t'].drop_duplicates().values)[1]
+    df[t_col]+=DT
+    df[t_col]=np.around(df[t_col],round_t_to_n_digits)
+    boo=df['n']==0
+    if sum(boo)==1:
+        df=df[~boo].copy()
     return df
