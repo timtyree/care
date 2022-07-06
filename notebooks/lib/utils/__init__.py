@@ -24,3 +24,4 @@ from .hide_print import *
 from .load_buffer_LR import *
 from .operari import load_buffer
 from .traj_alignment_func import *
+from .parse_tip_pos import *
