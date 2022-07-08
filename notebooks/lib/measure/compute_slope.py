@@ -3,7 +3,11 @@ import numpy as np
 def compute_95CI_ols(x,y):
     '''returns the max likliehood estimators and 95% confidence intervals
     that result from ordinary least squares regression applied to the
-    1-dimensional numpy arrays, x and y.'''
+    1-dimensional numpy arrays, x and y.
+
+    Example Usage:
+dict_output = compute_95CI_ols(x,y)
+    '''
     x=x.flatten();y=y.flatten()
     n=x.shape[0]
     assert(n==y.shape[0])
@@ -46,7 +50,11 @@ def compute_95CI_ols(x,y):
 def comp_ols_simple(x,y):
     '''returns the max likliehood estimators
     that result from ordinary least squares regression applied to the
-    1-dimensional numpy arrays, x and y.'''
+    1-dimensional numpy arrays, x and y.
+
+    Example Usage:
+dict_output = comp_ols_simple(x,y)
+    '''
     x=x.flatten();y=y.flatten()
     n=x.shape[0]
     assert(n==y.shape[0])
@@ -82,6 +90,6 @@ def comp_ols_simple(x,y):
         #'Delta_m':Delta_m,
         'b':b,
         #'Delta_b':Delta_b,
-        #'Rsquared':Rsquared
+        'Rsquared':Rsquared
     }
     return dict_output
