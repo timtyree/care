@@ -1,3 +1,11 @@
+
+
+rsync -ravz  --partial /home/timothytyree/ '/media/timothytyree/5 TB Hard Drive/'
+rsync -ravz  --partial /home/timothytyree/ '/media/timothytyree/5 TB Hard Drive/backup_ub'
+
+
+rsync -ravz  --partial /home/timothytyree/ /media/timothytyree/backups/
+
 range_data_dir='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-suite-3-LR/param_qu_tmax_30_Ko_5.4_diffCoef_0.0005_dt_0.5/annihilation_range_timeseries.pkl'
 range_data_dir='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_10_diffCoef_0.0005/annihilation_range_timeseries.pkl'
 range_data_dir='/home/timothytyree/Documents/GitHub/care/notebooks/Data/initial-conditions-fk-200x200/param_set_8_ds_5.0_tmax_30_diffCoef_0.001_dt_1/annihilation_range_timeseries.pkl'
