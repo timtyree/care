@@ -22,7 +22,26 @@ def grouper(iterable, n, fillvalue=None):
     return zip_longest(*args, fillvalue=fillvalue)
 
 def parse_fortranic_tip_pos(input_dir):
-    """
+    """parse_fortranic_tip_pos parses wj's spiral tip positions from his fortranic executables.
+    note that many of wj's fortranic results enforce periodic boundary conditions on a square computational domain.
+    the file format is as follows:
+    - a break indicates a termination event (as there are no entries)
+    - three lines indicates a frame
+    - the first line indicates the time, the current number of spiral tips, and the previous number of spiral tips.
+    - the second line indicates the x-coordinate in the computational domain.
+    - the third line indicates the y-coordinate in the computational domain.
+
+    Example Input: pasted from the head of tip_pos_per_001
+     1.0   6   1
+  7.6  28.2  60.6  61.8 128.5 200.2
+ 26.8  64.9 200.8   3.6 200.3  23.5
+     2.0   4   6
+  7.3  28.6 130.7 199.6
+ 27.1  66.1 200.1  25.0
+     3.0   4   4
+  7.6  28.8 132.8 199.1
+ 26.6  67.2 199.9  26.4
+
     Example Usage: parse one of WJ's files to a folder of .parquet files containing spiral tip locations.
 input_dir='/Users/timothytyree/Documents/GitHub/care/notebooks/Data/from_wjr/tippos_per_001'
 df_log=parse_fortranic_tip_pos(input_dir)

@@ -40,3 +40,12 @@ g=load_parquet_by_trial_num(trial_num=639,folder_parquet=log_folder_parquet)
     #df.index = df.index.map(np.int64)
     df.index = df.index.astype(np.int64)
     return df
+
+def clean_parquet_by(folder_parquet,**kwargs):
+    """kwargs are passed to shutil.rmtree directly.
+
+    Example Usage:
+clean_parquet_by(folder_parquet)
+    """
+    shutil.rmtree(folder_parquet,**kwargs)
+    return True
