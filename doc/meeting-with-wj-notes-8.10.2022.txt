@@ -1,0 +1,18 @@
+meeting-with-wj-notes-8.11.2022.txt
+ANSATZ: reaction rate is zero when reaction ranges is large
+TODO: test again at close ranges and high rates.
+TODO: prepare a table of particle properties.
+TODO: draft new manuscript
+- start with the oscillatory bit
+	- exists an effective attractive force
+	- these plots also show an oscillatory attraction
+	- we observe osciallations
+
+- it's hard to simulate the osc. model, so we have the linear particle model
+
+- we have this way to estimate alinear from msr
+
+- we can reproduce the pair-annihilation rates
+	- --> we can reproduce mean termination times
+
+- (if ^that works on 200x200): start thinking fenton-karma for larger ones (the luo-rudy model is very finnicky)... just do both tim.
