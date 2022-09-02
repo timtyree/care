@@ -35,7 +35,7 @@ g=load_parquet_by_trial_num(trial_num=639,folder_parquet=log_folder_parquet)
     df['trial_num']=trial_num
     if reset_index:
         df.reset_index(inplace=True)
-    #set index dtyp
+    #set index dtype
     #df.index = df.index.map(str)
     #df.index = df.index.map(np.int64)
     df.index = df.index.astype(np.int64)
