@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
 #Programmer: Tim Tyree
 #Date: 10.13.2021
-<<<<<<< Updated upstream
-#Forked from original fortran implementation by Profesor Wouter-Jan Rappel
-=======
-#Forked from original fortran implementation by Wouter-Jan Rappel
-# # Example Usage: generate lookup table with 0.01mV discretization
-# git pull https://github.com/timtyree/bgmc.git
-# cd bgmc/notebooks/lib/model
-# python3 gener_table_LR_I.py 0.01
->>>>>>> Stashed changes
 import numpy as np
+
+#########################################################################
+# Example Usage: generate lookup table with 0.01mV discretization
+#########################################################################
+show_example_usage=False
+if show_example_usage:
+    print("""
+git pull https://github.com/timtyree/bgmc.git
+cd bgmc/notebooks/lib/model
+python3 gener_table_LR_I.py 0.01
+""")
+
+#########################################################################
+# About: confirmed numerical agreement with fortranic source
+#########################################################################
+#gener_table_LR_I.py was transcribed from the original fortran
+# implementation by Wouter-Jan Rappel (WJ).  It has been verified to be
+# equivalent to WJ's fortranic implementation to at least 3-5 significant
+# figures at all time points for our test case involving a 0D action.
 
 def generate_lookup_table_LR_I(
         dt=0.01,
