@@ -59,7 +59,13 @@ def unwrap_xy_values(x_values,y_values,width,height,jump_thresh=None,**kwargs):
     return xv,yv
 
 def unwrap_and_center_xy_values(x_values,y_values,width,height,jump_thresh=None,**kwargs):
-    '''returns a path with periodic boundary conditions that is unwrapped and centered'''
+    '''returns a path with periodic boundary conditions that is unwrapped and centered.
+    if jump_thresh is None: jump_thresh=np.min((width,height))/2.
+    unwrap_xy_values are passed to unwrap_xy_values directly
+
+    Example Usage:
+xv,yv = unwrap_and_center_xy_values(x_values,y_values,width,height)#,jump_thresh=None,**kwargs)
+    '''
     if jump_thresh is None: jump_thresh=np.min((width,height))/2.
     # TODO: add support for re-using jit compiled distance_L2_pbc'''
     xv,yv=unwrap_xy_values(x_values,y_values,width,height,jump_thresh=jump_thresh,**kwargs)
