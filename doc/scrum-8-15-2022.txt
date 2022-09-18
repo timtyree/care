@@ -1,0 +1,16 @@
+the total recorded runtime was 2.375 years.
+/home/timothytyree/Documents/GitHub/bgmc/python/data/osg_output/run_X_all.csv
+/home/timothytyree/Documents/GitHub/bgmc/python/data/osg_output/run_25_all.csv
+# TODO: plot best powerlaw fits to full models
+powerlaw_fit_dir='/home/timothytyree/Documents/GitHub/bgmc/python/data/osg_output/run_25_all_powerlaw_fits.csv'
+
+#TODO: make color plot of RMSE to full on r versus kappa for fenton-karma model
+#TODO: make color plot of RMSE to full on r versus kappa for luo-rudy model
+
+#TODO: repeat ibid for M
+#TODO: repeat ibid for nu
+#TODO: decide whether a 0D or 1D locus defines the ground truth
+#HINT: draw level-sets for M=M* and nu=nu*.  How slight is their intersection?
+
+TODO: attempt to compute the distribution of RMSE versus distance from the minimal locus, where (M,nu)=(M*,nu*).  Does it have an exponent or an RLCT?
+TODO: consider making /bgmc/dst/ containing 1 .csv file of powerlaw fits for a given data run

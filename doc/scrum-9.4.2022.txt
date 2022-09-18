@@ -1,0 +1,55 @@
+scrum-9.4.2022.txt
+GOAL: isosurfaces computed and visualized. some graph for WJ to look at tomorrow.
+TODO: make mvp for WJ
+- TODO: make 2D scatter plot, with diverging color map from desired
+  - M,nu
+  - conditioned on alinear FK,LR
+- make ibid for different kwargs using different methods
+  - CloughTocher2DInterpolator
+
+TODO: attempt to verify the existence of the problem
+- TODO: simply visualize what I currently have for interp
+  - TODO: make 3D scatter plot, with diverging color map from desired M
+  - TODO: make 3D scatter plot, with diverging color map from desired nu
+  - TODO: make 2D scatter plot, with diverging color map from desired
+    - M,nu
+    - conditioned on alinear FK,LR
+  - make ibid for different kwargs using different methods
+    - CloughTocher2DInterpolator
+
+***
+
+Options for interpolator:
+griddata just calls other scipy functions.
+- DONT use griddata, because it doesn't return the function that I use in isoplanes
+
+
+Q:  have more control if I use CloughTocher2DInterpolator versus griddata?
+A: no. use griddata and then make switching between methods as simple as changing a kwarg!
+
+
+
+CloughTocher2DInterpolator
+Piecewise cubic, C1 smooth, curvature-minimizing interpolant in 2D.
+interpolate many planes in data
+and graph those planes in matplotlib in
+
+Q: what method does LinearNDInterpolator use?
+A: linear barycentric interpolation (of triangles?) from the Delaunay triangulation of the inputs
+
+Q: what method does scipy.interpolate.NearestNDInterpolator use?
+A: nearest neighbor interpolation using scipy.spatial.cKDTree
+- note: likely requires me to rescale to a space where everything is of comparable magnitude
+  - option 1: make it 1/kappa.
+  - option 2: make it all rescaled to the unit cube.
+  - option 3: both.
+
+
+PROBLEM: i suspect wiggles due to 4D linear interp instead of 3D
+- Option 0: attempt to make a simpler linear interpolator.
+  - simpler linear interpolator: that performs barycentric interpolation of any nearby points
+- TODO: Option 1: Condition on a particular value for D
+  - TODO: Option 1: Select only points with D fixed.
+  - DONT: Option 2: Attempt to interpolated to D fixed.
+- DONT: Option 2: Attempt complicated GPR procedure, introducing many new parameters
+  - i don't think i have a dense enough sample for the precision i need...
