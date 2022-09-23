@@ -1,6 +1,19 @@
 from scipy.stats import normaltest
 import time, os, numpy as np, dask.bag as db, pandas as pd
 
+def comp_mean_bootstrap_uncertainty(x,num_samples=1000):
+    """
+    Example Usage:
+meanx,Delta_meanx,num_obs,p_normal=comp_mean_bootstrap_uncertainty(minlifetime_values)
+printing=True
+if printing:
+    print(f"mean: {meanx:.4f} +/- {Delta_meanx:.4f} (N={num_obs}, {p_normal=:.4f})")
+    """
+    meanx = np.mean(x)
+    Delta_meanx,p_normal=bootstrap_95CI_Delta_mean(x,num_samples=num_samples)
+    num_obs=x.shape[0]
+    return meanx,Delta_meanx,num_obs,p_normal
+
 def bootstrap_values(values):
     """
     Example Usage:
