@@ -1,0 +1,13 @@
+references regarding the time averaged msd 
+
+ta(msd) is computed using trackpy.msd:
+- msd computed by fft using commonly known theorem
+The original Python implementation comes from a SO answer :
+  http://stackoverflow.com/questions/34222272/computing-mean-square-displacement-using-python-and-fft#34222273.
+  The algorithm is described in this paper : http://dx.doi.org/10.1051/sfn/201112010.
+
+- effective number of statistically independent observations from Eqn. B4 here:
+Derived from Equation B4 in:
+Qian, Hong, Michael P. Sheetz, and Elliot L. Elson. "Single particle
+tracking. Analysis of diffusion and flow in two-dimensional systems."
+Biophysical journal 60.4 (1991): 910.

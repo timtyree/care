@@ -1,6 +1,35 @@
-import numpy as np, pandas as pd, dask.bag as db
 from scipy.stats import normaltest
-import time
+import time, os, numpy as np, dask.bag as db, pandas as pd
+
+def bootstrap_values(values):
+    """
+    Example Usage:
+dict_bootstrapped_count=bootstrap_values(values)
+    """
+    count_values=values
+    mean_count=np.mean(count_values)
+    Delta_mean, p_bootstrap_normal=bootstrap_95CI_Delta_mean(count_values, num_samples=500)
+    std=np.std(count_values)
+    q25=np.quantile(count_values,0.25)
+    q75=np.quantile(count_values,0.75)
+    statistic, p_normal = normaltest(count_values)
+    mean_values=bootstrap_mean(count_values)
+    q25_mean=np.quantile(mean_values,0.25)
+    q75_mean=np.quantile(mean_values,0.75)
+
+    dict_bootstrapped_count={
+        "mean":mean_count,
+        "Delta_mean":Delta_mean,
+        "std":std,
+        'p_bootstrap_normal':p_bootstrap_normal,
+        'q25_mean':q25_mean,
+        'q75_mean':q75_mean,
+        "std":std,
+        'q25':q25,
+        'q75':q75,
+        'p_normal':p_normal,
+    }
+    return dict_bootstrapped_count
 
 def test_normality(x,alpha = 0.05):
     '''performs D'Agostino and Pearson's omnibus test for normality.
@@ -19,6 +48,12 @@ def print_test_normality(x,alpha = 0.05):
         print("\tThe null hypothesis cannot be rejected.  The data is not significantly different from the normal distribution.")
 
 def bootstrap_mean(x,num_samples=1000):
+    """
+    Example Usage:
+mean_values=bootstrap_mean(count_values)
+q25_mean=np.quantile(mean_values,0.25)
+q75_mean=np.quantile(mean_values,0.75)
+    """
     mean_values=np.zeros(num_samples)
     sizex=x.shape[0]
     for i in range(num_samples):
@@ -33,10 +68,7 @@ def bootstrap_stdev_of_mean(x,num_samples=1000):
     return sig
 
 def bootstrap_95CI_Delta_mean(x,num_samples=1000):
-    """
-    Example Usage:
-    Delta_mean,p=bootstrap_95CI_Delta_mean(x,num_samples=1000)
-    """
+    '''returns Delta_mean,p'''
     mean_values=bootstrap_mean(x,num_samples=num_samples)
     sig=np.std(mean_values)
     _, p = normaltest(mean_values)
@@ -44,7 +76,21 @@ def bootstrap_95CI_Delta_mean(x,num_samples=1000):
     return Delta_mean,p
 
 def bin_and_bootstrap_xy_values(x,y,xlabel,ylabel,bins='auto',min_numobs=None,num_bootstrap_samples=1000,npartitions=1,**kwargs):
-    '''see docstring for bin_and_bootstrap_xy_values_parallel'''
+    '''see docstring for bin_and_bootstrap_xy_values_parallel
+
+    Example Usage:
+df_bootstrapped=bin_and_bootstrap_xy_values_parallel(x,
+                               y,
+                               xlabel,
+                               ylabel,
+                               bins='auto',
+                               min_numobs=None,
+                               num_bootstrap_samples=1000,
+                               npartitions=None,
+                               use_test=False,
+                               test_val=0,printing=False)#,**kwargs)
+
+    '''
     type_in=type(np.ndarray([]))
     if type(x)!=type_in:
         raise "InputError: x and y must have type np.ndarray!"
@@ -104,14 +150,15 @@ def bin_and_bootstrap_xy_values(x,y,xlabel,ylabel,bins='auto',min_numobs=None,nu
         return pd.DataFrame(dict_out)
     else:
         #perform in parallel on multiple cores
-        return bin_and_bootstrap_xy_values_parallel(x,
-                                       y,
-                                       xlabel,
-                                       ylabel,
+        return bin_and_bootstrap_xy_values_parallel(x=x,
+                                       y=y,
+                                       xlabel=xlabel,
+                                       ylabel=ylabel,
                                        bins=bins,
                                        min_numobs=min_numobs,
                                        num_bootstrap_samples=num_bootstrap_samples,
-                                       npartitions=npartitions,**kwargs)
+                                       npartitions=npartitions,
+                                       **kwargs)
 
 ###########################################
 # Parallel implementation on multiple cores
@@ -134,6 +181,9 @@ def get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,counts,num_samples=1
             boo=(R_values>=r_edges[j])&(R_values<r_edges[j+1])
             r_values=R_values[boo]
             drdt_values=dRdt_values[boo]
+            #drop any nan values
+            r_values=r_values[~np.isnan(r_values)]
+            drdt_values=drdt_values[~np.isnan(r_values)]
             #compute mean values in bin
             r=np.mean(r_values)
             drdt=np.mean(drdt_values)
@@ -149,13 +199,13 @@ def get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,counts,num_samples=1
 
 def bin_and_bootstrap_xy_values_parallel(x,
                                y,
-                               xlabel='x',
-                               ylabel='y',
+                               xlabel,
+                               ylabel,
                                bins='auto',
                                min_numobs=None,
                                num_bootstrap_samples=1000,
-                               npartitions=1,
-                               use_test=True,
+                               npartitions=None,
+                               use_test=False,
                                test_val=0,printing=False,**kwargs):
     '''
     bin_and_bootstrap_xy_values_parallel returns a pandas.DataFrame instance with the following columns
@@ -175,31 +225,44 @@ def bin_and_bootstrap_xy_values_parallel(x,
     x and y values in hand, that worker bootstraps num_bootstrap_samples samples of approximations of
     the mean value for those x and y values.
 
-    A bin is ignored if it contains no more than min_numobs
+    A bin was ignored if it contains no more than min_numobs
     observations.  If min_numobs=None, then min_numobs=np.mean(counts)/8, where counts is the array of
     counts in each bin.
 
-    Example Usage: compute the bootstrapped mean dRdt (y_values) binning by one_over_R (x_values)
-boo=x_values>0
-df_out=bin_and_bootstrap_xy_values_parallel(x=x_values[boo],
-                               y=y_values[boo],
-                               xlabel='one_over_R',
-                               ylabel='dRdt',
+    The significance test was based on D'Agostino and
+    Pearson's [1]_, [2]_ test that combines skew and kurtosis to
+    produce an omnibus test of normality.
+
+    Example Usage:
+df_bootstrapped=bin_and_bootstrap_xy_values_parallel(x,
+                               y,
+                               xlabel,
+                               ylabel,
                                bins='auto',
                                min_numobs=None,
                                num_bootstrap_samples=1000,
-                               npartitions=os.cpu_count(),#full cylinders
+                               npartitions=None,
                                use_test=False,
                                test_val=0,printing=False)#,**kwargs)
 
+    References
+    ----------
+    .. [1] D'Agostino, R. B. (1971), "An omnibus test of normality for
+           moderate and large sample size", Biometrika, 58, 341-348
+
+    .. [2] D'Agostino, R. and Pearson, E. S. (1973), "Tests for departure from
+           normality", Biometrika, 60, 613-622
+
     '''
+    if npartitions is None:
+        npartitions=os.cpu_count()
     x_values=x
     y_values=y
     num_samples=num_bootstrap_samples
     counts,x_bin_edges=np.histogram(x_values,bins=bins)
     bin_id_lst=list(range(x_bin_edges.shape[0]-1))
     if min_numobs is None:
-        min_numobs=np.mean(counts)/8
+        min_numobs=np.mean(counts)/16
 
     #bake method to bootstrap 95%CI of mean of y conditioned on x being within a given bin
     routine_bootstrap_bin=get_routine_bootstrap_bin(x_values,y_values,x_bin_edges,counts,num_samples=num_samples,min_numobs=min_numobs)
@@ -213,12 +276,18 @@ df_out=bin_and_bootstrap_xy_values_parallel(x=x_values[boo],
     if use_test:
         retval=routine(test_val)
 
-    #all CPU version
-    b = db.from_sequence(bin_id_lst, npartitions=npartitions).map(routine)
-    start = time.time()
-    retval = list(b)
-    if printing:
-        print(f"run time for bootstrapping was {time.time()-start:.2f} seconds.")
+    if npartitions==1:
+        #all CPU version (serial)
+        retval=[]
+        for bin_id in bin_id_lst:
+            retval.append(routine(bin_id))
+    else:
+        #all CPU version (parallel)
+        b = db.from_sequence(bin_id_lst, npartitions=npartitions).map(routine)
+        start = time.time()
+        retval = list(b)
+        if printing:
+            print(f"run time for bootstrapping was {time.time()-start:.2f} seconds.")
 
     array_out=np.stack([x for x in retval if x is not None])
     columns=[xlabel,ylabel,f'Delta_{xlabel}',f'Delta_{ylabel}',f'p_{xlabel}',f'p_{ylabel}','counts']
@@ -226,3 +295,98 @@ df_out=bin_and_bootstrap_xy_values_parallel(x=x_values[boo],
     df=pd.DataFrame(data=array_out,columns=columns)
     df=df.astype({'counts': 'int32'})
     return df
+
+def bootstrap_and_bin_xy_values_parallel(x,
+                               y,
+                               xlabel,
+                               ylabel,
+                               # bins='auto',
+                               min_numobs=None,
+                               num_bootstrap_samples=1000,
+                               npartitions=None,
+                               # use_test=False,
+                               # test_val=0,
+                               printing=False,
+                               **kwargs):
+                               '''
+                               bin_and_bootstrap_xy_values_parallel returns a pandas.DataFrame instance with the following columns
+                               columns=[xlabel,ylabel,f'Delta_{xlabel}',f'Delta_{ylabel}',f'p_{xlabel}',f'p_{ylabel}','counts']
+                               Output Field for a given x bin include:
+                               - y       : the simple mean value of y
+                               - Delta_y : difference between the mean value and the edge of the 95% confidence interval of the mean value
+                               - p_y     : p value estimating the liklihood to reject the null hypothesis which claims the boostrapped distribution is normally distributed.
+                               - counts  : the number of observations in this bin
+
+                               Arguments x and y are assumed to be 1 dimensional numpy.array instances.
+                               If p_y reliably has values less than 0.05, then consider increasing num_bootstrap_samples
+
+                               bin_and_bootstrap_xy_values_parallel passes the kwarg, bins, to numpy.histogram
+                               to generate x bins, it then passes each x bin to npartitions dask workers, each of which
+                               selects the y values that correspond to the x values within its respective bin.  With these
+                               x and y values in hand, that worker bootstraps num_bootstrap_samples samples of approximations of
+                               the mean value for those x and y values.
+
+                               A bin was ignored if it contains no more than min_numobs
+                               observations.  If min_numobs=None, then min_numobs=np.mean(counts)/8, where counts is the array of
+                               counts in each bin.
+
+                               The significance test was based on D'Agostino and
+                               Pearson's [1]_, [2]_ test that combines skew and kurtosis to
+                               produce an omnibus test of normality.
+                               References
+                               ----------
+                               .. [1] D'Agostino, R. B. (1971), "An omnibus test of normality for
+                                      moderate and large sample size", Biometrika, 58, 341-348
+
+                               .. [2] D'Agostino, R. and Pearson, E. S. (1973), "Tests for departure from
+                                      normality", Biometrika, 60, 613-622
+
+                               '''
+                               return bin_and_bootstrap_xy_values_parallel(x=x,y=y,
+                                            xlabel=xlabel,
+                                            ylabel=ylabel,
+                                            min_numobs=min_numobs,
+                                            num_bootstrap_samples=num_bootstrap_samples,printing=printing,
+                                            npartitions=npartitions,
+                                            **kwargs)
+                               # return bin_and_bootstrap_xy_values_parallel(x,
+                               # y,
+                               # xlabel=xlabel,
+                               # ylabel=ylabel,
+                               # bins=bins,
+                               # min_numobs=min_numobs,
+                               # num_bootstrap_samples=num_bootstrap_samples,
+                               # npartitions=npartitions,
+                               # use_test=use_test,
+                               # test_val=test_val,printing=printing,**kwargs)
+
+def bootstrap_dataframe_xy_parallel(df,bins,
+                                xcol='frac_gibberish',
+                                ycol='auc',
+                                min_numobs=None,
+                                num_bootstrap_samples=150,
+                                npartitions=None,use_test=False,test_val=0,printing=False,**kwargs):
+    '''
+    bins must increase monotonically.
+    kwargs are passed to bin_and_bootstrap_xy_values_parallel
+
+    Example Usage:
+df_bootstrapped=bootstrap_dataframe_xy_parallel(df,bins,
+                                xcol='frac_gibberish',
+                                ycol='auc',
+                                min_numobs=None,
+                                num_bootstrap_samples=150,
+                                npartitions=None,use_test=False,test_val=0,printing=False)#,**kwargs)
+    '''
+    x_values=df[xcol].values
+    y_values=df[ycol].values
+    #DONE: bootstrap the mean +/- Delta_mean for each group df_mix_agg
+    df_bootstrapped=bin_and_bootstrap_xy_values_parallel(x=x_values,
+                                   y=y_values,
+                                   xlabel=xcol,
+                                   ylabel=ycol,
+                                   bins=bins,
+                                   min_numobs=min_numobs,
+                                   num_bootstrap_samples=num_bootstrap_samples,
+                                   npartitions=npartitions,use_test=use_test,test_val=test_val,printing=printing,**kwargs)
+    return df_bootstrapped
