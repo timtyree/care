@@ -1,13 +1,17 @@
 scrum-8.19.2022
 *** Resolution of Singularities - Application of Singular Learning Tyeory to Cardiac Electrophysiology ***
 GOAL: get the scale-invariant singular learning theory visualized by developing a custom sampling routine
-TODO: merge the current data
-TODO: compute interp from data as a map from parameters (r/L,kappa,alinear/L/L) to (M,nu)
-TODO: compute level set surface for a desired M
-TODO: compute level set surface for a desired nu
-TODO: compute the intersection curve of " with ""
-TODO: sample points on this curve. 
-TODO(bonus): sample only points on this curve that are at least xs distance from the nearest sample point
+DONE: merge the current data
+DONE: compute interp from data as a map from parameters (r/L,kappa,alinear/L/L) to (M,nu)
+DONE: compute level set surface for a desired M
+DONE: compute level set surface for a desired nu
+DONE: compute the intersection curve of M with nu
+DONT: sample points on this curve. 
+DONT(bonus): sample only points on this curve that are at least xs distance from the nearest sample point
 --> nice 1D representation, s
 TODO(bonus): randomly sample points in the neighborhood xd neighborhood of s
 --> allows for (powerlaw?) estimation of loss as you move away from s.  note the direction away from s might matter.  this directional dependence can be tested for by measuring the loss profile projected in the direction normal to the M-isosurface relative the loss profile projected in the direction normal to the nu-isosurface.  if there is no directional dependence, then there will be no difference in the M-normal and nu-normal directionals
+
+--
+DONE: generate MSD for all data WJ sends me
+DONE: update MSR analysis cache with data WJ sends me
