@@ -81,7 +81,7 @@ def bootstrap_stdev_of_mean(x,num_samples=1000):
     return sig
 
 def bootstrap_95CI_Delta_mean(x,num_samples=1000):
-    '''returns Delta_mean,p'''
+    '''returns Delta_mean,p. consider example usage from docstring of comp_mean_bootstrap_uncertainty'''
     mean_values=bootstrap_mean(x,num_samples=num_samples)
     sig=np.std(mean_values)
     _, p = normaltest(mean_values)
