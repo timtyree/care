@@ -1,0 +1,61 @@
+#TODO: dev run #30 (L=5) (and #31 (L=10)) using the following:
+
+###########################
+# mean min lifetime: Gamma
+###########################
+lifetime_fk= 105.3 # (1.6) ms
+lifetime_lr= 33.37 # (73) ms
+Gamma_fk = lifetime_fk
+Gamma_lr = lifetime_lr
+
+###########################
+# rms range: Gamma
+###########################
+R_rms_fk = 0.67 # ± 0.06 cm
+R_rms_lr = 0.86 # ± 0.07 cm
+
+######################################################
+# max attraction coefficient: amax (Method 1, b.o.e.)
+######################################################
+mean_squared_distance_fk = R_rms_fk**2
+mean_squared_distance_lr = R_rms_lr**2
+alinear_boe_fk = mean_squared_distance_fk / Gamma_fk / 4
+alinear_boe_lr = mean_squared_distance_lr / Gamma_lr / 4
+
+############################
+# mean rotational period: T
+############################
+- LR: mean number of loops per particle lifetime: 0.3438
+- FK: mean number of loops per particle lifetime: 0.4976
+- FK(backup, failing ^that): mean number of loops per particle lifetime (at least 1 loop): 0.9131
+
+T_fk = Gamma_fk / 0.3438
+T_lr = Gamma_lr / 0.3438
+
+######################################################
+# TODO: max attraction coefficient: amax (Method 2, annealed)
+######################################################
+#TODO: perform simulated annealing in .ipynb
+#input: T, Gamma, MSR(t'), D=0
+#output: mean squared distance
+mean_squared_distance_hat_fk = ??
+mean_squared_distance_hat_lr = ??
+alinear_anneal_fk = mean_squared_distance_hat_fk / Gamma_fk / 4
+alinear_anneal_lr = mean_squared_distance_hat_lr / Gamma_lr / 4
+
+######################################################
+# diffusion coefficient: D (from time averaged MSD)
+######################################################
+$D$ (cm$^2$/s):
+- FK: 37.2$\pm$1.4$\times10^{-3}$
+- LR: 1.40$\pm$0.10$\times10^{-3}$
+
+######################################################
+# reaction rate: kappa (b.o.e. from death rates and qs distribution)
+######################################################
+- Area: 25 cm^2, kappa: 436.74 Hz (Fenton-Karma)
+- Area: 25 cm^2, kappa: 1614.16 Hz (Luo-Rudy)
+- Area: 100 cm^2, kappa: 6197.13 Hz (Fenton-Karma)
+- Area: 100 cm^2, kappa: 8532.76 Hz (Luo-Rudy)
+
+then, TODO: dev run #30 using the above parameter values
