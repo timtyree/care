@@ -17,19 +17,27 @@ R_rms_lr = 0.86 # ± 0.07 cm
 ######################################################
 # max attraction coefficient: amax (Method 1, b.o.e.)
 ######################################################
+
 mean_squared_distance_fk = R_rms_fk**2
 mean_squared_distance_lr = R_rms_lr**2
 alinear_boe_fk = mean_squared_distance_fk / Gamma_fk / 4
 alinear_boe_lr = mean_squared_distance_lr / Gamma_lr / 4
 
+>>>
+alinear_boe_fk=1.9325 cm^2/s
+alinear_boe_lr=8.6303 cm^2/s
+#TODO: include ^these in run #30 as amax
+
+
 ############################
 # mean rotational period: T
 ############################
+#src: http://localhost:8889/notebooks/computing%20rotational%20period%20of%20mean%20fortranic%20spiral%20trajectories.ipynb
 - LR: mean number of loops per particle lifetime: 0.3438
 - FK: mean number of loops per particle lifetime: 0.4976
 - FK(backup, failing ^that): mean number of loops per particle lifetime (at least 1 loop): 0.9131
 
-T_fk = Gamma_fk / 0.3438
+T_fk = Gamma_fk / 0.4976
 T_lr = Gamma_lr / 0.3438
 
 ######################################################
@@ -49,6 +57,9 @@ alinear_anneal_lr = mean_squared_distance_hat_lr / Gamma_lr / 4
 $D$ (cm$^2$/s):
 - FK: 37.2$\pm$1.4$\times10^{-3}$
 - LR: 1.40$\pm$0.10$\times10^{-3}$
+- FK(failing ^that, from MSR): D = m/8 = 0.1145 +/- 0.007987364738330576 (using timepoints after 600.0 ms)
+- LR(failing ^that): D = m/8 = 0.4158 +/- 0.1383129275716018 (using timepoints after 100.0 ms)
+
 
 ######################################################
 # reaction rate: kappa (b.o.e. from death rates and qs distribution)
@@ -59,3 +70,35 @@ $D$ (cm$^2$/s):
 - Area: 100 cm^2, kappa: 8532.76 Hz (Luo-Rudy)
 
 then, TODO: dev run #30 using the above parameter values
+
+
+
+
+
+#########################################################
+##############
+# Fenton-Karma
+##############
+range_data_dir='/Users/timothytyree/Documents/GitHub/care/notebooks/Data/from_wjr/positions_fk/200x200/tippos_per_c_001_annihilation_range_timeseries.pkl'
+loaded range timeseries from 80 termination events
+df.shape=(3846532, 9)
+ - o - mean lifetime: 105.3196 +/- 1.6937 ms (N=36179, p_normal: 0.9623) from 80 termination events
+averages for spiral tip pairs:
+ - x - particle average first (not this one!): mean range: 0.5263 +/- 0.0035 ms (N=36179, p_normal: 0.9934) from 80 termination events
+ - o - all positions together (use this one!): mean range: 0.9022 +/- 0.0006 ms (N=3846532, p_normal: 0.8016) from 80 termination events
+ - o - all positions together (use this one!): root mean squared range: 1.0734 +/- 0.0186 ms (N=3846532, p_normal: 0.0120) from 80 termination events
+ - o - all positions together (use this one!): mean squared range: 1.1521 +/- 0.0016 ms (N=3846532, p_normal: 0.0120) from 80 termination events
+​
+##############
+# Luo-Rudy
+##############
+range_data_dir='/Users/timothytyree/Documents/GitHub/care/notebooks/Data/from_wjr/positions_lr/200x200/tippos_per_001_annihilation_range_timeseries.pkl'
+loaded range timeseries from 595 termination events
+df.shape=(524869, 9)
+ - o - mean lifetime: 33.3659 +/- 0.6978 ms (N=15273, p_normal: 0.2738) from 595 termination events
+averages for spiral tip pairs:
+ - x - particle average first (not this one!): mean range: 0.6635 +/- 0.0071 ms (N=15273, p_normal: 0.9181) from 595 termination events
+ - o - all positions together (use this one!): mean range: 1.0733 +/- 0.0018 ms (N=524869, p_normal: 0.0141) from 595 termination events
+ - o - all positions together (use this one!): root mean squared range: 1.2665 +/- 0.0279 ms (N=524869, p_normal: 0.9307) from 595 termination events
+ - o - all positions together (use this one!): mean squared range: 1.6040 +/- 0.0050 ms (N=524869, p_normal: 0.9307) from 595 termination events
+ #########################################################
