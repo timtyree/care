@@ -18,6 +18,26 @@ if printing:
     num_obs=x.shape[0]
     return meanx,Delta_meanx,num_obs,p_normal
 
+def comp_square_error_msr_aff_osc_period_fixed_with_msr_offset(x,*args):
+    """phase is in radians. period is in milliseconds.  a0,a1 are in cm^2/s.
+    MSR_offset is in cm^2
+
+Example Usage:
+x0=a0,a1,phase
+period=T*1e3 #bc period is in milliseconds
+args=t_values,msr_values,D,period
+square_error=comp_square_error_msr_aff_osc_period_fixed(x0,*args)
+rmse=np.sqrt(square_error/t_values.shape[0])
+print(f"{rmse=}")
+    """
+    a0,a1,phase,MSR_offset=x
+    t_values,msr_values,D,period=args
+    omega=2*np.pi/period*1e3 #Hz bc period is in ms
+    msr_values_affoscillatory=4*((2*D+a0)*t_values+(a1/omega)*(np.sin(omega*t_values+phase)-np.sin(phase)))+MSR_offset
+    square_error_msr=np.sum((msr_values_affoscillatory-msr_values)**2)
+    return square_error_msr
+
+
 def comp_square_error_msr_aff_osc_period_fixed(x,*args):
     """phase is in radians. period is in milliseconds.  a0,a1 are in cm^2/s.
 
