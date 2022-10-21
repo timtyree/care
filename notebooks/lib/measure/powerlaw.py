@@ -54,12 +54,18 @@ print_dict(dict_fit)
     rmse=compute_power_rmse(x,y,m,B)
     M, Delta_M= comp_power_scale(B,Delta_B,m,Delta_m)
     num_obs = x.shape[0]
+    #compute mean percent error
+    yv=(B*x)**m
+    boo = yv>0
+    pe_values = 100.*np.abs(y-yv)[boo]/yv[boo]
+    mpe=np.mean(pe_values)
     if printing:
         print(f"m = {m:.6f} +/- {Delta_m:.6f}")
         print(f"M = {M:.6f} +/- {Delta_M:.6f} Hz/cm^2; B={B:.6f} +/- {Delta_B:.6f}")
-        print(f"RMSE={rmse:.4f} Hz/cm^2; R^2={Rsq:.4f}; N={num_obs}")
+        print(f"RMSE={rmse:.4f} Hz/cm^2; R^2={Rsq:.4f}; MPE={mpe:.4f}%; N={num_obs}")
     dict_fit=dict(
         rmse=rmse,
+        mpe=mpe,
         Rsq=Rsq,
         num_obs=num_obs,
         m=m,
