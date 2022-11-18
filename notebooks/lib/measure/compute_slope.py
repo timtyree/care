@@ -1,5 +1,28 @@
 import numpy as np
 
+def print_fit_linear(x,y):
+    """returns the max likliehood estimators and 95% confidence intervals
+    that result from ordinary least squares regression applied to the
+    1-dimensional numpy arrays, x and y.
+
+    Example Usage:
+dict_fit = print_fit_linear(x,y)
+    """
+    dict_output = compute_95CI_ols(x,y)
+    m=dict_output['m']
+    b=dict_output['b']
+    Delta_m=dict_output['Delta_m']
+    Delta_b=dict_output['Delta_b']
+    Rsq=dict_output['Rsquared']
+    yhat=m*x+b
+    rmse=np.sqrt(np.mean((yhat-y)**2))
+    print(f"m={m:.6f}+-{Delta_m:.6f}")#"; B={B:.6f}+-{Delta_B:.6f}")
+    print(f"b= {b:.6f}+-{Delta_b:.6f}")
+    print(f"RMSE={rmse:.4f} (N={x.shape[0]})")
+    print(f"R^2={Rsq:.4f}")
+    return dict_output
+
+
 def compute_95CI_ols(x,y):
     '''returns the max likliehood estimators and 95% confidence intervals
     that result from ordinary least squares regression applied to the

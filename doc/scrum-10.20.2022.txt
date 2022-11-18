@@ -1,0 +1,14 @@
+DONE: use CardiacBD2021.pdf in the letter after the interoduction.  PM is efficient, and it will go unused if i don't.
+DONE: see if setting the best FK period to the observed value, T, makes the MSR line up better.
+DONE: analyze results from run #34
+DONE: replace RMSE with mean percent error (MPE / M%E) in all fits in Table 1
+
+alinear_anneal_fk=1.8402023397115908 cm^2/s
+alinear_boe_fk=1.9324901234567902 cm^2/s
+alinear_anneal_lr=8.585030312541999 cm^2/s
+alinear_boe_lr=8.630303341324543 cm^2/s
+
+DONE: estimate $a$ with oscillatory particle model
+DONE: estimate $a$ with b.o.e. from R_rms^2/Gamma/32
+DONE: estimate kappa from tau_infinity and P_qs?
+DONE: grid search over r and/or r,kappa, sure to include the predictive kappa

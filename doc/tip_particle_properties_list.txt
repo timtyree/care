@@ -9,7 +9,7 @@ Gamma_fk = lifetime_fk
 Gamma_lr = lifetime_lr
 
 ###########################
-# rms range: Gamma
+# rms range
 ###########################
 R_rms_fk = 0.67 # ± 0.06 cm
 R_rms_lr = 0.86 # ± 0.07 cm
@@ -24,10 +24,10 @@ alinear_boe_fk = mean_squared_distance_fk / Gamma_fk / 4
 alinear_boe_lr = mean_squared_distance_lr / Gamma_lr / 4
 
 >>>
+
 alinear_boe_fk=1.9325 cm^2/s
 alinear_boe_lr=8.6303 cm^2/s
-#TODO: include ^these in run #30 as amax
-
+#DONE: include ^these in run #30 as amax
 
 ############################
 # mean rotational period: T
@@ -60,6 +60,20 @@ $D$ (cm$^2$/s):
 - FK(failing ^that, from MSR): D = m/8 = 0.1145 +/- 0.007987364738330576 (using timepoints after 600.0 ms)
 - LR(failing ^that): D = m/8 = 0.4158 +/- 0.1383129275716018 (using timepoints after 100.0 ms)
 
+##############
+DONE: fill in MSD exponent mention in main text
+(Fenton-Karma) msd powerlaw fit of msd from lagt=0.1 to 3:
+m = 1.001994 +/- 0.015057
+M = 0.005766 +/- 0.000384 Hz/cm^2; B=0.005826 +/- 0.000076
+RMSE=0.0008 Hz/cm^2; R^2=0.9921; N=138
+D = 0.0014 +/- 0.0001 cm^2/s
+
+(Luo-Rudy) msd powerlaw fit of msd from lagt=0.06 to 0.2:
+m = 0.981067 +/- 0.044880
+M = 0.148857 +/- 0.005591 Hz/cm^2; B=0.143485 +/- 0.007501
+RMSE=0.0011 Hz/cm^2; R^2=0.9750; N=49
+D = 0.0372 +/- 0.0014 cm^2/s
+##############
 
 ######################################################
 # reaction rate: kappa (b.o.e. from death rates and qs distribution)
@@ -69,8 +83,25 @@ $D$ (cm$^2$/s):
 - Area: 100 cm^2, kappa: 6197.13 Hz (Fenton-Karma)
 - Area: 100 cm^2, kappa: 8532.76 Hz (Luo-Rudy)
 
-then, TODO: dev run #30 using the above parameter values
+then, DONE: dev run #30 using the above parameter values
 
+##########################################
+# annihilation dynamics fits in figure 4
+##########################################
+1/v_- = m*log(a/unit_a)+B
+m = 0.078432 +/- 0.002113
+B=283.095405 +/- 13.616559
+RMSE=0.0090 Hz/cm^2; R^2=0.9985; N=10
+
+1/M_- = m*log(a/unit_a)+B
+m = -0.035764 +/- 0.000704 Hz/cm^2
+B=0.022253 +/- 0.000505 Hz/cm^2
+RMSE=0.0003 cm^2s; R^2=0.9999; N=3
+
+tau = M*(a/unit_a)**m
+m = -3.014060 +/- 0.168188
+M = 96.058514 +/- 57.482289 s
+RMSE=1.3318 s; R^2=0.9992; N=3
 
 
 
@@ -102,3 +133,7 @@ averages for spiral tip pairs:
  - o - all positions together (use this one!): root mean squared range: 1.2665 +/- 0.0279 ms (N=524869, p_normal: 0.9307) from 595 termination events
  - o - all positions together (use this one!): mean squared range: 1.6040 +/- 0.0050 ms (N=524869, p_normal: 0.9307) from 595 termination events
  #########################################################
+
+
+
+################
