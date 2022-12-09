@@ -1,0 +1,1 @@
+We need to do more explaining where this attractive force comes from.- TODO: Plot the fields (V,y) along the activation front in the time leading up to an annihilation event for either full model- (left panel) Snapshot -2 ms before annihilation- (right panel) Plot histogram of curvature- GOAL: show the local geometry supports this apparent attractive force
