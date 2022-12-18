@@ -1,23 +1,24 @@
-We need to do more explaining where this attractive force comes from.  - TOOD: Plot the fields (V,y) along the activation front in the time leading up to an annihilation event for either full model- (left panel) Snapshot -2 ms before annihilation- (right panel) Plot histogram of curvature- GOAL: show the local geometry supports this apparent attractive forceTOOD: send notes on MSR_Osc (t + dt) minus (t)
+We need to do more explaining where this attractive force comes from.  - TOOD: Plot the fields (V,y) along the activation front in the time leading up to an annihilation event for either full model- (left panel) Snapshot -2 ms before annihilation- (right panel) Plot histogram of curvature- DONE GOAL: show the local geometry supports this apparent attractive forceDONE: send notes on MSR_Osc (t + dt) minus (t)
+DONE: make a new Fig. 1A
+DONE: get 3 panels showing spiral tips approaching and annihilating for FK
+DONE: get 3 panels showing spiral tips approaching and annihilating for LR
+DONE: collect ^that into a SM figure
+DONE: comment out the columns WJ doesn't want in table 1
 
-TODO: make a new Fig. 1A
-TODO: get 3 panels showing spiral tips approaching and annihilating for FK
-TODO: get 3 panels showing spiral tips approaching and annihilating for LR
-TODO: collect ^that into a SM figure
-
-
+TODO: test whether the analytic formula for tau(N_0) increases exponentially as A is increased
+HINT: for A in A_values: record tau(N_0) for some N_0
 TODO: fix uncertainty of a in Table 1.
-TODO: comment out the columns WJ doesn't want in table 1
 TODO: do anything else in red in figure 1
-
 TODO: recall my previous computational speedup estimate and put it back in the Letter
 HINT: it might be still there but commented out
-
 TODO: change figure legends from Lin. to LPM and Osc. to OPM
-
-TODO: numerically verify whether tau(N_0) increases exponentially as A is increased
-
 TODO: show/find the plot showing the total P decreases exponentially
+
+***********************************
+Yes, this may be the case. I wonder if this 4/3 is a coincidence or points to something deeper. Can you run these large a simulations for some other values of
+D, r and kappa? This constant is probably a function of these parameters (I would guess certainly of r and kappa), in which case we should not report 4/3 but
+simply say that it approaches a constant value.
+TODO: dev run on osg for ^this with a few more choices of r, kappa, and D
 
 ***********************************
 
