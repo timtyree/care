@@ -4,10 +4,13 @@ DONE: get 3 panels showing spiral tips approaching and annihilating for FK
 DONE: get 3 panels showing spiral tips approaching and annihilating for LR
 DONE: collect ^that into a SM figure
 DONE: comment out the columns WJ doesn't want in table 1
-
-TODO: test whether the analytic formula for tau(N_0) increases exponentially as A is increased
+DONE: test whether the analytic formula for tau(N_0) increases exponentially as A is increased
 HINT: for A in A_values: record tau(N_0) for some N_0
+
+
 TODO: fix uncertainty of a in Table 1.
+HINT: take maxabs diff for maxiter/10 instead of maxiter*10
+
 TODO: do anything else in red in figure 1
 TODO: recall my previous computational speedup estimate and put it back in the Letter
 HINT: it might be still there but commented out
