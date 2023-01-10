@@ -486,7 +486,7 @@ df_R.head()
                                                                 max_dist=max_dist,max_disp=max_disp,
                                                                 use_final_annihilation=use_final_annihilation,
                                                                 printing=printing)#,**kwargs)
-    df=compute_annihilation_range_timeseries(df,DS=0.025)
+    df=compute_annihilation_range_timeseries(df,DS=DS)
     max_index_annihilation=df['index_self'].max()
     if printing:
         print(f"successfully tracked {max_index_annihilation+1} annihilation events!")

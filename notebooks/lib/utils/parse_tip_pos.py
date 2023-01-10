@@ -72,9 +72,18 @@ if printing:
             row3=value_tuple[2]
             if n>0:
                 str_csv=strip_line_to_csv(lines[1])
-                x_tuple=eval(str_csv)
+                #if str_csv!=" ":
+                if len(str_csv)>1:
+                    x_tuple=eval(str_csv)
+                else:
+                    x_tuple=tuple()
                 str_csv=strip_line_to_csv(lines[2])
-                y_tuple=eval(str_csv)
+                #if str_csv!=" ":
+                if len(str_csv)>1:
+                    y_tuple=eval(str_csv)
+                else:
+                    y_tuple=tuple()
+
                 #record for each position
                 for x,y in zip(x_tuple,y_tuple):
                     dict_pos=dict(trial_num=trial_num,t=t,n=n,x=x-1,y=y-1) #-1 makes wj's min position 0 and max ~ width, as i have been using
