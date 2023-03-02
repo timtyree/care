@@ -2,7 +2,7 @@
 #Timothy Tyree
 #1.13.2021
 # The model from Luo-Rudy (1990) modified as described
-# in Qu et alli (2000) to exhibit spiral defect chaos
+# in Qu et alii (2000) to exhibit spiral defect chaos
 # implemented on a square computational domain.
 # Uses lookup table instead of using comp_ionic_currents
 from numba import njit, jit, float64#, prange
