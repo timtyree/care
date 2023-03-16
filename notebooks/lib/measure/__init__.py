@@ -30,6 +30,7 @@ from .smooth_array import *
 from .attraction_coefficient import *
 from .exponential_fit import *
 from .track_nearest_neighbors_pbc_annihilations import *
+from .distance_chamfer import *
 #deprecated method with topological knots measured
 # from .utils_measure_tips_cpu import *
 
