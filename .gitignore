@@ -177,3 +177,6 @@ notebooks/lib/measure/ignore.txt
 *.MTS
 *.mp4
 *.mov
+notebooks/1.10.0.tar.gz
+notebooks/dolphin.obj
+notebooks/Untitled.ipynb
