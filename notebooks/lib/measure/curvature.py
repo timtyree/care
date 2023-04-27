@@ -64,8 +64,9 @@ def compute_curvature(array):
                    }
     return dict_curvature
 
-def comp_curvature(xy_values,s=2):
-    '''s is a smoothing parameter. s=0 forces agreement with xy_values, but does not produce smooth curvature
+def comp_curvature(xy_values,s=2,per=0):
+    '''s is a smoothing parameter. s=0 forces agreement with xy_values, but does not produce smooth curvature.
+    if per=1, then periodic boundary conditions are used.
     xy_values is an Nx2 np.array discretizing a continuous curve
     Note that (i) we force interpolation by using s=0,
     (ii) the parameterization, u, is generated automatically.
@@ -75,18 +76,18 @@ def comp_curvature(xy_values,s=2):
     # x=xy_values[:,0]
     # y=xy_values[:,1]
 
-    xp=xy_values[:,0]
-    yp=xy_values[:,1]
-    assert (xy_values.shape[1]==2)
-    okay = np.where(np.abs(np.diff(xp)) + np.abs(np.diff(yp)) > 0)
-    x = np.r_[xp[okay], xp[-1], xp[0]]
-    y = np.r_[yp[okay], yp[-1], yp[0]]
+    # xp=xy_values[:,0]
+    # yp=xy_values[:,1]
+    # assert (xy_values.shape[1]==2)
+    # okay = np.where(np.abs(np.diff(xp)) + np.abs(np.diff(yp)) > 0)
+    # x = np.r_[xp[okay], xp[-1], xp[0]]
+    # y = np.r_[yp[okay], yp[-1], yp[0]]
+    # tck, u = splprep([x, y],s=s)#,per=1,nest=1000,task=0,k=3)#s=0)
     # print(x.shape)#error has shape (430,)
     # print(y.shape)#error has shape (430,)
     # try:
     # xyavg=xy_values[:-1]/2+xy_values[1:]/2
-    # tck, u = splprep(xy_values.T,s=s)#s=0)
-    tck, u = splprep([x, y],s=s)#,per=1,nest=1000,task=0,k=3)#s=0)
+    tck, u = splprep(xy_values.T,s=s,per=per)#s=0)
     # except Exception as e:
     #     print("ERROR:")
     #     print(e)
