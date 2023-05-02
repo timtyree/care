@@ -33,7 +33,7 @@ cd ../mov
 # Fenton-Karma Model'
 TEXT='Spiral Tip Motion
 from the
-Luo-Rudy Model'
+Fenton-Karma Model'
 # ffmpeg -f lavfi -y -i color=black:1920x1080 -f lavfi -i anullsrc  \ #widescreen
 ffmpeg -f lavfi -y -i color=black:1280x720 -f lavfi -i anullsrc  \
 	-q 0 -vf drawtext="

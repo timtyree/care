@@ -1,2 +1,2 @@
 
-TEXT=$'Luo-Rudy model'
+TEXT=$'Fenton-Karma model'
