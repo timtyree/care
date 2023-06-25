@@ -92,9 +92,11 @@ map_prev_next_disp_consistent,map_prev_next_disp=find_nearest_neighbor_map(d_pre
 def find_nearest_neighbors_simple(d_prev,d_next,distance_L2_pbc,xy_col_lst=['x','y'],**kwargs):
     """find_nearest_neighbors_pbc returns a list of pairs of indices, where each pair indexes
     a member of d_prev and d_next that are mutually nearest neighbors, respectively.
-    distance_L2_pbc is passed to find_nearest_neighbor_simple directly
+    distance_L2_pbc is passed to find_nearest_neighbor_simple directly.
+	d_prev,d_next are pandas.DataFrame instances with fields, xy_col_lst.
+	
     Example Usage:
-id_pair_lst=find_nearest_neighbors_simple(d_prev,d_next,distance_L2_pbc)#,xy_col_lst=['x','y'],**kwargs)
+id_pair_lst,disp_pair_lst=find_nearest_neighbors_simple(d_prev,d_next,distance_L2_pbc)#,xy_col_lst=['x','y'],**kwargs)
     """
     #extract positions
     xy_prev=d_prev[xy_col_lst].values.copy()
