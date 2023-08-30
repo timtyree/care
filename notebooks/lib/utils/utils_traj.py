@@ -5,6 +5,15 @@ from ..my_initialization import *
 from .. import *
 from .dist_func import *
 
+def resample_linearly(x_values,y_values,dt=0.001):
+    '''compute the linearly interpolated time series at a regular interval of dt
+    Example Usage:
+x_values,y_values=resample_linearly(x_values,y_values,dt=0.001)
+    '''
+    tau_values_interpolated=np.arange(x_values.min(),x_values.max(),dt)
+    sd_values_interpolated=np.interp(x=tau_values_interpolated, xp=x_values, fp=y_values, left=None, right=None, period=None)
+    return tau_values_interpolated, sd_values_interpolated
+
 def unwrap_for_each_jump(x_values,y_values,jump_index_array, width,height,
     jump_thresh=None, **kwargs):
     '''unwrap_for_each_jump iterates over the jumps indexed in jump_index_array
