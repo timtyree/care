@@ -18,7 +18,8 @@ def comp_power_scale(B,Delta_B,m,Delta_m):
 def fit_power_law(x,y):
     '''
     Example Usage:
-    B,Delta_B,m,Delta_m,Rsq=fit_power_law(x,y)'''
+B,Delta_B,m,Delta_m,Rsq=fit_power_law(x,y)
+    '''
     dict_loglog=compute_95CI_ols(np.log(x),np.log(y))
     m=dict_loglog['m']
     Delta_m=dict_loglog['Delta_m']
