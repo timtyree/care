@@ -1,0 +1,9 @@
+Q: does changing Ko to 3.8 from 5.4 affect $a$
+A: ??
+DONE: attempt to find where i make files like tippos_per_102_annihilation_range_timeseries.pkl
+#it uses WJ's fortranic inputs
+HINT: see processing of fortranic  trajectories
+TODO: compute annihilation_range_timeseries.pkl from scratch
+
+TODO: measure msr of param_qu_tmax_30_Ko_3.8_diffCoef_0.0005
+TODO: measure $a$ of param_qu_tmax_30_Ko_3.8_diffCoef_0.0005
