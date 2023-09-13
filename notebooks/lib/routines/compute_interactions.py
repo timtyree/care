@@ -10,8 +10,6 @@ def compute_df_interactions(input_fn,DS=5./200.,width=200,height=200,tmin=100,pi
     distance_L2_pbc = get_distance_L2_pbc(width=width,height=height)
     #list of length sorted trajectories
     df = pd.read_csv(input_fn)
-    dfg=df.groupby(pid_col)[t_col]
-    df_lifetimes=(dfg.max()-dfg.min())
 
     using_particle=True
     if using_particle:
@@ -22,6 +20,9 @@ def compute_df_interactions(input_fn,DS=5./200.,width=200,height=200,tmin=100,pi
     s = s.sort_values(ascending=False)
     pid_longest_lst = list(s.index.values)#[:n_tips])
 
+    dfg=df.groupby(pid_col)[t_col]
+    df_lifetimes=(dfg.max()-dfg.min())
+    
     #TODO: add minimum duration filtering here
     #TODO: add minimum duration filtering here
     #print summary stats on particle lifetimes for one input folder
