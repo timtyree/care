@@ -1,0 +1,7 @@
+howdo-transition-to-el9.txt
+---
+- https://portal.osg-htc.org/documentation/htc_workloads/specific_resource/el9-transition/
+
+- https://portal.osg-htc.org/documentation/htc_workloads/using_software/containers-docker/
+
+- https://portal.osg-htc.org/documentation/htc_workloads/using_software/containers-singularity/
