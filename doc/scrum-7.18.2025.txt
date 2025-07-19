@@ -1,0 +1,7 @@
+DONE: add third plot for MSR for <100ms pairs only to response
+DONE: generate a highlight image from Fig. 1 using the specifications that WJ emailed me.
+
+DONE: read through manuscript + response carefully
+DONE: cp manuscript to have no blue (_clean.tex) with references postscript.
+- compile in TeXShop.
+- copy and paste .bbl file to the end
